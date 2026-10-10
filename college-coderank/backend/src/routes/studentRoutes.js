@@ -7,9 +7,15 @@ import {
   syncStudentLeetCode,
   updateMyProfile
 } from "../controllers/studentController.js";
+import { registerStudent } from "../controllers/authController.js";
 import { requireAuth, requireRole } from "../middleware/authMiddleware.js";
 
 const router = Router();
+
+// Student self-registration route aliases (unauthenticated)
+router.post("/register", registerStudent);
+router.post("/", registerStudent);
+
 router.use(requireAuth);
 
 router.get("/me", requireRole("student"), getMyProfile);

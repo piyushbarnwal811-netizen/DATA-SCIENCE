@@ -21,13 +21,37 @@ export function AuthProvider({ children }) {
   }, []);
 
   const login = useCallback(async (credentials) => {
-    const { data } = await api.post("/auth/login", credentials);
-    return acceptSession(data);
+    try {
+      const { data } = await api.post("/auth/login", credentials);
+      return acceptSession(data);
+    } catch (error) {
+      if (error.response?.status === 404) {
+        const { data } = await api.post("/login", credentials);
+        return acceptSession(data);
+      }
+      throw error;
+    }
   }, [acceptSession]);
 
   const register = useCallback(async (details) => {
-    const { data } = await api.post("/auth/register", details);
-    return acceptSession(data);
+    try {
+      const { data } = await api.post("/auth/register", details);
+      return acceptSession(data);
+    } catch (error) {
+      if (error.response?.status === 404) {
+        try {
+          const { data } = await api.post("/students/register", details);
+          return acceptSession(data);
+        } catch (innerError) {
+          if (innerError.response?.status === 404) {
+            const { data } = await api.post("/students", details);
+            return acceptSession(data);
+          }
+          throw innerError;
+        }
+      }
+      throw error;
+    }
   }, [acceptSession]);
 
   const logout = useCallback(() => {

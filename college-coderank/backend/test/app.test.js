@@ -40,7 +40,8 @@ test("Excel roster import normalizes headers and emails", async () => {
     year: 2,
     leetcodeUsername: "",
     githubUsername: "",
-    hackerrankUsername: ""
+    hackerrankUsername: "",
+    codechefUsername: ""
   }]);
 });
 

@@ -38,22 +38,44 @@ export async function registerStudent(req, res, next) {
   try {
     const {
       name,
+      fullName,
       email,
       password,
       studentId,
+      rollNumber,
+      rollNo,
       branch,
+      department,
       section,
       year,
       githubUsername,
+      github,
+      githubHandle,
       leetcodeUsername,
+      leetcode,
+      leetcodeHandle,
       hackerrankUsername,
-      codechefUsername
+      hackerrank,
+      hackerrankHandle,
+      codechefUsername,
+      codechef,
+      codechefHandle
     } = req.body;
+
+    const resolvedName = String(name || fullName || "").trim();
     const normalizedEmail = String(email ?? "").trim().toLowerCase();
-    const normalizedBranch = String(branch ?? "").trim();
+    const normalizedBranch = String(branch || department || "").trim();
     const normalizedSection = String(section ?? "").trim();
     const numericYear = Number(year);
-    if (!String(name ?? "").trim() || !normalizedEmail || !password || !normalizedBranch || !normalizedSection || !year) {
+    const rawStudentId = studentId || rollNumber || rollNo;
+    const resolvedStudentId = rawStudentId && String(rawStudentId).trim() ? String(rawStudentId).trim() : undefined;
+
+    const rawGh = githubUsername || github || githubHandle;
+    const rawLc = leetcodeUsername || leetcode || leetcodeHandle;
+    const rawHr = hackerrankUsername || hackerrank || hackerrankHandle;
+    const rawCc = codechefUsername || codechef || codechefHandle;
+
+    if (!resolvedName || !normalizedEmail || !password || !normalizedBranch || !normalizedSection || !year) {
       return res.status(400).json({ message: "Complete all required fields to create an account." });
     }
     if (!Number.isInteger(numericYear) || numericYear < 1 || numericYear > 8) {
@@ -65,10 +87,10 @@ export async function registerStudent(req, res, next) {
     const passwordHash = await bcrypt.hash(password, 12);
     const existing = await Student.findOne({ email: normalizedEmail }).select("+password");
 
-    const cleanGh = cleanGitHubUsername(githubUsername);
-    const cleanLc = cleanLeetCodeUsername(leetcodeUsername);
-    const cleanHr = cleanHackerRankUsername(hackerrankUsername);
-    const cleanCc = cleanCodeChefUsername(codechefUsername);
+    const cleanGh = cleanGitHubUsername(rawGh);
+    const cleanLc = cleanLeetCodeUsername(rawLc);
+    const cleanHr = cleanHackerRankUsername(rawHr);
+    const cleanCc = cleanCodeChefUsername(rawCc);
 
     let student;
 
@@ -77,9 +99,9 @@ export async function registerStudent(req, res, next) {
         return res.status(409).json({ message: "An account with this email already exists." });
       }
       Object.assign(existing, {
-        name: String(name).trim(),
+        name: resolvedName,
         password: passwordHash,
-        studentId: studentId || existing.studentId,
+        studentId: resolvedStudentId || existing.studentId,
         branch: normalizedBranch,
         section: normalizedSection,
         year: numericYear,
@@ -91,10 +113,10 @@ export async function registerStudent(req, res, next) {
       student = await existing.save();
     } else {
       student = await Student.create({
-        name: String(name).trim(),
+        name: resolvedName,
         email: normalizedEmail,
         password: passwordHash,
-        studentId: studentId || undefined,
+        studentId: resolvedStudentId,
         branch: normalizedBranch,
         section: normalizedSection,
         year: numericYear,
@@ -127,16 +149,17 @@ export async function registerStudent(req, res, next) {
 
 export async function login(req, res, next) {
   try {
-    const { email, password, role = "student" } = req.body;
-    if (!email || !password || !["student", "admin"].includes(role)) {
+    const { email, password, role = "student", accountType } = req.body;
+    const resolvedRole = role || accountType || "student";
+    if (!email || !password || !["student", "admin"].includes(resolvedRole)) {
       return res.status(400).json({ message: "Enter a valid email, password, and account type." });
     }
-    const Model = role === "admin" ? Admin : Student;
+    const Model = resolvedRole === "admin" ? Admin : Student;
     const user = await Model.findOne({ email: String(email).trim().toLowerCase() }).select("+password");
     if (!user?.password || !(await bcrypt.compare(password, user.password))) {
       return res.status(401).json({ message: "Email or password is incorrect." });
     }
-    return res.json({ token: createToken(user, role), user: publicUser(user, role) });
+    return res.json({ token: createToken(user, resolvedRole), user: publicUser(user, resolvedRole) });
   } catch (error) {
     return next(error);
   }

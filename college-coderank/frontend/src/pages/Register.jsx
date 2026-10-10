@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { ArrowLeft, ArrowRight, Eye, GraduationCap, LockKeyhole, Mail, Sparkles, UserRound, Video } from "lucide-react";
+import { ArrowLeft, ArrowRight, Code2, Eye, GraduationCap, LockKeyhole, Mail, Sparkles, UserRound, Video } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext.jsx";
 import BranchSectionFields from "../components/BranchSectionFields.jsx";
@@ -46,7 +46,19 @@ export default function Register() {
     setBusy(true);
     setError("");
     try {
-      await register({ ...form, year: Number(form.year) });
+      await register({
+        name: form.name.trim(),
+        email: form.email.trim(),
+        password: form.password,
+        studentId: form.studentId?.trim() || undefined,
+        branch: form.branch.trim(),
+        section: form.section.trim(),
+        year: Number(form.year),
+        githubUsername: form.githubUsername?.trim() || "",
+        leetcodeUsername: form.leetcodeUsername?.trim() || "",
+        hackerrankUsername: form.hackerrankUsername?.trim() || "",
+        codechefUsername: form.codechefUsername?.trim() || ""
+      });
       navigate("/profile", { replace: true });
     } catch (requestError) {
       setError(errorMessage(requestError));
