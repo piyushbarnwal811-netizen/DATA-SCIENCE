@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { API_BASE_URL } from "./api.js";
 
 let eventSource = null;
 let reconnectTimer = null;
@@ -13,7 +14,7 @@ function initEventSource() {
   }
 
   try {
-    eventSource = new EventSource("/api/realtime/events");
+    eventSource = new EventSource(`${API_BASE_URL}/realtime/events`);
 
     eventSource.onopen = () => {
       window.dispatchEvent(new CustomEvent("ccr:realtime-connected"));
