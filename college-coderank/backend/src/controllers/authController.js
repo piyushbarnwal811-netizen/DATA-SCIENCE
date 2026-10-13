@@ -7,6 +7,7 @@ import { cleanGitHubUsername } from "../services/githubService.js";
 import { cleanLeetCodeUsername } from "../services/leetcodeService.js";
 import { cleanHackerRankUsername } from "../services/hackerrankService.js";
 import { cleanCodeChefUsername } from "../services/codechefService.js";
+import { cleanGeeksforGeeksUsername } from "../services/geeksforgeeksService.js";
 import { syncStudentAllStats } from "../utils/studentSync.js";
 
 function createToken(user, role) {
@@ -28,7 +29,8 @@ function publicUser(user, role) {
           githubUsername: user.githubUsername,
           leetcodeUsername: user.leetcodeUsername,
           hackerrankUsername: user.hackerrankUsername,
-          codechefUsername: user.codechefUsername
+          codechefUsername: user.codechefUsername,
+          geeksforgeeksUsername: user.geeksforgeeksUsername
         }
       : {})
   };
@@ -59,7 +61,13 @@ export async function registerStudent(req, res, next) {
       hackerrankHandle,
       codechefUsername,
       codechef,
-      codechefHandle
+      codechefHandle,
+      geeksforgeeksUsername,
+      geeksforgeeks,
+      geeksforgeeksHandle,
+      gfg,
+      gfgUsername,
+      gfgHandle
     } = req.body;
 
     const resolvedName = String(name || fullName || "").trim();
@@ -74,6 +82,7 @@ export async function registerStudent(req, res, next) {
     const rawLc = leetcodeUsername || leetcode || leetcodeHandle;
     const rawHr = hackerrankUsername || hackerrank || hackerrankHandle;
     const rawCc = codechefUsername || codechef || codechefHandle;
+    const rawGfg = geeksforgeeksUsername || geeksforgeeks || geeksforgeeksHandle || gfg || gfgUsername || gfgHandle;
 
     if (!resolvedName || !normalizedEmail || !password || !normalizedBranch || !normalizedSection || !year) {
       return res.status(400).json({ message: "Complete all required fields to create an account." });
@@ -91,6 +100,7 @@ export async function registerStudent(req, res, next) {
     const cleanLc = cleanLeetCodeUsername(rawLc);
     const cleanHr = cleanHackerRankUsername(rawHr);
     const cleanCc = cleanCodeChefUsername(rawCc);
+    const cleanGfg = cleanGeeksforGeeksUsername(rawGfg);
 
     let student;
 
@@ -108,7 +118,8 @@ export async function registerStudent(req, res, next) {
         ...(cleanGh ? { githubUsername: cleanGh } : {}),
         ...(cleanLc ? { leetcodeUsername: cleanLc } : {}),
         ...(cleanHr ? { hackerrankUsername: cleanHr } : {}),
-        ...(cleanCc ? { codechefUsername: cleanCc } : {})
+        ...(cleanCc ? { codechefUsername: cleanCc } : {}),
+        ...(cleanGfg ? { geeksforgeeksUsername: cleanGfg } : {})
       });
       student = await existing.save();
     } else {
@@ -123,7 +134,8 @@ export async function registerStudent(req, res, next) {
         githubUsername: cleanGh,
         leetcodeUsername: cleanLc,
         hackerrankUsername: cleanHr,
-        codechefUsername: cleanCc
+        codechefUsername: cleanCc,
+        geeksforgeeksUsername: cleanGfg
       });
     }
     await Department.updateOne(
@@ -132,8 +144,8 @@ export async function registerStudent(req, res, next) {
       { upsert: true }
     );
 
-    // Auto-sync platform stats immediately in the background so repos appear right away
-    if (student.githubUsername || student.leetcodeUsername || student.hackerrankUsername || student.codechefUsername) {
+    // Auto-sync platform stats immediately in the background so stats appear right away
+    if (student.githubUsername || student.leetcodeUsername || student.hackerrankUsername || student.codechefUsername || student.geeksforgeeksUsername) {
       syncStudentAllStats(student._id, { source: "registration" }).catch((syncErr) => {
         console.warn(`[Registration] Immediate sync for ${student.email} failed:`, syncErr.message);
       });

@@ -65,7 +65,7 @@ export default function Home() {
             </div>
             <p>
               Welcome to the competitive coding and skills intelligence portal of Rungta International Skills University. 
-              Our campus connects students' real-time achievements across LeetCode, CodeChef, GitHub, and HackerRank to celebrate consistency and build technical leadership.
+              Our campus connects students' real-time achievements across LeetCode, CodeChef, GeeksforGeeks, GitHub, and HackerRank to celebrate consistency and build technical leadership.
             </p>
             <div className="campus-badges-grid">
               <div className="campus-badge-item">
@@ -79,7 +79,7 @@ export default function Home() {
                 <span className="campus-badge-item__icon"><Zap size={16} /></span>
                 <div>
                   <strong>Live Multi-Platform Sync</strong>
-                  <span>LeetCode · CodeChef · GitHub · HackerRank</span>
+                  <span>LeetCode · CodeChef · GFG · GitHub · HackerRank</span>
                 </div>
               </div>
               <div className="campus-badge-item">
@@ -99,7 +99,7 @@ export default function Home() {
       <div className="stats-grid">
         <StatCard icon={Users} label="Students on the board" value={formatNumber(data?.summary.totalStudents)} note="Across campus" />
         <StatCard icon={Zap} label="Points earned" value={formatNumber(data?.summary.totalPoints)} note="And counting" tone="orange" />
-        <StatCard icon={Flame} label="Problems solved" value={formatNumber(students.reduce((sum, student) => sum + (student.stats?.leetcode?.total ?? 0), 0))} note="LeetCode total" tone="peach" />
+        <StatCard icon={Flame} label="Problems solved" value={formatNumber(students.reduce((sum, student) => sum + (student.stats?.leetcode?.total ?? 0) + (student.stats?.codechef?.problemsSolved ?? 0) + (student.stats?.geeksforgeeks?.problemsSolved ?? 0), 0))} note="LC + CodeChef + GFG" tone="peach" />
       </div>
 
       <section className="section-card leaderboard-preview">

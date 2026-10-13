@@ -16,13 +16,18 @@ export function getScore(stats = {}) {
   const codechefRating = Number(stats?.codechef?.rating ?? 0);
   const codechefScore = codechefSolved * 2 + (codechefRating > 1000 ? Math.floor((codechefRating - 1000) / 50) : 0);
 
+  const gfgScore = Number(stats?.geeksforgeeks?.score ?? 0);
+  const gfgSolved = Number(stats?.geeksforgeeks?.problemsSolved ?? 0);
+  const geeksforgeeksScore = gfgScore > 0 ? (Math.floor(gfgScore / 2) + gfgSolved) : (gfgSolved * 2);
+
   return (
     (stats.leetcode?.easy ?? 0) +
     (stats.leetcode?.medium ?? 0) * 3 +
     (stats.leetcode?.hard ?? 0) * 5 +
     (stats.github?.publicRepos ?? 0) * 2 +
     Math.floor((stats.hackerrank?.points ?? 0) / 10) +
-    codechefScore
+    codechefScore +
+    geeksforgeeksScore
   );
 }
 

@@ -3,11 +3,12 @@ import { fetchGitHubStats } from "../services/githubService.js";
 import { fetchHackerRankStats } from "../services/hackerrankService.js";
 import { fetchLeetCodeProfile } from "../services/leetcodeService.js";
 import { fetchCodeChefStats } from "../services/codechefService.js";
+import { fetchGeeksforGeeksStats } from "../services/geeksforgeeksService.js";
 import { calculateScore } from "./scoreCalculator.js";
 import { broadcastStudentUpdate } from "./realtime.js";
 
 /**
- * Synchronize stats across LeetCode, HackerRank, GitHub, and CodeChef for a single student.
+ * Synchronize stats across LeetCode, HackerRank, GitHub, CodeChef, and GeeksforGeeks for a single student.
  * Recalculates their score, persists changes, and broadcasts real-time updates.
  */
 export async function syncStudentAllStats(studentOrId, options = {}) {
@@ -23,6 +24,8 @@ export async function syncStudentAllStats(studentOrId, options = {}) {
   const prevHkPoints = student.stats?.hackerrank?.points ?? 0;
   const prevCcSolved = student.stats?.codechef?.problemsSolved ?? 0;
   const prevCcRating = student.stats?.codechef?.rating ?? 0;
+  const prevGfgSolved = student.stats?.geeksforgeeks?.problemsSolved ?? 0;
+  const prevGfgScore = student.stats?.geeksforgeeks?.score ?? 0;
 
   const tasks = [];
   const taskKeys = [];
@@ -63,6 +66,15 @@ export async function syncStudentAllStats(studentOrId, options = {}) {
     taskKeys.push("codechef");
   }
 
+  // 4: GeeksforGeeks
+  if (student.geeksforgeeksUsername) {
+    tasks.push(fetchGeeksforGeeksStats(student.geeksforgeeksUsername));
+    taskKeys.push("geeksforgeeks");
+  } else {
+    tasks.push(Promise.resolve(null));
+    taskKeys.push("geeksforgeeks");
+  }
+
   const results = await Promise.allSettled(tasks);
   const errors = [];
 
@@ -98,6 +110,13 @@ export async function syncStudentAllStats(studentOrId, options = {}) {
     errors.push(`CodeChef: ${results[3].reason.message}`);
   }
 
+  // GeeksforGeeks
+  if (results[4].status === "fulfilled" && results[4].value) {
+    student.stats.geeksforgeeks = results[4].value;
+  } else if (results[4].status === "rejected") {
+    errors.push(`GeeksforGeeks: ${results[4].reason.message}`);
+  }
+
   student.stats.lastSyncedAt = new Date();
   student.score = calculateScore(student.stats);
   await student.save();
@@ -108,7 +127,9 @@ export async function syncStudentAllStats(studentOrId, options = {}) {
     (student.stats?.github?.publicRepos ?? 0) !== prevRepos ||
     (student.stats?.hackerrank?.points ?? 0) !== prevHkPoints ||
     (student.stats?.codechef?.problemsSolved ?? 0) !== prevCcSolved ||
-    (student.stats?.codechef?.rating ?? 0) !== prevCcRating;
+    (student.stats?.codechef?.rating ?? 0) !== prevCcRating ||
+    (student.stats?.geeksforgeeks?.problemsSolved ?? 0) !== prevGfgSolved ||
+    (student.stats?.geeksforgeeks?.score ?? 0) !== prevGfgScore;
 
   // Broadcast real-time update to Admin and Student dashboards
   broadcastStudentUpdate(student, { source: options.source || "manual" });

@@ -16,7 +16,8 @@ const initialForm = {
   githubUsername: "",
   leetcodeUsername: "",
   hackerrankUsername: "",
-  codechefUsername: ""
+  codechefUsername: "",
+  geeksforgeeksUsername: ""
 };
 
 export default function Register() {
@@ -57,7 +58,8 @@ export default function Register() {
         githubUsername: form.githubUsername?.trim() || "",
         leetcodeUsername: form.leetcodeUsername?.trim() || "",
         hackerrankUsername: form.hackerrankUsername?.trim() || "",
-        codechefUsername: form.codechefUsername?.trim() || ""
+        codechefUsername: form.codechefUsername?.trim() || "",
+        geeksforgeeksUsername: form.geeksforgeeksUsername?.trim() || ""
       });
       navigate("/profile", { replace: true });
     } catch (requestError) {
@@ -211,6 +213,16 @@ export default function Register() {
                       placeholder="CodeChef Username (e.g. your-codechef-handle)"
                       value={form.codechefUsername}
                       onChange={(e) => setForm({ ...form, codechefUsername: e.target.value })}
+                    />
+                  </span>
+                </label>
+                <label className="form-label form-label--light" style={{ margin: 0 }}>
+                  <span className="input-wrap input-wrap--glass">
+                    <img src="/gfg_logo.svg" alt="GeeksforGeeks" style={{ width: 16, height: 16, borderRadius: 4, objectFit: "contain" }} />
+                    <input
+                      placeholder="GeeksforGeeks Username (e.g. your-gfg-handle)"
+                      value={form.geeksforgeeksUsername}
+                      onChange={(e) => setForm({ ...form, geeksforgeeksUsername: e.target.value })}
                     />
                   </span>
                 </label>

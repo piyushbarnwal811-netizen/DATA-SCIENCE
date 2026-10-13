@@ -13,13 +13,15 @@ import {
 import Loader from "../components/Loader.jsx";
 import RecentSolvedProblems from "../components/RecentSolvedProblems.jsx";
 import StatCard from "../components/StatCard.jsx";
+import StudentPlatformStandings from "../components/StudentPlatformStandings.jsx";
 import api, { errorMessage } from "../services/api.js";
 import { useRealtimeSync } from "../services/realtime.js";
 import { formatNumber, getInitials } from "../utils/helpers.js";
 
 export default function Profile() {
   const [student, setStudent] = useState(null);
-  const [handles, setHandles] = useState({ leetcodeUsername: "", githubUsername: "", hackerrankUsername: "", codechefUsername: "" });
+  const [positions, setPositions] = useState(null);
+  const [handles, setHandles] = useState({ leetcodeUsername: "", githubUsername: "", hackerrankUsername: "", codechefUsername: "", geeksforgeeksUsername: "" });
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState("");
   const [exporting, setExporting] = useState(false);
@@ -29,12 +31,14 @@ export default function Profile() {
   const loadProfile = ({ updateHandles = true } = {}) =>
     api.get("/students/me").then(({ data }) => {
       setStudent(data.student);
+      if (data.positions) setPositions(data.positions);
       if (updateHandles) {
         setHandles({
           leetcodeUsername: data.student.leetcodeUsername ?? "",
           githubUsername: data.student.githubUsername ?? "",
           hackerrankUsername: data.student.hackerrankUsername ?? "",
-          codechefUsername: data.student.codechefUsername ?? ""
+          codechefUsername: data.student.codechefUsername ?? "",
+          geeksforgeeksUsername: data.student.geeksforgeeksUsername ?? ""
         });
       }
     });
@@ -143,7 +147,7 @@ export default function Profile() {
         <div className="page-intro__line">
           <div>
             <h1>My profile</h1>
-            <p>Your progress across LeetCode, CodeChef, GitHub, and HackerRank in real time.</p>
+            <p>Your progress across LeetCode, CodeChef, GeeksforGeeks, GitHub, and HackerRank in real time.</p>
           </div>
           <span className="page-intro__icon"><UserRound size={25} /></span>
         </div>
@@ -181,6 +185,9 @@ export default function Profile() {
       {error && <div className="inline-error" role="alert">{error}</div>}
       {notice && <div className="inline-success" role="status"><Check size={16} />{notice}</div>}
 
+      {/* Multi-Platform Campus Positions & Rankings */}
+      <StudentPlatformStandings student={student} positions={positions} />
+
       <div className="stats-grid stats-grid--four">
         <StatCard icon={Code2} label="Problems solved" value={formatNumber(stats.leetcode?.total)} note="LeetCode" />
         <StatCard icon={Code2} label="Easy solved" value={formatNumber(stats.leetcode?.easy)} note="Keep going" tone="orange" />
@@ -188,6 +195,8 @@ export default function Profile() {
         <StatCard icon={Code2} label="Hard solved" value={formatNumber(stats.leetcode?.hard)} note="LeetCode" tone="orange" />
         <StatCard icon={Code2} label="CodeChef Rating" value={stats.codechef?.rating ? formatNumber(stats.codechef.rating) : "—"} note={stats.codechef?.stars ? `${stats.codechef.stars} · ${stats.codechef.division || "Rated"}` : "Unrated"} tone="peach" />
         <StatCard icon={Code2} label="CodeChef Solved" value={formatNumber(stats.codechef?.problemsSolved)} note="Contest challenges" tone="orange" />
+        <StatCard icon={Code2} label="GFG Solved" value={formatNumber(stats.geeksforgeeks?.problemsSolved)} note={stats.geeksforgeeks?.instituteRank ? `Inst. Rank #${stats.geeksforgeeks.instituteRank}` : "GeeksforGeeks"} tone="peach" />
+        <StatCard icon={Code2} label="GFG Score" value={formatNumber(stats.geeksforgeeks?.score)} note="Coding score" tone="orange" />
         <StatCard icon={Github} label="Public repositories" value={formatNumber(stats.github?.publicRepos)} note={`${formatNumber(stats.github?.followers)} followers`} tone="purple" />
         <StatCard icon={Code2} label="HackerRank points" value={formatNumber(stats.hackerrank?.points)} note="Public score" tone="orange" />
       </div>
@@ -209,6 +218,7 @@ export default function Profile() {
           {[
             { name: "leetcodeUsername", label: "LeetCode username", logo: "/leetcode_logo.jpeg", placeholder: "e.g. codewizard", getUrl: (u) => `https://leetcode.com/${encodeURIComponent(u)}` },
             { name: "codechefUsername", label: "CodeChef username", logo: "/codechef_logo.svg", placeholder: "e.g. your_codechef", getUrl: (u) => `https://www.codechef.com/users/${encodeURIComponent(u)}` },
+            { name: "geeksforgeeksUsername", label: "GeeksforGeeks username", logo: "/gfg_logo.svg", placeholder: "e.g. your_gfg_handle", getUrl: (u) => `https://www.geeksforgeeks.org/user/${encodeURIComponent(u)}/` },
             { name: "githubUsername", label: "GitHub username", logo: "/github_logo.jpeg", placeholder: "e.g. your-github", getUrl: (u) => `https://github.com/${encodeURIComponent(u)}` },
             { name: "hackerrankUsername", label: "HackerRank username", logo: "/hackerrank_logo.jpeg", placeholder: "e.g. problem_solver", getUrl: (u) => `https://www.hackerrank.com/profile/${encodeURIComponent(u)}` }
           ].map(({ name, label, logo, placeholder, getUrl }) => (

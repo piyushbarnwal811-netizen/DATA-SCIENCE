@@ -175,7 +175,7 @@ export default function AdminDashboard() {
               className="button button--subtle"
               onClick={handleSyncAll}
               disabled={busy !== ""}
-              title="Sync LeetCode, GitHub and HackerRank for all students"
+              title="Sync LeetCode, CodeChef, GeeksforGeeks, GitHub and HackerRank for all students"
             >
               <RefreshCw size={15} className={busy === "sync-all" ? "spin" : ""} />
               <span>{busy === "sync-all" ? "Syncing roster..." : "Sync all students"}</span>
@@ -241,6 +241,13 @@ export default function AdminDashboard() {
             <span>2 pts / problem + Rating tier bonus</span>
           </div>
         </div>
+        <div className="admin-platform-chip admin-platform-chip--gfg">
+          <img src="/gfg_logo.svg" alt="GeeksforGeeks" className="admin-platform-logo" />
+          <div>
+            <strong>GeeksforGeeks Engine</strong>
+            <span>Coding Score (0.5x) + Solved (1x)</span>
+          </div>
+        </div>
         <div className="admin-platform-chip admin-platform-chip--hr">
           <img src="/hackerrank_logo.jpeg" alt="HackerRank" className="admin-platform-logo" />
           <div>
@@ -304,7 +311,7 @@ export default function AdminDashboard() {
             <span>!</span>
             <p>
               Required columns: <strong>name, email, branch, section, year</strong>. Optional: studentId,
-              leetcodeUsername, codechefUsername, githubUsername, hackerrankUsername.
+              leetcodeUsername, codechefUsername, geeksforgeeksUsername, githubUsername, hackerrankUsername.
             </p>
           </div>
         </section>

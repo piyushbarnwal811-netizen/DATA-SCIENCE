@@ -42,7 +42,17 @@ export default function StudentAnalyticsDashboard({
   connected = false,
   isAdmin = false
 }) {
-  const [activeTab, setActiveTab] = useState("overview"); // "overview" | "leetcode" | "hackerrank" | "github" | "branches"
+  const [activeTab, setActiveTab] = useState("overview"); // "overview" | "leetcode" | "codechef" | "geeksforgeeks" | "hackerrank" | "github" | "branches"
+  const [selectedPlatform, setSelectedPlatform] = useState("all");
+
+  const handleTabChange = (tab) => {
+    setActiveTab(tab);
+    if (["leetcode", "codechef", "geeksforgeeks", "hackerrank", "github"].includes(tab)) {
+      setSelectedPlatform(tab);
+    } else {
+      setSelectedPlatform("all");
+    }
+  };
 
   // Compute metrics from current filtered students
   const metrics = useMemo(() => computeDashboardMetrics(students), [students]);
@@ -84,6 +94,11 @@ export default function StudentAnalyticsDashboard({
               </span>
               <span className="perf-sep">|</span>
               <span className="perf-pill">
+                <img src="/gfg_logo.svg" alt="GeeksforGeeks" className="banner-badge-img" />
+                <span>GeeksforGeeks</span>
+              </span>
+              <span className="perf-sep">|</span>
+              <span className="perf-pill">
                 <img src="/github_logo.jpeg" alt="GitHub" className="banner-badge-img" />
                 <span>Git Hub</span>
               </span>
@@ -108,7 +123,7 @@ export default function StudentAnalyticsDashboard({
           <button
             type="button"
             className={`dashboard-nav-tab ${activeTab === "overview" ? "is-active" : ""}`}
-            onClick={() => setActiveTab("overview")}
+            onClick={() => handleTabChange("overview")}
           >
             <BarChart3 size={15} />
             <span>Executive Overview</span>
@@ -116,7 +131,7 @@ export default function StudentAnalyticsDashboard({
           <button
             type="button"
             className={`dashboard-nav-tab ${activeTab === "leetcode" ? "is-active" : ""}`}
-            onClick={() => setActiveTab("leetcode")}
+            onClick={() => handleTabChange("leetcode")}
           >
             <img src="/leetcode_logo.jpeg" alt="" className="nav-tab-logo" />
             <span>LeetCode Deep-Dive</span>
@@ -124,15 +139,23 @@ export default function StudentAnalyticsDashboard({
           <button
             type="button"
             className={`dashboard-nav-tab ${activeTab === "codechef" ? "is-active" : ""}`}
-            onClick={() => setActiveTab("codechef")}
+            onClick={() => handleTabChange("codechef")}
           >
             <img src="/codechef_logo.svg" alt="" className="nav-tab-logo" />
             <span>CodeChef Deep-Dive</span>
           </button>
           <button
             type="button"
+            className={`dashboard-nav-tab ${activeTab === "geeksforgeeks" ? "is-active" : ""}`}
+            onClick={() => handleTabChange("geeksforgeeks")}
+          >
+            <img src="/gfg_logo.svg" alt="" className="nav-tab-logo" />
+            <span>GeeksforGeeks Deep-Dive</span>
+          </button>
+          <button
+            type="button"
             className={`dashboard-nav-tab ${activeTab === "hackerrank" ? "is-active" : ""}`}
-            onClick={() => setActiveTab("hackerrank")}
+            onClick={() => handleTabChange("hackerrank")}
           >
             <img src="/hackerrank_logo.jpeg" alt="" className="nav-tab-logo" />
             <span>HackerRank Deep-Dive</span>
@@ -140,7 +163,7 @@ export default function StudentAnalyticsDashboard({
           <button
             type="button"
             className={`dashboard-nav-tab ${activeTab === "github" ? "is-active" : ""}`}
-            onClick={() => setActiveTab("github")}
+            onClick={() => handleTabChange("github")}
           >
             <img src="/github_logo.jpeg" alt="" className="nav-tab-logo" />
             <span>GitHub Repositories</span>
@@ -148,7 +171,7 @@ export default function StudentAnalyticsDashboard({
           <button
             type="button"
             className={`dashboard-nav-tab ${activeTab === "branches" ? "is-active" : ""}`}
-            onClick={() => setActiveTab("branches")}
+            onClick={() => handleTabChange("branches")}
           >
             <Layers size={15} />
             <span>Branch & Year Insights</span>
@@ -181,6 +204,11 @@ export default function StudentAnalyticsDashboard({
       {/* CodeChef Dedicated View */}
       {activeTab === "codechef" && (
         <PlatformDeepDive platform="codechef" students={students} />
+      )}
+
+      {/* GeeksforGeeks Dedicated View */}
+      {activeTab === "geeksforgeeks" && (
+        <PlatformDeepDive platform="geeksforgeeks" students={students} />
       )}
 
       {/* HackerRank Dedicated View */}
@@ -228,11 +256,20 @@ export default function StudentAnalyticsDashboard({
           exporting={exporting}
         />
 
-        {/* Sortable Table */}
+        {/* Sortable Platform-Specific Table */}
         <InteractiveRankingsTable
           students={students}
           isAdmin={isAdmin}
           emptyMessage="No students match the selected filter criteria."
+          selectedPlatform={selectedPlatform}
+          onSelectPlatform={(p) => {
+            setSelectedPlatform(p);
+            if (p === "all") {
+              setActiveTab("overview");
+            } else if (["leetcode", "codechef", "geeksforgeeks", "hackerrank", "github"].includes(p)) {
+              setActiveTab(p);
+            }
+          }}
         />
 
         <div className="table-footer">

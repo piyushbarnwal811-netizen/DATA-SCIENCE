@@ -394,10 +394,14 @@ export function computeDashboardMetrics(students = []) {
       avgGitHub: 0,
       avgCodeChefRating: 0,
       avgCodeChefSolved: 0,
+      avgGeeksforGeeksSolved: 0,
+      avgGeeksforGeeksScore: 0,
       avgScore: 0,
       totalSolvedLeetCode: 0,
       totalSolvedHackerRank: 0,
       totalSolvedCodeChef: 0,
+      totalSolvedGeeksforGeeks: 0,
+      totalScoreGeeksforGeeks: 0,
       totalGitHubRepos: 0
     };
   }
@@ -408,6 +412,8 @@ export function computeDashboardMetrics(students = []) {
   let totalCodeChefRating = 0;
   let totalCodeChefSolved = 0;
   let codeChefRatedCount = 0;
+  let totalGeeksforGeeksSolved = 0;
+  let totalGeeksforGeeksScore = 0;
   let totalScore = 0;
 
   for (const s of students) {
@@ -417,6 +423,8 @@ export function computeDashboardMetrics(students = []) {
     const gh = s.stats?.github?.publicRepos ?? 0;
     const ccSolved = s.stats?.codechef?.problemsSolved ?? 0;
     const ccRating = s.stats?.codechef?.rating ?? 0;
+    const gfgSolved = s.stats?.geeksforgeeks?.problemsSolved ?? 0;
+    const gfgScore = s.stats?.geeksforgeeks?.score ?? 0;
     const sc = Number(s.score) || 0;
 
     totalLeetCode += lc;
@@ -427,6 +435,8 @@ export function computeDashboardMetrics(students = []) {
       totalCodeChefRating += ccRating;
       codeChefRatedCount += 1;
     }
+    totalGeeksforGeeksSolved += gfgSolved;
+    totalGeeksforGeeksScore += gfgScore;
     totalScore += sc;
   }
 
@@ -437,10 +447,14 @@ export function computeDashboardMetrics(students = []) {
     avgGitHub: Number((totalGitHub / count).toFixed(2)),
     avgCodeChefRating: codeChefRatedCount ? Math.round(totalCodeChefRating / codeChefRatedCount) : 0,
     avgCodeChefSolved: Number((totalCodeChefSolved / count).toFixed(1)),
+    avgGeeksforGeeksSolved: Number((totalGeeksforGeeksSolved / count).toFixed(1)),
+    avgGeeksforGeeksScore: Number((totalGeeksforGeeksScore / count).toFixed(1)),
     avgScore: Number((totalScore / count).toFixed(1)),
     totalSolvedLeetCode: totalLeetCode,
     totalSolvedHackerRank: totalHackerRank,
     totalSolvedCodeChef: totalCodeChefSolved,
+    totalSolvedGeeksforGeeks: totalGeeksforGeeksSolved,
+    totalScoreGeeksforGeeks: totalGeeksforGeeksScore,
     totalGitHubRepos: totalGitHub
   };
 }
@@ -519,6 +533,26 @@ export function getTopGitHubBuilders(students = [], limit = 5) {
     .slice(0, limit);
 }
 
+// Get top N students for GeeksforGeeks
+export function getTopGeeksforGeeksSolvers(students = [], limit = 5) {
+  return [...students]
+    .map((s) => ({
+      id: s.studentId || s.name,
+      studentId: s.studentId || "—",
+      name: s.name,
+      branch: s.branch,
+      section: s.section,
+      username: s.geeksforgeeksUsername || "",
+      score: s.stats?.geeksforgeeks?.score ?? 0,
+      problemsSolved: s.stats?.geeksforgeeks?.problemsSolved ?? 0,
+      monthlyScore: s.stats?.geeksforgeeks?.monthlyScore ?? 0,
+      instituteRank: s.stats?.geeksforgeeks?.instituteRank || "",
+      value: s.stats?.geeksforgeeks?.problemsSolved ?? (s.stats?.geeksforgeeks?.score ? Math.round(s.stats.geeksforgeeks.score / 3) : 0)
+    }))
+    .sort((a, b) => (b.problemsSolved || 0) - (a.problemsSolved || 0) || (b.score || 0) - (a.score || 0))
+    .slice(0, limit);
+}
+
 // Get overall performance distribution (100% stacked) for top students
 export function getOverallDistribution(students = [], limit = 5) {
   return [...students]
@@ -530,12 +564,14 @@ export function getOverallDistribution(students = [], limit = 5) {
         ((s.stats?.leetcode?.easy || 0) + (s.stats?.leetcode?.medium || 0) + (s.stats?.leetcode?.hard || 0));
       const gh = (s.stats?.github?.publicRepos ?? 0) * 2; // scaled for visibility
       const cc = s.stats?.codechef?.problemsSolved ?? 0;
+      const gfg = s.stats?.geeksforgeeks?.problemsSolved ?? (s.stats?.geeksforgeeks?.score ? Math.round(s.stats.geeksforgeeks.score / 3) : 0);
 
-      const sum = (hr + lc + gh + cc) || 1;
+      const sum = (hr + lc + gh + cc + gfg) || 1;
       const hrPct = Math.round((hr / sum) * 100);
       const lcPct = Math.round((lc / sum) * 100);
       const ccPct = Math.round((cc / sum) * 100);
-      const ghPct = Math.max(0, 100 - hrPct - lcPct - ccPct);
+      const gfgPct = Math.round((gfg / sum) * 100);
+      const ghPct = Math.max(0, 100 - hrPct - lcPct - ccPct - gfgPct);
 
       return {
         id: s.studentId || s.name,
@@ -547,10 +583,12 @@ export function getOverallDistribution(students = [], limit = 5) {
         lcRaw: lc,
         ghRaw: s.stats?.github?.publicRepos ?? 0,
         ccRaw: cc,
+        gfgRaw: gfg,
         hrPct,
         lcPct,
         ghPct,
-        ccPct
+        ccPct,
+        gfgPct
       };
     });
 }
@@ -627,4 +665,88 @@ export function getSectionBreakdown(students = []) {
     ...sec,
     avgScore: Number((sec.totalScore / sec.count).toFixed(1))
   })).sort((a, b) => a.name.localeCompare(b.name));
+}
+
+// Compute student's rank/position across every individual platform (LeetCode, CodeChef, HackerRank, GFG, GitHub, and Overall)
+export function computeStudentPlatformPositions(student, allStudents = []) {
+  if (!student) return null;
+  const pool = allStudents && allStudents.length > 0 ? allStudents : SAMPLE_STUDENTS;
+  const targetId = student._id || student.studentId || student.email || student.name;
+  const isTarget = (s) =>
+    (s._id && s._id === targetId) ||
+    (s.studentId && s.studentId === student.studentId) ||
+    (s.email && s.email === student.email) ||
+    s.name === student.name;
+
+  let list = [...pool];
+  if (!list.some(isTarget)) {
+    list.push(student);
+  }
+
+  const total = list.length;
+  const branchPool = list.filter((s) => s.branch === student.branch);
+  const branchTotal = branchPool.length || 1;
+
+  // 1. Overall campus score rank
+  const overallSorted = [...list].sort((a, b) => (Number(b.score) || 0) - (Number(a.score) || 0));
+  const overallRank = Math.max(1, overallSorted.findIndex(isTarget) + 1);
+
+  // 2. Branch rank
+  const branchSorted = [...branchPool].sort((a, b) => (Number(b.score) || 0) - (Number(a.score) || 0));
+  const branchRank = Math.max(1, branchSorted.findIndex(isTarget) + 1);
+
+  // 3. LeetCode rank
+  const getLc = (s) =>
+    s.stats?.leetcode?.total ??
+    ((s.stats?.leetcode?.easy || 0) + (s.stats?.leetcode?.medium || 0) + (s.stats?.leetcode?.hard || 0));
+  const lcSorted = [...list].sort((a, b) => {
+    const diff = getLc(b) - getLc(a);
+    if (diff !== 0) return diff;
+    return (b.stats?.leetcode?.hard || 0) - (a.stats?.leetcode?.hard || 0);
+  });
+  const leetcodeRank = Math.max(1, lcSorted.findIndex(isTarget) + 1);
+
+  // 4. CodeChef rank
+  const ccSorted = [...list].sort((a, b) => {
+    const rDiff = (b.stats?.codechef?.rating || 0) - (a.stats?.codechef?.rating || 0);
+    if (rDiff !== 0) return rDiff;
+    return (b.stats?.codechef?.problemsSolved || 0) - (a.stats?.codechef?.problemsSolved || 0);
+  });
+  const codechefRank = Math.max(1, ccSorted.findIndex(isTarget) + 1);
+
+  // 5. HackerRank rank
+  const hrSorted = [...list].sort((a, b) => {
+    const sDiff = (b.stats?.hackerrank?.solved || 0) - (a.stats?.hackerrank?.solved || 0);
+    if (sDiff !== 0) return sDiff;
+    return (b.stats?.hackerrank?.points || 0) - (a.stats?.hackerrank?.points || 0);
+  });
+  const hackerrankRank = Math.max(1, hrSorted.findIndex(isTarget) + 1);
+
+  // 6. GeeksforGeeks rank
+  const gfgSorted = [...list].sort((a, b) => {
+    const sDiff = (b.stats?.geeksforgeeks?.problemsSolved || 0) - (a.stats?.geeksforgeeks?.problemsSolved || 0);
+    if (sDiff !== 0) return sDiff;
+    return (b.stats?.geeksforgeeks?.score || 0) - (a.stats?.geeksforgeeks?.score || 0);
+  });
+  const geeksforgeeksRank = Math.max(1, gfgSorted.findIndex(isTarget) + 1);
+
+  // 7. GitHub rank
+  const ghSorted = [...list].sort((a, b) => {
+    const rDiff = (b.stats?.github?.publicRepos || 0) - (a.stats?.github?.publicRepos || 0);
+    if (rDiff !== 0) return rDiff;
+    return (b.stats?.github?.followers || 0) - (a.stats?.github?.followers || 0);
+  });
+  const githubRank = Math.max(1, ghSorted.findIndex(isTarget) + 1);
+
+  return {
+    totalStudents: total,
+    branchTotal,
+    overall: overallRank,
+    branch: branchRank,
+    leetcode: leetcodeRank,
+    codechef: codechefRank,
+    hackerrank: hackerrankRank,
+    geeksforgeeks: geeksforgeeksRank,
+    github: githubRank
+  };
 }

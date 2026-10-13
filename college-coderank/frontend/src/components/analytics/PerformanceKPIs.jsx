@@ -57,6 +57,24 @@ export default function PerformanceKPIs({ metrics }) {
         </div>
       </div>
 
+      {/* 4. AVG GeeksforGeeks Solved & Score */}
+      <div className="kpi-card kpi-card--geeksforgeeks">
+        <div className="kpi-card__top">
+          <span className="kpi-card__icon kpi-card__icon--img">
+            <img src="/gfg_logo.svg" alt="GeeksforGeeks" className="kpi-logo-img" />
+          </span>
+          <span className="kpi-card__sublabel">{metrics.avgGeeksforGeeksScore ? `${metrics.avgGeeksforGeeksScore} Score` : "Practice"}</span>
+        </div>
+        <div className="kpi-card__content">
+          <div className="kpi-card__value">
+            {(metrics.avgGeeksforGeeksSolved || 0).toFixed(1)}
+          </div>
+          <div className="kpi-card__label kpi-card__label--gfg">
+            AVG GeeksforGeeks Solved
+          </div>
+        </div>
+      </div>
+
       {/* 4. AVG HackerRank Solved */}
       <div className="kpi-card kpi-card--hackerrank">
         <div className="kpi-card__top">

@@ -10,12 +10,18 @@ export function calculateScore(stats) {
   // CodeChef contribution: 2 pts per problem solved + rating tier bonus
   const codechefScore = codechefSolved * 2 + (codechefRating > 1000 ? Math.floor((codechefRating - 1000) / 50) : 0);
 
+  // GeeksforGeeks contribution: 1 pt per 2 coding score points + 1 pt per solved problem (or 2 pts per solved problem)
+  const gfgScore = Number(stats?.geeksforgeeks?.score ?? 0);
+  const gfgSolved = Number(stats?.geeksforgeeks?.problemsSolved ?? 0);
+  const geeksforgeeksScore = gfgScore > 0 ? (Math.floor(gfgScore / 2) + gfgSolved) : (gfgSolved * 2);
+
   return (
     easy +
     medium * 3 +
     hard * 5 +
     repositories * 2 +
     Math.floor(hackerrankPoints / 10) +
-    codechefScore
+    codechefScore +
+    geeksforgeeksScore
   );
 }

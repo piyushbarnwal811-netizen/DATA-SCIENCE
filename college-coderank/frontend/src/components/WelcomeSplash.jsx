@@ -67,7 +67,7 @@ export default function WelcomeSplash() {
             Rungta International Skills University · Department of Computer Science & Engineering
           </p>
           <p className={`welcome-splash__motto ${isTypingComplete ? "is-visible" : ""}`}>
-            Live algorithmic intelligence tracking across LeetCode, CodeChef, GitHub & HackerRank
+            Live algorithmic intelligence tracking across LeetCode, CodeChef, GeeksforGeeks, GitHub &amp; HackerRank
           </p>
         </div>
 

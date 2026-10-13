@@ -16,8 +16,9 @@ test("score calculation applies the documented platform weights", () => {
   assert.equal(calculateScore({
     leetcode: { easy: 2, medium: 3, hard: 1 },
     github: { publicRepos: 4 },
-    hackerrank: { points: 59 }
-  }), 29);
+    hackerrank: { points: 59 },
+    geeksforgeeks: { score: 100, problemsSolved: 20 }
+  }), 99);
 });
 
 test("score calculation handles missing platform stats", () => {
@@ -41,7 +42,8 @@ test("Excel roster import normalizes headers and emails", async () => {
     leetcodeUsername: "",
     githubUsername: "",
     hackerrankUsername: "",
-    codechefUsername: ""
+    codechefUsername: "",
+    geeksforgeeksUsername: ""
   }]);
 });
 

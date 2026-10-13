@@ -16,8 +16,8 @@ export async function generateLeaderboardWorkbook(students = [], { title = "Coll
     properties: { tabColor: { argb: "FF4F46E5" } }
   });
 
-  // Title Banner Row
-  sheet.mergeCells("A1:W1");
+  // Title Banner Row (Columns A to Z)
+  sheet.mergeCells("A1:Z1");
   const titleCell = sheet.getCell("A1");
   titleCell.value = `${title} — Generated on ${new Date().toLocaleDateString("en-IN", {
     day: "numeric",
@@ -59,6 +59,9 @@ export async function generateLeaderboardWorkbook(students = [], { title = "Coll
     { header: "CodeChef Stars", key: "codechefStars", width: 15 },
     { header: "CodeChef Solved", key: "codechefSolved", width: 16 },
     { header: "CodeChef Handle", key: "codechefUsername", width: 20 },
+    { header: "GeeksforGeeks Score", key: "geeksforgeeksScore", width: 18 },
+    { header: "GeeksforGeeks Solved", key: "geeksforgeeksSolved", width: 18 },
+    { header: "GeeksforGeeks Handle", key: "geeksforgeeksUsername", width: 22 },
     { header: "Last Synced At", key: "lastSyncedAt", width: 22 }
   ];
 
@@ -109,6 +112,9 @@ export async function generateLeaderboardWorkbook(students = [], { title = "Coll
       codechefStars: student.stats?.codechef?.stars || "1★",
       codechefSolved: student.stats?.codechef?.problemsSolved ?? 0,
       codechefUsername: student.codechefUsername || "—",
+      geeksforgeeksScore: student.stats?.geeksforgeeks?.score ?? 0,
+      geeksforgeeksSolved: student.stats?.geeksforgeeks?.problemsSolved ?? 0,
+      geeksforgeeksUsername: student.geeksforgeeksUsername || "—",
       lastSyncedAt: student.stats?.lastSyncedAt
         ? new Date(student.stats.lastSyncedAt).toLocaleString("en-IN")
         : "Not synced"
@@ -258,7 +264,8 @@ export async function generateStudentWorkbook(student) {
     ["HackerRank Username", student.hackerrankUsername || "—", "GitHub Followers", student.stats?.github?.followers ?? 0],
     ["CodeChef Username", student.codechefUsername || "—", "HackerRank Points", student.stats?.hackerrank?.points ?? 0],
     ["CodeChef Rating", student.stats?.codechef?.rating ? `${student.stats.codechef.rating} (${student.stats.codechef.stars || "1★"})` : "Unrated", "CodeChef Solved", student.stats?.codechef?.problemsSolved ?? 0],
-    ["Account Status", student.isActive ? "Active" : "Inactive", "Profile Generated", new Date().toLocaleString("en-IN")],
+    ["GeeksforGeeks Username", student.geeksforgeeksUsername || "—", "GeeksforGeeks Score", student.stats?.geeksforgeeks?.score ?? 0],
+    ["Account Status", student.isActive ? "Active" : "Inactive", "GeeksforGeeks Solved", student.stats?.geeksforgeeks?.problemsSolved ?? 0],
     ["Last Synced At", student.stats?.lastSyncedAt ? new Date(student.stats.lastSyncedAt).toLocaleString("en-IN") : "Never", "CodeChef Division", student.stats?.codechef?.division || "—"]
   ];
 

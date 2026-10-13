@@ -14,7 +14,8 @@ const aliases = {
   leetcodeUsername: ["leetcodeusername", "leetcode"],
   githubUsername: ["githubusername", "github"],
   hackerrankUsername: ["hackerrankusername", "hackerrank"],
-  codechefUsername: ["codechefusername", "codechef"]
+  codechefUsername: ["codechefusername", "codechef"],
+  geeksforgeeksUsername: ["geeksforgeeksusername", "geeksforgeeks", "gfgusername", "gfg", "geeksforgeeksid", "gfgid"]
 };
 
 function readCell(row, keys) {
@@ -59,7 +60,7 @@ export async function parseStudentWorkbook(buffer, fileName = "") {
     student.branch = String(student.branch).trim();
     student.section = String(student.section).trim();
     student.year = Number(student.year);
-    for (const field of ["leetcodeUsername", "githubUsername", "hackerrankUsername", "codechefUsername"]) {
+    for (const field of ["leetcodeUsername", "githubUsername", "hackerrankUsername", "codechefUsername", "geeksforgeeksUsername"]) {
       student[field] = String(student[field] ?? "").trim();
     }
 

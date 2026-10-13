@@ -248,29 +248,29 @@ export default function PlatformDeepDive({ platform = "leetcode", students = [] 
             </span>
 
             <div className="difficulty-pills-row">
-              <div className="diff-pill diff-pill--hard" style={{ borderColor: "#a855f7" }}>
-                <span className="diff-dot" style={{ background: "#a855f7" }} />
+              <div className="diff-pill diff-pill--hard" style={{ borderColor: "#7f1d1d" }}>
+                <span className="diff-dot" style={{ background: "#7f1d1d" }} />
                 <div>
                   <strong>{star4Plus}</strong>
                   <small>4★+ Expert ({s4Pct}%)</small>
                 </div>
               </div>
-              <div className="diff-pill diff-pill--easy" style={{ borderColor: "#3b82f6" }}>
-                <span className="diff-dot" style={{ background: "#3b82f6" }} />
+              <div className="diff-pill diff-pill--easy" style={{ borderColor: "#b91c1c" }}>
+                <span className="diff-dot" style={{ background: "#b91c1c" }} />
                 <div>
                   <strong>{star3}</strong>
                   <small>3★ Lead ({s3Pct}%)</small>
                 </div>
               </div>
-              <div className="diff-pill diff-pill--medium" style={{ borderColor: "#10b981" }}>
-                <span className="diff-dot" style={{ background: "#10b981" }} />
+              <div className="diff-pill diff-pill--medium" style={{ borderColor: "#dc2626" }}>
+                <span className="diff-dot" style={{ background: "#dc2626" }} />
                 <div>
                   <strong>{star2}</strong>
                   <small>2★ Achiever ({s2Pct}%)</small>
                 </div>
               </div>
-              <div className="diff-pill" style={{ borderColor: "#94a3b8" }}>
-                <span className="diff-dot" style={{ background: "#94a3b8" }} />
+              <div className="diff-pill" style={{ borderColor: "#f87171" }}>
+                <span className="diff-dot" style={{ background: "#f87171" }} />
                 <div>
                   <strong>{star1}</strong>
                   <small>1★ Active ({s1Pct}%)</small>
@@ -280,10 +280,10 @@ export default function PlatformDeepDive({ platform = "leetcode", students = [] 
 
             {/* Visual ratio bar */}
             <div className="ratio-bar">
-              <div className="ratio-slice" style={{ width: `${s4Pct}%`, background: "#a855f7" }} title={`4★+: ${s4Pct}%`} />
-              <div className="ratio-slice" style={{ width: `${s3Pct}%`, background: "#3b82f6" }} title={`3★: ${s3Pct}%`} />
-              <div className="ratio-slice" style={{ width: `${s2Pct}%`, background: "#10b981" }} title={`2★: ${s2Pct}%`} />
-              <div className="ratio-slice" style={{ width: `${s1Pct}%`, background: "#94a3b8" }} title={`1★: ${s1Pct}%`} />
+              <div className="ratio-slice" style={{ width: `${s4Pct}%`, background: "#7f1d1d" }} title={`4★+: ${s4Pct}%`} />
+              <div className="ratio-slice" style={{ width: `${s3Pct}%`, background: "#b91c1c" }} title={`3★: ${s3Pct}%`} />
+              <div className="ratio-slice" style={{ width: `${s2Pct}%`, background: "#dc2626" }} title={`2★: ${s2Pct}%`} />
+              <div className="ratio-slice" style={{ width: `${s1Pct}%`, background: "#f87171" }} title={`1★: ${s1Pct}%`} />
             </div>
 
             <div className="hr-stats-banner" style={{ marginTop: 14 }}>
@@ -334,6 +334,116 @@ export default function PlatformDeepDive({ platform = "leetcode", students = [] 
                     rel="noreferrer"
                   >
                     <img src="/codechef_logo.svg" alt="" className="cell-mini-logo" /> @{s.codechefUsername} <ArrowUpRight size={10} />
+                  </a>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (platform === "geeksforgeeks") {
+    const totalSolved = students.reduce((sum, s) => sum + (s.stats?.geeksforgeeks?.problemsSolved || 0), 0);
+    const totalScore = students.reduce((sum, s) => sum + (s.stats?.geeksforgeeks?.score || 0), 0);
+    const activeCoders = students.filter((s) => (s.stats?.geeksforgeeks?.problemsSolved || 0) > 0 || (s.stats?.geeksforgeeks?.score || 0) > 0);
+    const avgScore = activeCoders.length
+      ? Math.round(totalScore / activeCoders.length)
+      : 0;
+
+    const topGFG = [...students]
+      .filter((s) => s.geeksforgeeksUsername || (s.stats?.geeksforgeeks?.problemsSolved || 0) > 0 || (s.stats?.geeksforgeeks?.score || 0) > 0)
+      .sort((a, b) => (b.stats?.geeksforgeeks?.problemsSolved || 0) - (a.stats?.geeksforgeeks?.problemsSolved || 0) || (b.stats?.geeksforgeeks?.score || 0) - (a.stats?.geeksforgeeks?.score || 0))
+      .slice(0, 8);
+
+    return (
+      <div className="deepdive-wrap">
+        {/* Summary Card */}
+        <div className="deepdive-summary">
+          <div className="deepdive-kpi-card deepdive-kpi-card--gfg">
+            <span className="eyebrow eyebrow--gfg">
+              <img src="/gfg_logo.svg" alt="" className="deepdive-banner-logo" />
+              <span>GEEKSFORGEEKS PRACTICE &amp; CODING SCORE METRICS</span>
+            </span>
+
+            <div className="difficulty-pills-row">
+              <div className="diff-pill diff-pill--easy" style={{ borderColor: "#2f8d46" }}>
+                <span className="diff-dot" style={{ background: "#2f8d46" }} />
+                <div>
+                  <strong>{formatNumber(totalSolved)}</strong>
+                  <small>Total Problems Solved</small>
+                </div>
+              </div>
+              <div className="diff-pill diff-pill--medium" style={{ borderColor: "#15803d" }}>
+                <span className="diff-dot" style={{ background: "#15803d" }} />
+                <div>
+                  <strong>{formatNumber(totalScore)}</strong>
+                  <small>Accumulated Coding Score</small>
+                </div>
+              </div>
+              <div className="diff-pill" style={{ borderColor: "#4ade80" }}>
+                <span className="diff-dot" style={{ background: "#4ade80" }} />
+                <div>
+                  <strong>{activeCoders.length}</strong>
+                  <small>Active GFG Coders</small>
+                </div>
+              </div>
+              <div className="diff-pill" style={{ borderColor: "#166534" }}>
+                <span className="diff-dot" style={{ background: "#166534" }} />
+                <div>
+                  <strong>{avgScore}</strong>
+                  <small>Avg Score / Active Student</small>
+                </div>
+              </div>
+            </div>
+
+            <div className="hr-stats-banner" style={{ marginTop: 14 }}>
+              <div>
+                <h3>{formatNumber(totalSolved)}</h3>
+                <small>Campus Total Practice Questions Cleared</small>
+              </div>
+              <div className="hr-stat-pill">
+                <span>Avg Coding Score: <b>{avgScore} pts</b></span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Top Solvers Grid */}
+        <div className="top-solvers-section">
+          <h4>
+            <img src="/gfg_logo.svg" alt="" className="deepdive-section-logo" />
+            <span>Top GeeksforGeeks Problem Solvers</span>
+          </h4>
+          <div className="top-solvers-grid">
+            {topGFG.map((s, index) => (
+              <div key={s._id || s.studentId || index} className="solver-card">
+                <span className="solver-rank">#{index + 1}</span>
+                <span className="avatar avatar--soft">{getInitials(s.name)}</span>
+                <div className="solver-info">
+                  <strong>{s.name}</strong>
+                  <span>{s.branch} · {s.studentId}</span>
+                </div>
+                <div className="solver-metric solver-metric--gfg">
+                  <strong>{s.stats?.geeksforgeeks?.problemsSolved || s.stats?.geeksforgeeks?.score || 0}</strong>
+                  <small>{s.stats?.geeksforgeeks?.problemsSolved ? "solved" : "score"}</small>
+                </div>
+                <div className="solver-breakdown">
+                  <span className="pill-e">{s.stats?.geeksforgeeks?.problemsSolved || 0} Solved</span>
+                  <span className="pill-m">{s.stats?.geeksforgeeks?.score || 0} Score</span>
+                  {s.stats?.geeksforgeeks?.monthlyScore > 0 && (
+                    <span className="sec-tag">{s.stats.geeksforgeeks.monthlyScore} Monthly</span>
+                  )}
+                </div>
+                {s.geeksforgeeksUsername && (
+                  <a
+                    className="solver-link"
+                    href={`https://www.geeksforgeeks.org/user/${encodeURIComponent(s.geeksforgeeksUsername)}/`}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    <img src="/gfg_logo.svg" alt="" className="cell-mini-logo" /> @{s.geeksforgeeksUsername} <ArrowUpRight size={10} />
                   </a>
                 )}
               </div>

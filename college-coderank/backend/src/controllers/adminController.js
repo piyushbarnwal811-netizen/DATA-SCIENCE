@@ -44,7 +44,7 @@ export async function importStudents(req, res, next) {
     const operations = students.map((student) => {
       const { email, ...profile } = student;
       if (!profile.studentId) delete profile.studentId;
-      for (const field of ["leetcodeUsername", "githubUsername", "hackerrankUsername", "codechefUsername"]) {
+      for (const field of ["leetcodeUsername", "githubUsername", "hackerrankUsername", "codechefUsername", "geeksforgeeksUsername"]) {
         if (!profile[field]) delete profile[field];
       }
       return {
@@ -137,7 +137,7 @@ export async function removeDepartmentSection(req, res, next) {
 export async function exportAllStudents(req, res, next) {
   try {
     const students = await Student.find({ isActive: true })
-      .select("name email studentId branch section year stats score githubUsername leetcodeUsername hackerrankUsername")
+      .select("name email studentId branch section year stats score githubUsername leetcodeUsername hackerrankUsername codechefUsername geeksforgeeksUsername")
       .sort({ score: -1, name: 1 })
       .lean();
 
@@ -167,7 +167,9 @@ export async function syncAllStudents(req, res, next) {
       $or: [
         { leetcodeUsername: { $nin: ["", null] } },
         { githubUsername: { $nin: ["", null] } },
-        { hackerrankUsername: { $nin: ["", null] } }
+        { hackerrankUsername: { $nin: ["", null] } },
+        { codechefUsername: { $nin: ["", null] } },
+        { geeksforgeeksUsername: { $nin: ["", null] } }
       ]
     });
 

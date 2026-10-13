@@ -13,6 +13,7 @@ import { Link, useParams } from "react-router-dom";
 import Loader from "../components/Loader.jsx";
 import RecentSolvedProblems from "../components/RecentSolvedProblems.jsx";
 import StatCard from "../components/StatCard.jsx";
+import StudentPlatformStandings from "../components/StudentPlatformStandings.jsx";
 import api, { errorMessage } from "../services/api.js";
 import { useRealtimeSync } from "../services/realtime.js";
 import { formatNumber, getInitials } from "../utils/helpers.js";
@@ -20,6 +21,7 @@ import { formatNumber, getInitials } from "../utils/helpers.js";
 export default function AdminStudentProfile() {
   const { id } = useParams();
   const [student, setStudent] = useState(null);
+  const [positions, setPositions] = useState(null);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [exporting, setExporting] = useState(false);
@@ -29,13 +31,17 @@ export default function AdminStudentProfile() {
   const loadProfile = useCallback(async () => {
     const { data } = await api.get(`/students/${encodeURIComponent(id)}`);
     setStudent(data.student);
+    if (data.positions) setPositions(data.positions);
   }, [id]);
 
   useEffect(() => {
     let active = true;
     api.get(`/students/${encodeURIComponent(id)}`)
       .then(({ data }) => {
-        if (active) setStudent(data.student);
+        if (active) {
+          setStudent(data.student);
+          if (data.positions) setPositions(data.positions);
+        }
       })
       .catch((requestError) => {
         if (active) setError(errorMessage(requestError));
@@ -174,6 +180,9 @@ export default function AdminStudentProfile() {
       {error && <div className="inline-error" role="alert">{error}</div>}
       {notice && <div className="inline-success" role="status">{notice}</div>}
 
+      {/* Multi-Platform Campus Positions & Rankings */}
+      <StudentPlatformStandings student={student} positions={positions} />
+
       <div className="stats-grid stats-grid--four">
         <StatCard icon={Code2} label="Problems solved" value={formatNumber(stats.leetcode?.total)} note="Accepted problems" />
         <StatCard icon={Code2} label="Easy solved" value={formatNumber(stats.leetcode?.easy)} note="LeetCode" />
@@ -181,6 +190,8 @@ export default function AdminStudentProfile() {
         <StatCard icon={Code2} label="Hard solved" value={formatNumber(stats.leetcode?.hard)} note="LeetCode" tone="peach" />
         <StatCard icon={Code2} label="CodeChef Rating" value={stats.codechef?.rating ? formatNumber(stats.codechef.rating) : "—"} note={stats.codechef?.stars ? `${stats.codechef.stars} · ${stats.codechef.division || "Rated"}` : "Unrated"} tone="peach" />
         <StatCard icon={Code2} label="CodeChef Solved" value={formatNumber(stats.codechef?.problemsSolved)} note="Contest problems" tone="orange" />
+        <StatCard icon={Code2} label="GFG Solved" value={formatNumber(stats.geeksforgeeks?.problemsSolved)} note={stats.geeksforgeeks?.instituteRank ? `Inst. Rank #${stats.geeksforgeeks.instituteRank}` : "GeeksforGeeks"} tone="peach" />
+        <StatCard icon={Code2} label="GFG Score" value={formatNumber(stats.geeksforgeeks?.score)} note="Coding score" tone="orange" />
         <StatCard icon={Github} label="Public repositories" value={formatNumber(stats.github?.publicRepos)} note={`${formatNumber(stats.github?.followers)} followers`} tone="purple" />
         <StatCard icon={Code2} label="HackerRank points" value={formatNumber(stats.hackerrank?.points)} note="Public score" tone="orange" />
       </div>
@@ -194,7 +205,7 @@ export default function AdminStudentProfile() {
           <button
             className="button button--subtle"
             onClick={syncStudent}
-            disabled={busy || (!student.leetcodeUsername && !student.githubUsername && !student.hackerrankUsername && !student.codechefUsername)}
+            disabled={busy || (!student.leetcodeUsername && !student.githubUsername && !student.hackerrankUsername && !student.codechefUsername && !student.geeksforgeeksUsername)}
           >
             <RefreshCw size={15} className={busy ? "spin" : ""} />
             {busy ? "Updating all..." : "Refresh all stats"}
@@ -226,6 +237,21 @@ export default function AdminStudentProfile() {
                 target="_blank"
                 rel="noreferrer"
                 aria-label="Open CodeChef profile"
+              >
+                <ArrowUpRight size={14} />
+              </a>
+            )}
+          </span>
+          <span>
+            <img src="/gfg_logo.svg" alt="GeeksforGeeks" className="admin-handle-logo" />
+            <span>GeeksforGeeks</span>
+            <strong>{student.geeksforgeeksUsername || "Not connected"}</strong>
+            {student.geeksforgeeksUsername && (
+              <a
+                href={`https://www.geeksforgeeks.org/user/${encodeURIComponent(student.geeksforgeeksUsername)}/`}
+                target="_blank"
+                rel="noreferrer"
+                aria-label="Open GeeksforGeeks profile"
               >
                 <ArrowUpRight size={14} />
               </a>

@@ -32,6 +32,12 @@ const platformStatsSchema = new mongoose.Schema(
       globalRank: { type: Number, default: 0 },
       countryRank: { type: Number, default: 0 }
     },
+    geeksforgeeks: {
+      score: { type: Number, default: 0 },
+      problemsSolved: { type: Number, default: 0 },
+      monthlyScore: { type: Number, default: 0 },
+      instituteRank: { type: String, default: "" }
+    },
     lastSyncedAt: { type: Date, default: null }
   },
   { _id: false }
@@ -57,6 +63,7 @@ const studentSchema = new mongoose.Schema(
     githubUsername: { type: String, trim: true, default: "" },
     hackerrankUsername: { type: String, trim: true, default: "" },
     codechefUsername: { type: String, trim: true, default: "" },
+    geeksforgeeksUsername: { type: String, trim: true, default: "" },
     stats: { type: platformStatsSchema, default: () => ({}) },
     score: { type: Number, default: 0, index: true },
     isActive: { type: Boolean, default: true }

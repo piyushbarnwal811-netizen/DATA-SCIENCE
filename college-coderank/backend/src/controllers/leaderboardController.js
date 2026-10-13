@@ -46,7 +46,7 @@ export async function getLeaderboard(req, res, next) {
     const limit = parseLimit(req.query.limit, 500);
 
     const students = await Student.find(filter)
-      .select("name email studentId branch section year stats score githubUsername leetcodeUsername hackerrankUsername")
+      .select("name email studentId branch section year stats score githubUsername leetcodeUsername hackerrankUsername codechefUsername geeksforgeeksUsername")
       .sort({ score: -1, name: 1 })
       .limit(limit)
       .lean();
@@ -82,7 +82,7 @@ export async function exportLeaderboard(req, res, next) {
     const limit = parseLimit(req.query.limit, 5000);
 
     const students = await Student.find(filter)
-      .select("name email studentId branch section year stats score githubUsername leetcodeUsername hackerrankUsername")
+      .select("name email studentId branch section year stats score githubUsername leetcodeUsername hackerrankUsername codechefUsername geeksforgeeksUsername")
       .sort({ score: -1, name: 1 })
       .limit(limit)
       .lean();

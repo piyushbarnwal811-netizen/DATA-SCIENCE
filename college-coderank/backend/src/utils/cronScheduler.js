@@ -20,7 +20,8 @@ export function startStatsScheduler() {
           { leetcodeUsername: { $nin: ["", null] } },
           { githubUsername: { $nin: ["", null] } },
           { hackerrankUsername: { $nin: ["", null] } },
-          { codechefUsername: { $nin: ["", null] } }
+          { codechefUsername: { $nin: ["", null] } },
+          { geeksforgeeksUsername: { $nin: ["", null] } }
         ]
       });
 

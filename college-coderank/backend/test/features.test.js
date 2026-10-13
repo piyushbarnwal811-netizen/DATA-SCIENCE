@@ -115,3 +115,12 @@ test("fetchHackerRankStats safely handles null or missing username", async () =>
   const result = await fetchHackerRankStats("");
   assert.equal(result, null);
 });
+
+test("cleanGeeksforGeeksUsername sanitizes various URL formats", async () => {
+  const { cleanGeeksforGeeksUsername } = await import("../src/services/geeksforgeeksService.js");
+  assert.equal(cleanGeeksforGeeksUsername("https://www.geeksforgeeks.org/user/john_doe/"), "john_doe");
+  assert.equal(cleanGeeksforGeeksUsername("https://geeksforgeeks.org/profile/jane_doe"), "jane_doe");
+  assert.equal(cleanGeeksforGeeksUsername("@geeks_123"), "geeks_123");
+  assert.equal(cleanGeeksforGeeksUsername(""), "");
+});
+
