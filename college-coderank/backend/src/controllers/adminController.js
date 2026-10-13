@@ -1,8 +1,10 @@
 import bcrypt from "bcryptjs";
+import mongoose from "mongoose";
 import Admin from "../models/Admin.js";
 import Department from "../models/Department.js";
 import Student from "../models/Student.js";
 import { parseStudentWorkbook } from "../utils/excelParser.js";
+import { broadcastRealtimeEvent } from "../utils/realtime.js";
 
 export async function seedAdmin() {
   const { ADMIN_EMAIL, ADMIN_PASSWORD, ADMIN_NAME = "College Admin" } = process.env;
@@ -26,6 +28,28 @@ export async function getAdminOverview(req, res, next) {
       Student.find().sort({ createdAt: -1 }).limit(5).select("name email branch section year createdAt")
     ]);
     return res.json({ students, departments, recent });
+  } catch (error) {
+    return next(error);
+  }
+}
+
+export async function deleteStudent(req, res, next) {
+  try {
+    const { id } = req.params;
+    if (!mongoose.isValidObjectId(id)) {
+      return res.status(400).json({ message: "Invalid student ID." });
+    }
+
+    const student = await Student.findByIdAndDelete(id);
+    if (!student) return res.status(404).json({ message: "Student not found." });
+
+    broadcastRealtimeEvent("leaderboard:refresh", {
+      reason: "student_deleted",
+      studentId: student._id.toString(),
+      timestamp: new Date().toISOString()
+    });
+
+    return res.json({ message: "Student and all saved coding history deleted successfully." });
   } catch (error) {
     return next(error);
   }

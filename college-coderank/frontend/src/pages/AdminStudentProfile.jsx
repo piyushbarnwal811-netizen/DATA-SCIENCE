@@ -6,10 +6,11 @@ import {
   FileSpreadsheet,
   Github,
   RefreshCw,
+  Trash2,
   Trophy,
   UserRound
 } from "lucide-react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import Loader from "../components/Loader.jsx";
 import RecentSolvedProblems from "../components/RecentSolvedProblems.jsx";
 import StatCard from "../components/StatCard.jsx";
@@ -20,11 +21,13 @@ import { formatNumber, getInitials } from "../utils/helpers.js";
 
 export default function AdminStudentProfile() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [student, setStudent] = useState(null);
   const [positions, setPositions] = useState(null);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [exporting, setExporting] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
 
@@ -111,6 +114,23 @@ export default function AdminStudentProfile() {
     }
   };
 
+  const handleDeleteStudent = async () => {
+    if (!window.confirm(
+      `Permanently delete ${student.name} and all of their saved coding stats and history? This cannot be undone.`
+    )) return;
+
+    setDeleting(true);
+    setError("");
+    try {
+      await api.delete(`/admin/students/${encodeURIComponent(id)}`);
+      navigate("/admin", { replace: true });
+    } catch (requestError) {
+      setError(errorMessage(requestError, "Could not delete this student."));
+    } finally {
+      setDeleting(false);
+    }
+  };
+
   if (loading) return <Loader label="Loading student profile..." />;
   if (!student) {
     return (
@@ -167,11 +187,21 @@ export default function AdminStudentProfile() {
               type="button"
               className="button button--excel button--compact"
               onClick={handleExportStudent}
-              disabled={exporting}
+              disabled={exporting || deleting}
               title="Download this student's complete information into Excel (.xlsx)"
             >
               <FileSpreadsheet size={15} />
               <span>{exporting ? "Exporting..." : "Export Excel (.xlsx)"}</span>
+            </button>
+            <button
+              type="button"
+              className="button button--danger button--compact"
+              onClick={handleDeleteStudent}
+              disabled={deleting || busy}
+              title="Permanently delete this student and all saved history"
+            >
+              <Trash2 size={15} />
+              <span>{deleting ? "Deleting..." : "Delete student"}</span>
             </button>
           </div>
         </div>
@@ -205,7 +235,7 @@ export default function AdminStudentProfile() {
           <button
             className="button button--subtle"
             onClick={syncStudent}
-            disabled={busy || (!student.leetcodeUsername && !student.githubUsername && !student.hackerrankUsername && !student.codechefUsername && !student.geeksforgeeksUsername)}
+            disabled={busy || deleting || (!student.leetcodeUsername && !student.githubUsername && !student.hackerrankUsername && !student.codechefUsername && !student.geeksforgeeksUsername)}
           >
             <RefreshCw size={15} className={busy ? "spin" : ""} />
             {busy ? "Updating all..." : "Refresh all stats"}

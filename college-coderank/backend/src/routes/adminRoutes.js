@@ -1,6 +1,7 @@
 import { Router } from "express";
 import {
   addDepartmentSection,
+  deleteStudent,
   exportAllStudents,
   getAdminOverview,
   getDepartments,
@@ -18,6 +19,7 @@ router.get("/overview", getAdminOverview);
 router.get("/departments", getDepartments);
 router.post("/departments", addDepartmentSection);
 router.delete("/departments/:branch/sections/:section", removeDepartmentSection);
+router.delete("/students/:id", deleteStudent);
 router.post("/students/import", upload.single("file"), importStudents);
 router.get("/students/export", exportAllStudents);
 router.post("/students/sync-all", syncAllStudents);

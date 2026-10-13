@@ -147,6 +147,8 @@ button { color: inherit; }
 .button--white:hover { transform: translateY(-1px); background: #fff8f6; }
 .button--primary { color: #fff; background: var(--red); }
 .button--primary:hover:not(:disabled) { background: var(--red-dark); box-shadow: 0 4px 10px rgba(210, 72, 74, .19); }
+.button--danger { color: #fff; background: #b91c1c; }
+.button--danger:hover:not(:disabled) { background: #991b1b; box-shadow: 0 4px 10px rgba(185, 28, 28, .2); }
 .button--wide { width: 100%; }
 .button--subtle { min-height: 33px; padding: 0 10px; border-color: #f0e8e6; color: #6f6967; background: #fff; font-size: 10px; }
 .button--subtle:hover:not(:disabled) { color: var(--red-dark); border-color: #f3ceca; background: #fff9f8; }
@@ -3372,6 +3374,5 @@ td.is-platform-focused {
     grid-template-columns: 1fr;
   }
 }
-
 
 
