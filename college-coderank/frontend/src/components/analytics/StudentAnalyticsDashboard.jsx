@@ -73,8 +73,14 @@ export default function StudentAnalyticsDashboard({
             <span className="perf-banner__code-icon">&lt;/&gt;</span>
           </div>
           <div>
-            <div className="perf-banner__eyebrow">
-              RUNGTA INTERNATIONAL SKILLS UNIVERSITY · CODING INTELLIGENCE
+            <div className="perf-banner__eyebrow-row">
+              <div className="perf-banner__eyebrow">
+                RUNGTA INTERNATIONAL SKILLS UNIVERSITY · CODING INTELLIGENCE
+              </div>
+              <div className="perf-banner__dsc-pill">
+                <Sparkles size={12} />
+                <span>Presented by <strong>DATA SCIENCE CLUB</strong></span>
+              </div>
             </div>
             <h1 className="perf-banner__title">Student Coding Performance</h1>
             <div className="perf-banner__subtitle">

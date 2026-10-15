@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Navigate, NavLink, Outlet, Route, Routes, useLocation } from "react-router-dom";
-import { Activity, ArrowUpRight, BookOpen, CircleHelp, Home as HomeIcon, ShieldCheck, Trophy, UserRound, Users, Video } from "lucide-react";
+import { Activity, ArrowUpRight, BookOpen, CircleHelp, Home as HomeIcon, ShieldCheck, Sparkles, Trophy, UserRound, Users, Video } from "lucide-react";
 import AdminDashboard from "./pages/AdminDashboard.jsx";
 import AdminStudentProfile from "./pages/AdminStudentProfile.jsx";
 import Home from "./pages/Home.jsx";
@@ -46,6 +46,9 @@ function PortalLayout() {
             <div className="campus-card__body">
               <strong>{user?.name || "Rungta International Skills University"}</strong>
               <span>{user ? user.role === "admin" ? "Campus Administrator" : `${user.branch} · Section ${user.section}` : "RISU Coding Community"}</span>
+              <div className="campus-card__dsc-badge">
+                <Sparkles size={11} /> Presented by <strong>Data Science Club</strong>
+              </div>
               <small>{user?.email || "Rungta International Skills University"}</small>
             </div>
           </section>
@@ -55,7 +58,7 @@ function PortalLayout() {
             <NavLink to="/welcome" className={({ isActive }) => `side-nav__link ${isActive ? "is-active" : ""}`}><Video size={18} /><span>Campus Intro</span></NavLink>
           </nav>
           <div className="side-note"><span className="side-note__icon"><Activity size={16} /></span><strong>Consistency compounds.</strong><p>One focused session today is a win.</p></div>
-          <div className="left-rail__bottom"><span><BookOpen size={15} /> Built for your coding journey</span><a href="https://github.com" target="_blank" rel="noreferrer">Community <ArrowUpRight size={13} /></a></div>
+          <div className="left-rail__bottom"><span><Sparkles size={13} /> Presented by Data Science Club</span><a href="https://github.com" target="_blank" rel="noreferrer">Community <ArrowUpRight size={13} /></a></div>
         </aside>
         <main className="main-content" key={location.pathname}><Outlet /></main>
       </div>

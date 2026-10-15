@@ -33,7 +33,10 @@ export default function Login() {
       <header className="auth-topbar">
         <div className="auth-university-pill">
           <img src="/college_logo.png" alt="Rungta University Logo" className="auth-pill-logo" />
-          <span>Rungta International Skills University</span>
+          <div className="auth-pill-text">
+            <span>Rungta International Skills University</span>
+            <small className="auth-pill-dsc">Presented by DATA SCIENCE CLUB</small>
+          </div>
         </div>
         <div className="auth-topbar__actions">
           <button
@@ -64,7 +67,10 @@ export default function Login() {
         <div className={`auth-card auth-card--transparent ${photoOnly ? "auth-card--hidden" : ""}`}>
           <div className="auth-card__campus-crest">
             <img src="/college_logo.png" alt="Rungta University Logo" className="auth-crest-logo" />
-            <span>Rungta International Skills University</span>
+            <div className="auth-crest-text">
+              <span>Rungta International Skills University</span>
+              <small className="auth-crest-dsc">Presented by DATA SCIENCE CLUB</small>
+            </div>
           </div>
 
           <div className="auth-brand">
@@ -73,13 +79,13 @@ export default function Login() {
             </span>
             <div className="brand__text-group">
               <span className="brand__text brand__text--white">College<span>CodeRank</span></span>
-              <span className="brand__college-sub brand__college-sub--gold">Official Student & Faculty Portal</span>
+              <span className="brand__college-sub brand__college-sub--gold">Presented by Data Science Club · Official Portal</span>
             </div>
           </div>
 
           <h1 className="auth-card__title">Sign In to <span>RISU Portal</span></h1>
           <p className="auth-subtitle auth-subtitle--light">
-            Empowering future tech leaders. Track LeetCode, GitHub & HackerRank streaks at Rungta University.
+            Presented by the Data Science Club. Track LeetCode, CodeChef, GFG, GitHub &amp; HackerRank streaks at Rungta University.
           </p>
 
           <div className="role-switch role-switch--glass">

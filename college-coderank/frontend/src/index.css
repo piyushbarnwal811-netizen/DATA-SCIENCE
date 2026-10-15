@@ -3375,4 +3375,445 @@ td.is-platform-focused {
   }
 }
 
+/* ==========================================================================
+   Presented by DATA SCIENCE CLUB — Visual Branding & Presentation System
+   ========================================================================== */
+
+/* 1. Navbar Brand Tag & Topbar Badge */
+.brand__dsc-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 7.5px;
+  font-weight: 500;
+  color: #ffe4e3;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+  margin-top: 1px;
+}
+.brand__dsc-tag strong {
+  font-weight: 800;
+  color: #fff;
+  letter-spacing: 0.4px;
+  background: linear-gradient(90deg, #ffffff 0%, #ffe0cc 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.brand__dsc-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #4ade80;
+  box-shadow: 0 0 8px #4ade80;
+  flex-shrink: 0;
+  animation: dscPulse 2s ease-in-out infinite;
+}
+
+@keyframes dscPulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(0.85); }
+}
+
+.topbar-dsc-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 11px;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.16);
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  backdrop-filter: blur(8px);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.2px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  transition: all 0.2s ease;
+}
+.topbar-dsc-badge:hover {
+  background: rgba(255, 255, 255, 0.24);
+  border-color: rgba(255, 255, 255, 0.55);
+  transform: translateY(-1px);
+}
+.topbar-dsc-badge__icon {
+  color: #fef08a;
+  animation: spinSlow 8s linear infinite;
+}
+@keyframes spinSlow {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+.topbar-dsc-badge strong {
+  font-weight: 800;
+  letter-spacing: 0.4px;
+  color: #fff;
+}
+
+@media (max-width: 820px) {
+  .topbar-dsc-badge {
+    display: none;
+  }
+}
+
+/* 2. Enhanced Footer with DSC Presentation */
+.footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: min(1720px, calc(100% - 48px));
+  margin: 0 auto;
+  padding: 14px 0 20px;
+  color: #a29b98;
+  font-size: 9.5px;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.footer-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+.footer-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #635b58;
+  font-weight: 600;
+}
+.footer-dsc-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 9px;
+  border-radius: 12px;
+  background: #fff0ee;
+  border: 1px solid #f9cdca;
+  color: #b91c1c;
+  font-size: 9px;
+  font-weight: 600;
+}
+.footer-dsc-tag strong {
+  font-weight: 800;
+  color: #991b1b;
+}
+.footer-dsc-icon {
+  color: #ed5758;
+}
+.footer-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+  text-align: right;
+  font-size: 8.5px;
+}
+.footer-credit {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: #78716c;
+}
+.footer-heart-icon {
+  color: #ef4444;
+  fill: #ef4444;
+  display: inline-block;
+  vertical-align: middle;
+}
+
+@media (max-width: 768px) {
+  .footer {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .footer-right {
+    align-items: flex-start;
+    text-align: left;
+  }
+}
+
+/* 3. Hero Card DSC Badge (Home Page) */
+.hero-dsc-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.18);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  backdrop-filter: blur(10px);
+  color: #ffffff;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.6px;
+  margin-bottom: 10px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+.hero-dsc-badge strong {
+  color: #fef08a;
+  font-weight: 800;
+  letter-spacing: 0.8px;
+}
+
+/* 4. Dedicated Data Science Club Featured Showcase Card */
+.dsc-showcase-card {
+  margin-top: 18px;
+  padding: 24px 28px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #ffffff 0%, #fff7f6 60%, #fff0ee 100%);
+  border: 1px solid #f8d3cf;
+  box-shadow: 0 4px 18px rgba(237, 87, 88, 0.08);
+  position: relative;
+  overflow: hidden;
+}
+.dsc-showcase-card::before {
+  content: "";
+  position: absolute;
+  top: -40px;
+  right: -40px;
+  width: 180px;
+  height: 180px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(237, 87, 88, 0.12) 0%, rgba(237, 87, 88, 0) 70%);
+  pointer-events: none;
+}
+.dsc-showcase-card__inner {
+  display: grid;
+  grid-template-columns: 1fr 240px;
+  gap: 28px;
+  align-items: center;
+  position: relative;
+  z-index: 1;
+}
+.dsc-showcase-card__pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 9px;
+  border-radius: 14px;
+  background: #fff0ee;
+  border: 1px solid #fecaca;
+  color: #dc2626;
+  font-size: 8.5px;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+.dsc-showcase-card h2 {
+  margin: 0 0 6px;
+  font-size: 19px;
+  font-weight: 800;
+  color: #1f2937;
+  letter-spacing: -0.4px;
+}
+.dsc-showcase-card h2 span {
+  color: #ed5758;
+  background: linear-gradient(135deg, #dc2626, #b91c1c);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.dsc-showcase-card__tagline {
+  margin: 0 0 10px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #4b5563;
+}
+.dsc-showcase-card__text {
+  margin: 0 0 14px;
+  font-size: 10.5px;
+  line-height: 1.6;
+  color: #6b7280;
+  max-width: 680px;
+}
+.dsc-showcase-card__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+.dsc-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 16px;
+  background: #ffffff;
+  border: 1px solid #f0e6e4;
+  color: #6c5a58;
+  font-size: 9px;
+  font-weight: 600;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+}
+.dsc-showcase-card__stats {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+.dsc-stat-box {
+  background: #ffffff;
+  border: 1px solid #fed7d7;
+  border-radius: 10px;
+  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: 0 2px 6px rgba(220, 38, 38, 0.04);
+}
+.dsc-stat-box__val {
+  font-size: 16px;
+  font-weight: 800;
+  color: #dc2626;
+  font-family: "Manrope", sans-serif;
+}
+.dsc-stat-box__lbl {
+  font-size: 9px;
+  font-weight: 600;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+@media (max-width: 900px) {
+  .dsc-showcase-card__inner {
+    grid-template-columns: 1fr;
+  }
+  .dsc-showcase-card__stats {
+    flex-direction: row;
+  }
+  .dsc-stat-box {
+    flex: 1;
+    flex-direction: column;
+    text-align: center;
+    gap: 3px;
+  }
+}
+
+/* 5. Campus Badge Item Highlight for DSC */
+.campus-badge-item--dsc {
+  border-color: #fca5a5 !important;
+  background: linear-gradient(135deg, #ffffff, #fff5f5) !important;
+}
+.campus-badge-item--dsc .campus-badge-item__icon {
+  color: #dc2626 !important;
+  background: #ffe4e6 !important;
+}
+
+/* 6. Performance Dashboard Banner DSC Pill */
+.perf-banner__eyebrow-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 2px;
+}
+.perf-banner__dsc-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 8px;
+  border-radius: 12px;
+  background: #fff1f2;
+  border: 1px solid #fecdd3;
+  color: #be123c;
+  font-size: 8.5px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+}
+.perf-banner__dsc-pill strong {
+  font-weight: 800;
+  color: #9f1239;
+}
+
+/* 7. Welcome Splash DSC Elements */
+.welcome-splash__crest-text {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.welcome-splash__crest-presenter {
+  font-size: 7.5px;
+  font-weight: 700;
+  color: #fca5a5;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+}
+.welcome-splash__presenter-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 14px;
+  border-radius: 20px;
+  background: rgba(220, 38, 38, 0.35);
+  border: 1px solid rgba(254, 202, 202, 0.45);
+  backdrop-filter: blur(10px);
+  color: #ffffff;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  margin-bottom: 12px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+.welcome-splash__presenter-pill strong {
+  color: #fef08a;
+  font-weight: 800;
+  letter-spacing: 0.8px;
+}
+.welcome-splash__footer-dsc {
+  display: block;
+  font-size: 9px;
+  color: #fecdd3;
+  font-weight: 600;
+  letter-spacing: 0.4px;
+  margin-top: 4px;
+}
+.welcome-splash__footer-dsc strong {
+  color: #ffffff;
+  font-weight: 800;
+}
+
+/* 8. Auth Pages (Login / Register) DSC Branding */
+.auth-pill-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+.auth-pill-dsc {
+  font-size: 7.5px;
+  font-weight: 700;
+  color: #fca5a5;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+.auth-crest-text {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.auth-crest-dsc {
+  font-size: 8px;
+  font-weight: 700;
+  color: #ef4444;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+/* 9. Sidebar Left Rail DSC Badge */
+.campus-card__dsc-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: #fff1f2;
+  border: 1px solid #ffe4e6;
+  color: #be123c;
+  font-size: 8px;
+  font-weight: 600;
+  margin: 4px 0 2px;
+  width: fit-content;
+}
+.campus-card__dsc-badge strong {
+  font-weight: 800;
+  color: #9f1239;
+}
+
 

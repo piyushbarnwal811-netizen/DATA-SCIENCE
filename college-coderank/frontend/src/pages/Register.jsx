@@ -74,7 +74,10 @@ export default function Register() {
       <header className="auth-topbar">
         <div className="auth-university-pill">
           <img src="/college_logo.png" alt="Rungta University Logo" className="auth-pill-logo" />
-          <span>Rungta International Skills University</span>
+          <div className="auth-pill-text">
+            <span>Rungta International Skills University</span>
+            <small className="auth-pill-dsc">Presented by DATA SCIENCE CLUB</small>
+          </div>
         </div>
         <div className="auth-topbar__actions">
           <button
@@ -105,7 +108,10 @@ export default function Register() {
         <div className={`auth-card auth-card--register auth-card--transparent ${photoOnly ? "auth-card--hidden" : ""}`}>
           <div className="auth-card__campus-crest">
             <img src="/college_logo.png" alt="Rungta University Logo" className="auth-crest-logo" />
-            <span>Rungta Student Registration</span>
+            <div className="auth-crest-text">
+              <span>Rungta Student Registration</span>
+              <small className="auth-crest-dsc">Presented by DATA SCIENCE CLUB</small>
+            </div>
           </div>
 
           <div className="auth-brand">
@@ -114,13 +120,13 @@ export default function Register() {
             </span>
             <div className="brand__text-group">
               <span className="brand__text brand__text--white">College<span>CodeRank</span></span>
-              <span className="brand__college-sub brand__college-sub--gold">Rungta International Skills University</span>
+              <span className="brand__college-sub brand__college-sub--gold">Presented by Data Science Club · RISU</span>
             </div>
           </div>
 
           <h1 className="auth-card__title">Create Student <span>Account</span></h1>
           <p className="auth-subtitle auth-subtitle--light">
-            Set up your official profile and represent your department on the Rungta leaderboard.
+            Presented by the Data Science Club. Set up your official profile and represent your department on the leaderboard.
           </p>
 
           <form className="auth-form register-form" onSubmit={submit}>

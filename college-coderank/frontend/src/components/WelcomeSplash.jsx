@@ -30,7 +30,10 @@ export default function WelcomeSplash() {
       <header className="welcome-splash__topbar">
         <div className="welcome-splash__crest">
           <img src="/college_logo.png" alt="Rungta University Logo" className="welcome-splash__logo-img" />
-          <span>RUNGTA INTERNATIONAL SKILLS UNIVERSITY</span>
+          <div className="welcome-splash__crest-text">
+            <span>RUNGTA INTERNATIONAL SKILLS UNIVERSITY</span>
+            <small className="welcome-splash__crest-presenter">Presented by <strong>DATA SCIENCE CLUB</strong></small>
+          </div>
         </div>
         <div className="welcome-splash__top-links">
           <Link to="/login" className="welcome-splash__top-link welcome-splash__top-link--red">
@@ -56,6 +59,10 @@ export default function WelcomeSplash() {
         </div>
 
         <div className="welcome-splash__headline-box">
+          <div className="welcome-splash__presenter-pill">
+            <Sparkles size={13} />
+            <span>Presented by <strong>DATA SCIENCE CLUB</strong></span>
+          </div>
           <span className="welcome-splash__pretitle">
             <Sparkles size={14} /> OFFICIAL CAMPUS CODING PORTAL
           </span>
@@ -67,7 +74,7 @@ export default function WelcomeSplash() {
             Rungta International Skills University · Department of Computer Science & Engineering
           </p>
           <p className={`welcome-splash__motto ${isTypingComplete ? "is-visible" : ""}`}>
-            Live algorithmic intelligence tracking across LeetCode, CodeChef, GeeksforGeeks, GitHub &amp; HackerRank
+            An official initiative presented by the <strong>Data Science Club</strong> · Real-time algorithmic intelligence tracking across LeetCode, CodeChef, GeeksforGeeks, GitHub &amp; HackerRank
           </p>
         </div>
 
@@ -101,6 +108,7 @@ export default function WelcomeSplash() {
 
       <footer className="welcome-splash__footer">
         <span>Rungta Educational Complex · Central India Premier Technical Institution (Bhilai / Raipur)</span>
+        <span className="welcome-splash__footer-dsc">An Initiative Presented by <strong>DATA SCIENCE CLUB</strong></span>
       </footer>
     </div>
   );

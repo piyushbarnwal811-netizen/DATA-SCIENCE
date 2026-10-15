@@ -25,12 +25,16 @@ export default function Home() {
     <>
       <section className="welcome-card">
         <div className="welcome-card__copy">
+          <div className="hero-dsc-badge">
+            <Sparkles size={13} />
+            <span>Presented by <strong>DATA SCIENCE CLUB</strong></span>
+          </div>
           <span className="eyebrow eyebrow--light">
             <img src="/college_logo.png" alt="Rungta University" className="eyebrow-logo" />
-            RUNGTA INTERNATIONAL SKILLS UNIVERSITY · CODING HUB
+            RUNGTA INTERNATIONAL SKILLS UNIVERSITY · PRESENTED BY DATA SCIENCE CLUB
           </span>
           <h1>Small commits.<br /><span>Big campus energy.</span></h1>
-          <p>See who's building, solving and showing up at Rungta University. Your next streak starts right here.</p>
+          <p>See who's building, solving and showing up at Rungta University. An official competitive coding initiative proudly presented by the <strong>Data Science Club</strong>.</p>
           <div className="welcome-card__btn-row">
             <Link className="button button--white" to="/leaderboard">Explore leaderboard <ArrowRight size={16} /></Link>
             <Link className="button button--campus-intro" to="/welcome"><GraduationCap size={16} /> Campus Intro</Link>
@@ -44,6 +48,44 @@ export default function Home() {
           <span className="welcome-float welcome-float--medal"><Medal size={21} /></span>
         </div>
         <span className="welcome-glow" aria-hidden="true" />
+      </section>
+
+      {/* Presented by Data Science Club Featured Spotlight Card */}
+      <section className="section-card dsc-showcase-card">
+        <div className="dsc-showcase-card__inner">
+          <div className="dsc-showcase-card__left">
+            <div className="dsc-showcase-card__pill">
+              <Sparkles size={13} /> OFFICIAL PRESENTATION
+            </div>
+            <h2>Presented by <span>DATA SCIENCE CLUB</span></h2>
+            <p className="dsc-showcase-card__tagline">
+              Fostering Algorithmic Excellence, Machine Learning &amp; Open Source Innovation at Rungta University
+            </p>
+            <p className="dsc-showcase-card__text">
+              College CodeRank is conceived, designed, and presented by the <strong>Data Science Club</strong>. Our mission is to inspire consistent coding habits, celebrate student problem-solving milestones across LeetCode, CodeChef, GeeksforGeeks, HackerRank &amp; GitHub, and prepare future-ready engineers.
+            </p>
+            <div className="dsc-showcase-card__tags">
+              <span className="dsc-chip">📊 Data &amp; Competitive Coding</span>
+              <span className="dsc-chip">🚀 Real-Time Campus Analytics</span>
+              <span className="dsc-chip">🌐 Open Tech Community</span>
+              <span className="dsc-chip">🏆 Hackathons &amp; Code Sprints</span>
+            </div>
+          </div>
+          <div className="dsc-showcase-card__stats">
+            <div className="dsc-stat-box">
+              <span className="dsc-stat-box__val">5+</span>
+              <span className="dsc-stat-box__lbl">Synced Platforms</span>
+            </div>
+            <div className="dsc-stat-box">
+              <span className="dsc-stat-box__val">Live</span>
+              <span className="dsc-stat-box__lbl">Ranking Engine</span>
+            </div>
+            <div className="dsc-stat-box">
+              <span className="dsc-stat-box__val">100%</span>
+              <span className="dsc-stat-box__lbl">Student Driven</span>
+            </div>
+          </div>
+        </div>
       </section>
 
       {/* Rungta International Skills University Showcase Section */}
@@ -64,7 +106,7 @@ export default function Home() {
               </div>
             </div>
             <p>
-              Welcome to the competitive coding and skills intelligence portal of Rungta International Skills University. 
+              Welcome to the competitive coding and skills intelligence portal of Rungta International Skills University, presented in collaboration with the <strong>Data Science Club</strong>. 
               Our campus connects students' real-time achievements across LeetCode, CodeChef, GeeksforGeeks, GitHub, and HackerRank to celebrate consistency and build technical leadership.
             </p>
             <div className="campus-badges-grid">
@@ -87,6 +129,13 @@ export default function Home() {
                 <div>
                   <strong>Engineering Departments</strong>
                   <span>CSE, AI, Data Science & IT</span>
+                </div>
+              </div>
+              <div className="campus-badge-item campus-badge-item--dsc">
+                <span className="campus-badge-item__icon"><Sparkles size={16} /></span>
+                <div>
+                  <strong>Data Science Club</strong>
+                  <span>Presented &amp; Driven by DSC</span>
                 </div>
               </div>
             </div>
