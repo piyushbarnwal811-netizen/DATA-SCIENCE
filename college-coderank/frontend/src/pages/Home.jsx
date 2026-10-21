@@ -3,6 +3,7 @@ import { ArrowRight, ArrowUpRight, Award, Flame, Github, GraduationCap, Medal, S
 import { Link } from "react-router-dom";
 import api, { errorMessage } from "../services/api.js";
 import { formatNumber, getInitials } from "../utils/helpers.js";
+import { SAMPLE_STUDENTS } from "../utils/dashboardData.js";
 import RankBadge from "../components/RankBadge.jsx";
 import StatCard from "../components/StatCard.jsx";
 import Loader from "../components/Loader.jsx";
@@ -13,13 +14,22 @@ export default function Home() {
 
   useEffect(() => {
     api.get("/leaderboard")
-      .then(({ data: response }) => setData(response))
-      .catch((requestError) => setError(errorMessage(requestError)));
+      .then(({ data: response }) => {
+        setData(response);
+        setError("");
+      })
+      .catch((requestError) => {
+        console.warn("Backend leaderboard API offline, using interactive campus dataset on Home:", requestError.message);
+        setError(errorMessage(requestError));
+      });
   }, []);
 
   if (!data && !error) return <Loader />;
-  const students = data?.students ?? [];
+  const students = data?.students ?? (SAMPLE_STUDENTS || []);
   const topStudents = students.slice(0, 5);
+  const totalStudents = data?.summary?.totalStudents ?? students.length;
+  const totalPoints = data?.summary?.totalPoints ?? students.reduce((sum, s) => sum + (s.score || 0), 0);
+  const totalProblems = students.reduce((sum, student) => sum + (student.stats?.leetcode?.total ?? 0) + (student.stats?.codechef?.problemsSolved ?? 0) + (student.stats?.geeksforgeeks?.problemsSolved ?? 0), 0);
 
   return (
     <>
@@ -146,9 +156,9 @@ export default function Home() {
       {error && <div className="inline-error" role="alert">{error}</div>}
 
       <div className="stats-grid">
-        <StatCard icon={Users} label="Students on the board" value={formatNumber(data?.summary.totalStudents)} note="Across campus" />
-        <StatCard icon={Zap} label="Points earned" value={formatNumber(data?.summary.totalPoints)} note="And counting" tone="orange" />
-        <StatCard icon={Flame} label="Problems solved" value={formatNumber(students.reduce((sum, student) => sum + (student.stats?.leetcode?.total ?? 0) + (student.stats?.codechef?.problemsSolved ?? 0) + (student.stats?.geeksforgeeks?.problemsSolved ?? 0), 0))} note="LC + CodeChef + GFG" tone="peach" />
+        <StatCard icon={Users} label="Students on the board" value={formatNumber(totalStudents)} note="Across campus" />
+        <StatCard icon={Zap} label="Points earned" value={formatNumber(totalPoints)} note="And counting" tone="orange" />
+        <StatCard icon={Flame} label="Problems solved" value={formatNumber(totalProblems)} note="LC + CodeChef + GFG" tone="peach" />
       </div>
 
       <section className="section-card leaderboard-preview">
@@ -156,13 +166,11 @@ export default function Home() {
           <div><span className="eyebrow">CAMPUS PULSE</span><h2>Leaderboard <span className="live-dot" /> <span className="live-label">LIVE</span></h2></div>
           <Link className="text-link" to="/leaderboard">See all <ArrowUpRight size={16} /></Link>
         </div>
-        {error ? (
-          <div className="empty-state"><span className="empty-state__icon"><Users size={22} /></span><strong>Leaderboard is getting ready</strong><p>{error}</p></div>
-        ) : topStudents.length ? (
+        {topStudents.length ? (
           <div className="leaderboard-list">
-            {topStudents.map((student) => (
-              <div className="leaderboard-row" key={student._id}>
-                <RankBadge rank={student.rank} />
+            {topStudents.map((student, idx) => (
+              <div className="leaderboard-row" key={student._id || student.studentId || idx}>
+                <RankBadge rank={student.rank || idx + 1} />
                 <span className="avatar avatar--soft">{getInitials(student.name)}</span>
                 <div className="student-summary"><strong>{student.name}</strong><span>{student.branch} · Section {student.section}</span></div>
                 <div className="student-platform"><Github size={15} /> <span>{student.stats?.github?.publicRepos ?? 0} repos</span></div>
@@ -170,6 +178,8 @@ export default function Home() {
               </div>
             ))}
           </div>
+        ) : error ? (
+          <div className="empty-state"><span className="empty-state__icon"><Users size={22} /></span><strong>Leaderboard is getting ready</strong><p>{error}</p></div>
         ) : (
           <div className="empty-state"><span className="empty-state__icon"><Medal size={22} /></span><strong>No rankings just yet</strong><p>Once students join the board, the campus race begins.</p></div>
         )}

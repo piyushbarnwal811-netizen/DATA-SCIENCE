@@ -57,7 +57,7 @@ export default function Login() {
             <Eye size={14} />
             <span>{photoOnly ? "Show Sign In" : "View Full Campus"}</span>
           </button>
-          <Link to="/" className="auth-home-btn">
+          <Link to="/leaderboard" className="auth-home-btn">
             <ArrowLeft size={14} /> Back to Leaderboard
           </Link>
         </div>

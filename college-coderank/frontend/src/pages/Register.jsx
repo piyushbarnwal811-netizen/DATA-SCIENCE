@@ -98,7 +98,7 @@ export default function Register() {
             <Eye size={14} />
             <span>{photoOnly ? "Show Registration Form" : "View Full Campus"}</span>
           </button>
-          <Link to="/" className="auth-home-btn">
+          <Link to="/leaderboard" className="auth-home-btn">
             <ArrowLeft size={14} /> Back to Leaderboard
           </Link>
         </div>

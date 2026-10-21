@@ -105,7 +105,7 @@ export default function Leaderboard() {
 
   // Determine students list: either live from backend, or fallback to sample data filtered
   const activeStudents = useMemo(() => {
-    if (data?.students && data.students.length > 0) {
+    if (data && Array.isArray(data.students)) {
       return data.students;
     }
 
