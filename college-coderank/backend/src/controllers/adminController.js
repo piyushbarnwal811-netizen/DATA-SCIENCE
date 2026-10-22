@@ -5,6 +5,12 @@ import Department from "../models/Department.js";
 import Student from "../models/Student.js";
 import { parseStudentWorkbook } from "../utils/excelParser.js";
 import { broadcastRealtimeEvent } from "../utils/realtime.js";
+import { cleanGitHubUsername } from "../services/githubService.js";
+import { cleanLeetCodeUsername } from "../services/leetcodeService.js";
+import { cleanHackerRankUsername } from "../services/hackerrankService.js";
+import { cleanCodeChefUsername } from "../services/codechefService.js";
+import { cleanGeeksforGeeksUsername } from "../services/geeksforgeeksService.js";
+import { syncStudentAllStats } from "../utils/studentSync.js";
 
 export async function seedAdmin() {
   const { ADMIN_EMAIL, ADMIN_PASSWORD, ADMIN_NAME = "College Admin" } = process.env;
@@ -50,6 +56,140 @@ export async function deleteStudent(req, res, next) {
     });
 
     return res.json({ message: "Student and all saved coding history deleted successfully." });
+  } catch (error) {
+    return next(error);
+  }
+}
+
+export async function createStudent(req, res, next) {
+  try {
+    const {
+      name,
+      fullName,
+      email,
+      studentId,
+      rollNumber,
+      rollNo,
+      branch,
+      department,
+      section,
+      year,
+      password,
+      githubUsername,
+      github,
+      githubHandle,
+      leetcodeUsername,
+      leetcode,
+      leetcodeHandle,
+      hackerrankUsername,
+      hackerrank,
+      hackerrankHandle,
+      codechefUsername,
+      codechef,
+      codechefHandle,
+      geeksforgeeksUsername,
+      geeksforgeeks,
+      geeksforgeeksHandle,
+      gfg,
+      gfgUsername
+    } = req.body;
+
+    const resolvedName = String(name || fullName || "").trim();
+    const normalizedEmail = String(email || "").trim().toLowerCase();
+    const normalizedBranch = String(branch || department || "").trim();
+    const normalizedSection = String(section || "").trim();
+    const numericYear = Number(year);
+    const rawStudentId = studentId || rollNumber || rollNo;
+    const resolvedStudentId = rawStudentId && String(rawStudentId).trim() ? String(rawStudentId).trim() : undefined;
+
+    if (!resolvedName || !normalizedEmail || !normalizedBranch || !normalizedSection || !year) {
+      return res.status(400).json({ message: "Name, email, branch, section, and year are required." });
+    }
+
+    if (!Number.isInteger(numericYear) || numericYear < 1 || numericYear > 8) {
+      return res.status(400).json({ message: "Choose a valid year between 1 and 8." });
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(normalizedEmail)) {
+      return res.status(400).json({ message: "Please enter a valid email address." });
+    }
+
+    const existing = await Student.findOne({ email: normalizedEmail });
+    if (existing) {
+      return res.status(409).json({ message: `A student with email "${normalizedEmail}" already exists.` });
+    }
+
+    if (resolvedStudentId) {
+      const existingId = await Student.findOne({ studentId: resolvedStudentId });
+      if (existingId) {
+        return res.status(409).json({ message: `A student with Student ID/Roll No "${resolvedStudentId}" already exists.` });
+      }
+    }
+
+    const cleanGh = cleanGitHubUsername(githubUsername || github || githubHandle);
+    const cleanLc = cleanLeetCodeUsername(leetcodeUsername || leetcode || leetcodeHandle);
+    const cleanHr = cleanHackerRankUsername(hackerrankUsername || hackerrank || hackerrankHandle);
+    const cleanCc = cleanCodeChefUsername(codechefUsername || codechef || codechefHandle);
+    const cleanGfg = cleanGeeksforGeeksUsername(geeksforgeeksUsername || geeksforgeeks || geeksforgeeksHandle || gfg || gfgUsername);
+
+    let passwordHash = undefined;
+    if (password && String(password).trim().length > 0) {
+      if (String(password).trim().length < 6) {
+        return res.status(400).json({ message: "Password must be at least 6 characters if provided." });
+      }
+      passwordHash = await bcrypt.hash(String(password).trim(), 12);
+    }
+
+    const student = await Student.create({
+      name: resolvedName,
+      email: normalizedEmail,
+      studentId: resolvedStudentId,
+      ...(passwordHash ? { password: passwordHash, mustChangePassword: true } : {}),
+      branch: normalizedBranch,
+      section: normalizedSection,
+      year: numericYear,
+      githubUsername: cleanGh || "",
+      leetcodeUsername: cleanLc || "",
+      hackerrankUsername: cleanHr || "",
+      codechefUsername: cleanCc || "",
+      geeksforgeeksUsername: cleanGfg || "",
+      stats: {},
+      score: 0,
+      isActive: true
+    });
+
+    await Department.updateOne(
+      { name: normalizedBranch },
+      { $setOnInsert: { name: normalizedBranch }, $addToSet: { sections: normalizedSection } },
+      { upsert: true }
+    );
+
+    broadcastRealtimeEvent("leaderboard:refresh", {
+      reason: "student_created",
+      studentId: student._id.toString(),
+      name: student.name,
+      timestamp: new Date().toISOString()
+    });
+
+    if (cleanGh || cleanLc || cleanHr || cleanCc || cleanGfg) {
+      syncStudentAllStats(student._id, { source: "admin_manual_create" }).catch((syncErr) => {
+        console.warn(`[Admin Manual Create] Sync for ${student.email} warning:`, syncErr.message);
+      });
+    }
+
+    return res.status(201).json({
+      message: `Student "${student.name}" added successfully to the campus roster!`,
+      student: {
+        _id: student._id,
+        name: student.name,
+        email: student.email,
+        studentId: student.studentId,
+        branch: student.branch,
+        section: student.section,
+        year: student.year
+      }
+    });
   } catch (error) {
     return next(error);
   }

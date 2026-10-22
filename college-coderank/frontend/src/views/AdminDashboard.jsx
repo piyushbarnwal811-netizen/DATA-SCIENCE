@@ -1,3 +1,5 @@
+"use client";
+
 import { useEffect, useState } from "react";
 import {
   ArrowDownToLine,
@@ -9,9 +11,10 @@ import {
   RefreshCw,
   Trash2,
   Upload,
+  UserPlus,
   Users
 } from "lucide-react";
-import { Link } from "react-router-dom";
+import Link from "next/link";
 import BranchSectionFields from "../components/BranchSectionFields.jsx";
 import api, { errorMessage } from "../services/api.js";
 import { useRealtimeSync } from "../services/realtime.js";
@@ -20,6 +23,7 @@ import { formatNumber } from "../utils/helpers.js";
 export default function AdminDashboard() {
   const [overview, setOverview] = useState(null);
   const [departments, setDepartments] = useState([]);
+  const [rosterMode, setRosterMode] = useState("bulk"); // "bulk" | "single"
   const [file, setFile] = useState(null);
   const [branch, setBranch] = useState("");
   const [section, setSection] = useState("");
@@ -27,6 +31,28 @@ export default function AdminDashboard() {
   const [notice, setNotice] = useState("");
   const [error, setError] = useState("");
   const [exporting, setExporting] = useState(false);
+  const [origin, setOrigin] = useState("");
+
+  const [singleStudent, setSingleStudent] = useState({
+    name: "",
+    email: "",
+    studentId: "",
+    branch: "",
+    section: "",
+    year: "1",
+    password: "",
+    leetcodeUsername: "",
+    githubUsername: "",
+    codechefUsername: "",
+    geeksforgeeksUsername: "",
+    hackerrankUsername: ""
+  });
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      setOrigin(window.location.origin);
+    }
+  }, []);
 
   const updateCampusFields = ({ branch: nextBranch, section: nextSection }) => {
     setBranch(nextBranch);
@@ -73,6 +99,40 @@ export default function AdminDashboard() {
       setNotice(`${data.message} ${data.imported} student records processed.`);
       setFile(null);
       form.reset();
+      await loadDashboard();
+    } catch (requestError) {
+      setError(errorMessage(requestError));
+    } finally {
+      setBusy("");
+    }
+  };
+
+  const updateSingleStudentBranchSection = ({ branch: nextBranch, section: nextSection }) => {
+    setSingleStudent((prev) => ({ ...prev, branch: nextBranch, section: nextSection }));
+  };
+
+  const handleAddSingleStudent = async (event) => {
+    event.preventDefault();
+    setBusy("add-student");
+    setError("");
+    setNotice("");
+    try {
+      const { data } = await api.post("/admin/students", singleStudent);
+      setNotice(data.message || `Student "${singleStudent.name}" added successfully!`);
+      setSingleStudent({
+        name: "",
+        email: "",
+        studentId: "",
+        branch: "",
+        section: "",
+        year: "1",
+        password: "",
+        leetcodeUsername: "",
+        githubUsername: "",
+        codechefUsername: "",
+        geeksforgeeksUsername: "",
+        hackerrankUsername: ""
+      });
       await loadDashboard();
     } catch (requestError) {
       setError(errorMessage(requestError));
@@ -268,52 +328,267 @@ export default function AdminDashboard() {
         <section className="section-card admin-upload-card">
           <div className="section-heading">
             <div>
-              <span className="eyebrow">BULK IMPORT &amp; EXPORT</span>
+              <span className="eyebrow">STUDENT ROSTER &amp; ONBOARDING</span>
               <h2>Student roster management</h2>
             </div>
-            <span className="admin-section-icon"><FileSpreadsheet size={19} /></span>
+            <div className="roster-mode-switcher" role="tablist">
+              <button
+                type="button"
+                className={`mode-btn ${rosterMode === "bulk" ? "is-active" : ""}`}
+                onClick={() => {
+                  setRosterMode("bulk");
+                  setError("");
+                }}
+              >
+                <Upload size={13} />
+                <span>Bulk Upload</span>
+              </button>
+              <button
+                type="button"
+                className={`mode-btn ${rosterMode === "single" ? "is-active" : ""}`}
+                onClick={() => {
+                  setRosterMode("single");
+                  setError("");
+                }}
+              >
+                <UserPlus size={13} />
+                <span>Add Single Student</span>
+              </button>
+            </div>
           </div>
-          <p className="section-description">
-            Add or update student profiles in bulk. Existing accounts are matched by email.
-          </p>
-          <div className="roster-actions-row">
-            <a className="download-template" href="/sample_student_template.xlsx" download>
-              <ArrowDownToLine size={15} /> Download template
-            </a>
-            <button
-              type="button"
-              className="button button--subtle button--compact"
-              onClick={handleExportRoster}
-              disabled={exporting}
-            >
-              <FileSpreadsheet size={14} /> Download current roster (.xlsx)
-            </button>
-          </div>
-          <form className="upload-form" onSubmit={uploadSheet}>
-            <label className="upload-dropzone">
-              <input
-                type="file"
-                accept=".xlsx,.csv"
-                onChange={(event) => setFile(event.target.files?.[0] ?? null)}
+
+          {rosterMode === "bulk" ? (
+            <>
+              <p className="section-description">
+                Add or update student profiles in bulk using Excel (.xlsx) or CSV files. Existing accounts are matched by email.
+              </p>
+              <div className="roster-actions-row">
+                <a className="download-template" href="/sample_student_template.xlsx" download>
+                  <ArrowDownToLine size={15} /> Download template
+                </a>
+                <button
+                  type="button"
+                  className="button button--subtle button--compact"
+                  onClick={handleExportRoster}
+                  disabled={exporting}
+                >
+                  <FileSpreadsheet size={14} /> Download current roster (.xlsx)
+                </button>
+              </div>
+              <form className="upload-form" onSubmit={uploadSheet}>
+                <label className="upload-dropzone">
+                  <input
+                    type="file"
+                    accept=".xlsx,.csv"
+                    onChange={(event) => setFile(event.target.files?.[0] ?? null)}
+                  />
+                  <span className="upload-dropzone__icon"><Upload size={21} /></span>
+                  <strong>{file?.name || "Choose a student sheet"}</strong>
+                  <span>
+                    {file ? `${(file.size / 1024).toFixed(0)} KB · ready to upload` : "Excel (.xlsx) or CSV · max 5 MB"}
+                  </span>
+                </label>
+                <button className="button button--primary button--wide" disabled={busy !== "" || !file}>
+                  <Upload size={16} />
+                  {busy === "upload" ? "Importing roster..." : "Upload student list"}
+                </button>
+              </form>
+              <div className="import-tip">
+                <span>!</span>
+                <p>
+                  Required columns: <strong>name, email, branch, section, year</strong>. Optional: studentId,
+                  leetcodeUsername, codechefUsername, geeksforgeeksUsername, githubUsername, hackerrankUsername.
+                </p>
+              </div>
+            </>
+          ) : (
+            <form className="single-student-form" onSubmit={handleAddSingleStudent}>
+              <p className="section-description">
+                Manually register an individual student. Competitive coding handles will synchronize immediately upon adding.
+              </p>
+
+              <div className="form-grid-2">
+                <label className="form-label" htmlFor="single-name">
+                  Full Name *
+                  <input
+                    id="single-name"
+                    className="plain-input"
+                    type="text"
+                    required
+                    placeholder="e.g. Rahul Sharma"
+                    value={singleStudent.name}
+                    onChange={(e) => setSingleStudent({ ...singleStudent, name: e.target.value })}
+                  />
+                </label>
+
+                <label className="form-label" htmlFor="single-email">
+                  Email Address *
+                  <input
+                    id="single-email"
+                    className="plain-input"
+                    type="email"
+                    required
+                    placeholder="e.g. rahul.sharma@rungta.ac.in"
+                    value={singleStudent.email}
+                    onChange={(e) => setSingleStudent({ ...singleStudent, email: e.target.value })}
+                  />
+                </label>
+              </div>
+
+              <div className="form-grid-2">
+                <label className="form-label" htmlFor="single-student-id">
+                  Student ID / Roll No (Optional)
+                  <input
+                    id="single-student-id"
+                    className="plain-input"
+                    type="text"
+                    placeholder="e.g. CS2024045"
+                    value={singleStudent.studentId}
+                    onChange={(e) => setSingleStudent({ ...singleStudent, studentId: e.target.value })}
+                  />
+                </label>
+
+                <label className="form-label" htmlFor="single-year">
+                  Academic Year *
+                  <select
+                    id="single-year"
+                    className="plain-input"
+                    required
+                    value={singleStudent.year}
+                    onChange={(e) => setSingleStudent({ ...singleStudent, year: e.target.value })}
+                  >
+                    <option value="1">1st Year</option>
+                    <option value="2">2nd Year</option>
+                    <option value="3">3rd Year</option>
+                    <option value="4">4th Year</option>
+                    <option value="5">5th Year</option>
+                    <option value="6">6th Year</option>
+                    <option value="7">7th Year</option>
+                    <option value="8">8th Year</option>
+                  </select>
+                </label>
+              </div>
+
+              <BranchSectionFields
+                idPrefix="single-student"
+                branch={singleStudent.branch}
+                section={singleStudent.section}
+                departments={departments}
+                onChange={updateSingleStudentBranchSection}
+                branchLabel="Branch *"
+                sectionLabel="Section *"
               />
-              <span className="upload-dropzone__icon"><Upload size={21} /></span>
-              <strong>{file?.name || "Choose a student sheet"}</strong>
-              <span>
-                {file ? `${(file.size / 1024).toFixed(0)} KB · ready to upload` : "Excel (.xlsx) or CSV · max 5 MB"}
-              </span>
-            </label>
-            <button className="button button--primary button--wide" disabled={busy !== "" || !file}>
-              <Upload size={16} />
-              {busy === "upload" ? "Importing roster..." : "Upload student list"}
-            </button>
-          </form>
-          <div className="import-tip">
-            <span>!</span>
-            <p>
-              Required columns: <strong>name, email, branch, section, year</strong>. Optional: studentId,
-              leetcodeUsername, codechefUsername, geeksforgeeksUsername, githubUsername, hackerrankUsername.
-            </p>
-          </div>
+
+              <div className="platform-handles-section">
+                <div className="platform-handles-header">
+                  <strong>Competitive Coding Profiles (Optional)</strong>
+                  <small>Auto-synced on submission</small>
+                </div>
+
+                <div className="form-grid-2">
+                  <label className="form-label" htmlFor="single-lc">
+                    <span className="flex items-center gap-1.5">
+                      <img src="/leetcode_logo.jpeg" alt="LeetCode" className="w-3.5 h-3.5 rounded object-contain" />
+                      LeetCode Handle
+                    </span>
+                    <input
+                      id="single-lc"
+                      className="plain-input"
+                      type="text"
+                      placeholder="e.g. rahul_sharma"
+                      value={singleStudent.leetcodeUsername}
+                      onChange={(e) => setSingleStudent({ ...singleStudent, leetcodeUsername: e.target.value })}
+                    />
+                  </label>
+
+                  <label className="form-label" htmlFor="single-gh">
+                    <span className="flex items-center gap-1.5">
+                      <img src="/github_logo.jpeg" alt="GitHub" className="w-3.5 h-3.5 rounded object-contain" />
+                      GitHub Username
+                    </span>
+                    <input
+                      id="single-gh"
+                      className="plain-input"
+                      type="text"
+                      placeholder="e.g. rahulsharma-dev"
+                      value={singleStudent.githubUsername}
+                      onChange={(e) => setSingleStudent({ ...singleStudent, githubUsername: e.target.value })}
+                    />
+                  </label>
+                </div>
+
+                <div className="form-grid-3">
+                  <label className="form-label" htmlFor="single-cc">
+                    <span className="flex items-center gap-1.5">
+                      <img src="/codechef_logo.svg" alt="CodeChef" className="w-3.5 h-3.5 rounded object-contain" />
+                      CodeChef Handle
+                    </span>
+                    <input
+                      id="single-cc"
+                      className="plain-input"
+                      type="text"
+                      placeholder="e.g. rahul_cc"
+                      value={singleStudent.codechefUsername}
+                      onChange={(e) => setSingleStudent({ ...singleStudent, codechefUsername: e.target.value })}
+                    />
+                  </label>
+
+                  <label className="form-label" htmlFor="single-gfg">
+                    <span className="flex items-center gap-1.5">
+                      <img src="/gfg_logo.svg" alt="GeeksforGeeks" className="w-3.5 h-3.5 rounded object-contain" />
+                      GFG Username
+                    </span>
+                    <input
+                      id="single-gfg"
+                      className="plain-input"
+                      type="text"
+                      placeholder="e.g. rahul_gfg"
+                      value={singleStudent.geeksforgeeksUsername}
+                      onChange={(e) => setSingleStudent({ ...singleStudent, geeksforgeeksUsername: e.target.value })}
+                    />
+                  </label>
+
+                  <label className="form-label" htmlFor="single-hr">
+                    <span className="flex items-center gap-1.5">
+                      <img src="/hackerrank_logo.jpeg" alt="HackerRank" className="w-3.5 h-3.5 rounded object-contain" />
+                      HackerRank Handle
+                    </span>
+                    <input
+                      id="single-hr"
+                      className="plain-input"
+                      type="text"
+                      placeholder="e.g. rahul_hr"
+                      value={singleStudent.hackerrankUsername}
+                      onChange={(e) => setSingleStudent({ ...singleStudent, hackerrankUsername: e.target.value })}
+                    />
+                  </label>
+                </div>
+              </div>
+
+              <label className="form-label" htmlFor="single-password">
+                Temporary Password (Optional)
+                <input
+                  id="single-password"
+                  className="plain-input"
+                  type="password"
+                  placeholder="Min 6 characters (or leave blank for student self-registration)"
+                  value={singleStudent.password}
+                  onChange={(e) => setSingleStudent({ ...singleStudent, password: e.target.value })}
+                />
+              </label>
+
+              <div className="single-student-actions">
+                <button
+                  type="submit"
+                  className="button button--primary button--wide"
+                  disabled={busy !== "" || !singleStudent.name || !singleStudent.email || !singleStudent.branch || !singleStudent.section}
+                >
+                  <UserPlus size={16} />
+                  {busy === "add-student" ? "Adding student & syncing stats..." : "Add Student to Roster"}
+                </button>
+              </div>
+            </form>
+          )}
         </section>
 
         <section className="section-card section-manager">
@@ -393,7 +668,7 @@ export default function AdminDashboard() {
                 <strong>1. GitHub Webhook (Instant)</strong>
               </div>
               <p>Configure repo webhook to URL:</p>
-              <code>{window.location.origin}/api/webhooks/github</code>
+              <code>{origin ? `${origin}/api/webhooks/github` : "/api/webhooks/github"}</code>
               <small>Triggers on commit push event to instantly refresh student repositories and score.</small>
             </div>
             <div className="webhook-step">
@@ -412,7 +687,7 @@ export default function AdminDashboard() {
                 <strong>3. Instant Ping Endpoint</strong>
               </div>
               <p>Call anytime via GET/POST:</p>
-              <code>{window.location.origin}/api/webhooks/ping?username=&lt;handle&gt;</code>
+              <code>{origin ? `${origin}/api/webhooks/ping?username=<handle>` : "/api/webhooks/ping?username=<handle>"}</code>
               <small>Can be hooked into student scripts, browser extensions, or GitHub Actions.</small>
             </div>
           </div>
@@ -432,7 +707,7 @@ export default function AdminDashboard() {
             {overview.recent.map((student) => (
               <Link
                 className="recent-student recent-student--link"
-                to={`/admin/students/${student._id}`}
+                href={`/admin/students/${student._id}`}
                 key={student._id}
               >
                 <span className="avatar avatar--soft">

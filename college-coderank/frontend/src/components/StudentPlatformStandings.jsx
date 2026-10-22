@@ -1,3 +1,5 @@
+"use client";
+
 import { useMemo } from "react";
 import { ArrowUpRight, Award, Flame, Medal, Sparkles, Trophy } from "lucide-react";
 import { computeStudentPlatformPositions } from "../utils/dashboardData.js";

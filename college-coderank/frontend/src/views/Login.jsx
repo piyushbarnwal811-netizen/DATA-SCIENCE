@@ -1,13 +1,16 @@
+"use client";
+
 import { useState } from "react";
 import { ArrowLeft, ArrowRight, Eye, GraduationCap, LockKeyhole, Mail, Sparkles, Video } from "lucide-react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "../context/AuthContext.jsx";
 import { errorMessage } from "../services/api.js";
 
 export default function Login() {
   const { login } = useAuth();
-  const navigate = useNavigate();
-  const location = useLocation();
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [role, setRole] = useState("student");
   const [form, setForm] = useState({ email: "", password: "" });
   const [error, setError] = useState("");
@@ -20,7 +23,12 @@ export default function Login() {
     setError("");
     try {
       const user = await login({ ...form, role });
-      navigate(location.state?.from || (user.role === "admin" ? "/admin" : "/profile"), { replace: true });
+      if (user?.status === "FORCE_PASSWORD_CHANGE" || user?.must_change_password) {
+        router.replace("/force-change-password");
+        return;
+      }
+      const target = searchParams.get("from") || (user.role === "admin" ? "/admin" : "/profile");
+      router.replace(target);
     } catch (requestError) {
       setError(errorMessage(requestError));
     } finally {
@@ -42,7 +50,7 @@ export default function Login() {
           <button
             type="button"
             className="auth-photo-toggle-btn"
-            onClick={() => navigate("/welcome")}
+            onClick={() => router.push("/welcome")}
             title="Play Welcome Intro"
           >
             <Video size={14} />
@@ -57,7 +65,7 @@ export default function Login() {
             <Eye size={14} />
             <span>{photoOnly ? "Show Sign In" : "View Full Campus"}</span>
           </button>
-          <Link to="/leaderboard" className="auth-home-btn">
+          <Link href="/leaderboard" className="auth-home-btn">
             <ArrowLeft size={14} /> Back to Leaderboard
           </Link>
         </div>
@@ -108,11 +116,21 @@ export default function Login() {
                 <input type="password" required autoComplete="current-password" placeholder="Enter your password" value={form.password} onChange={(event) => setForm({ ...form, password: event.target.value })} />
               </span>
             </label>
+
+            <div className="flex justify-end -mt-1 mb-2">
+              <Link
+                href="/forgot-password"
+                className="text-xs text-white/75 hover:text-white transition-colors underline decoration-white/30 hover:decoration-white"
+              >
+                Forgot password?
+              </Link>
+            </div>
+
             {error && <div className="inline-error inline-error--glass" role="alert">{error}</div>}
             <button className="button button--risu-portal button--wide" disabled={busy}>{busy ? "Verifying credentials..." : "Sign in to Rungta Portal"} <ArrowRight size={16} /></button>
           </form>
 
-          {role === "student" && <p className="auth-bottom auth-bottom--light">New student? <Link to="/register">Create your student account</Link></p>}
+          {role === "student" && <p className="auth-bottom auth-bottom--light">New student? <Link href="/register">Create your student account</Link></p>}
           <p className="auth-privacy auth-privacy--light">Rungta Educational Complex · Central India Premier Tech Institute</p>
         </div>
       </main>

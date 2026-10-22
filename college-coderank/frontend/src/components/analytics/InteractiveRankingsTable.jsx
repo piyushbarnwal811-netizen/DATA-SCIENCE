@@ -1,6 +1,8 @@
+"use client";
+
 import { useState, useMemo, useEffect } from "react";
 import { ArrowUpDown, ArrowUpRight, Flame, Trophy, UserRound } from "lucide-react";
-import { Link } from "react-router-dom";
+import Link from "next/link";
 import RankBadge from "../RankBadge.jsx";
 import { formatNumber, getInitials } from "../../utils/helpers.js";
 
@@ -337,7 +339,7 @@ export default function InteractiveRankingsTable({
                       {isAdmin && student._id ? (
                         <Link
                           className="table-student table-student--link"
-                          to={`/admin/students/${student._id}`}
+                          href={`/admin/students/${student._id}`}
                           title={`View ${student.name}'s profile and platform positions`}
                         >
                           <span className="avatar avatar--soft">{getInitials(student.name)}</span>

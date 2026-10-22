@@ -1,3 +1,5 @@
+"use client";
+
 import { useMemo, useState } from "react";
 import { COMMON_BRANCHES, COMMON_SECTIONS } from "../utils/collegeOptions.js";
 

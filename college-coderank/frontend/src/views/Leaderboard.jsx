@@ -1,6 +1,8 @@
+"use client";
+
 import { useCallback, useEffect, useState, useMemo } from "react";
 import { Download, FileSpreadsheet, Radio, Trophy } from "lucide-react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams } from "next/navigation";
 import Loader from "../components/Loader.jsx";
 import StudentAnalyticsDashboard from "../components/analytics/StudentAnalyticsDashboard.jsx";
 import { useAuth } from "../context/AuthContext.jsx";

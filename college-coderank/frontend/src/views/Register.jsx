@@ -1,6 +1,9 @@
+"use client";
+
 import { useEffect, useState } from "react";
 import { ArrowLeft, ArrowRight, Code2, Eye, GraduationCap, LockKeyhole, Mail, Sparkles, UserRound, Video } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useAuth } from "../context/AuthContext.jsx";
 import BranchSectionFields from "../components/BranchSectionFields.jsx";
 import api, { errorMessage } from "../services/api.js";
@@ -22,7 +25,7 @@ const initialForm = {
 
 export default function Register() {
   const { register } = useAuth();
-  const navigate = useNavigate();
+  const router = useRouter();
   const [form, setForm] = useState(initialForm);
   const [departments, setDepartments] = useState([]);
   const [error, setError] = useState("");
@@ -61,7 +64,7 @@ export default function Register() {
         codechefUsername: form.codechefUsername?.trim() || "",
         geeksforgeeksUsername: form.geeksforgeeksUsername?.trim() || ""
       });
-      navigate("/profile", { replace: true });
+      router.replace("/profile");
     } catch (requestError) {
       setError(errorMessage(requestError));
     } finally {
@@ -83,7 +86,7 @@ export default function Register() {
           <button
             type="button"
             className="auth-photo-toggle-btn"
-            onClick={() => navigate("/welcome")}
+            onClick={() => router.push("/welcome")}
             title="Play Welcome Intro"
           >
             <Video size={14} />
@@ -98,7 +101,7 @@ export default function Register() {
             <Eye size={14} />
             <span>{photoOnly ? "Show Registration Form" : "View Full Campus"}</span>
           </button>
-          <Link to="/leaderboard" className="auth-home-btn">
+          <Link href="/leaderboard" className="auth-home-btn">
             <ArrowLeft size={14} /> Back to Leaderboard
           </Link>
         </div>
@@ -239,7 +242,7 @@ export default function Register() {
             <button className="button button--risu-portal button--wide" disabled={busy}>{busy ? "Registering student & syncing..." : "Create Account & Join Board"} <ArrowRight size={16} /></button>
           </form>
 
-          <p className="auth-bottom auth-bottom--light">Already registered? <Link to="/login">Sign in</Link></p>
+          <p className="auth-bottom auth-bottom--light">Already registered? <Link href="/login">Sign in</Link></p>
           <p className="auth-privacy auth-privacy--light">Rungta Educational Complex · Sign up with your college email.</p>
         </div>
       </main>

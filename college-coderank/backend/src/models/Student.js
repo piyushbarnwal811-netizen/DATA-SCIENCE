@@ -66,11 +66,40 @@ const studentSchema = new mongoose.Schema(
     geeksforgeeksUsername: { type: String, trim: true, default: "" },
     stats: { type: platformStatsSchema, default: () => ({}) },
     score: { type: Number, default: 0, index: true },
-    isActive: { type: Boolean, default: true }
+    isActive: { type: Boolean, default: true },
+    mustChangePassword: {
+      type: Boolean,
+      default: false,
+      alias: "must_change_password"
+    },
+    resetPasswordTokenHash: {
+      type: String,
+      select: false,
+      default: null,
+      alias: "reset_password_token_hash"
+    },
+    resetPasswordExpiresAt: {
+      type: Date,
+      select: false,
+      default: null,
+      alias: "reset_password_expires_at"
+    },
+    resetPasswordUsed: {
+      type: Boolean,
+      select: false,
+      default: false,
+      alias: "reset_password_used"
+    },
+    tokenVersion: {
+      type: Number,
+      default: 0,
+      alias: "token_version"
+    }
   },
   { timestamps: true }
 );
 
 studentSchema.index({ score: -1, name: 1 });
+studentSchema.index({ resetPasswordTokenHash: 1 }, { sparse: true });
 
 export default mongoose.model("Student", studentSchema);

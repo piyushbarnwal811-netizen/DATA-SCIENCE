@@ -1,15 +1,19 @@
+"use client";
+
 import { Bell, LogOut, Menu, Search, Sparkles, UserRound } from "lucide-react";
-import { Link, NavLink, useNavigate } from "react-router-dom";
+import Link from "next/link";
+import { useRouter, usePathname } from "next/navigation";
 import { useAuth } from "../context/AuthContext.jsx";
 import { getInitials } from "../utils/helpers.js";
 
 export default function Navbar({ onMenuClick }) {
   const { user, logout } = useAuth();
-  const navigate = useNavigate();
+  const router = useRouter();
+  const pathname = usePathname();
 
   const signOut = () => {
     logout();
-    navigate("/");
+    router.push("/");
   };
 
   return (
@@ -18,7 +22,7 @@ export default function Navbar({ onMenuClick }) {
         <button className="icon-button mobile-menu" aria-label="Open navigation" onClick={onMenuClick}>
           <Menu size={21} />
         </button>
-        <Link to={user ? "/home" : "/"} className="brand" title="College CodeRank — Presented by Data Science Club, Rungta International Skills University">
+        <Link href={user ? "/home" : "/"} className="brand" title="College CodeRank — Presented by Data Science Club, Rungta International Skills University">
           <span className="brand__mark">
             <img src="/college_logo.png" alt="Rungta University Logo" className="brand__logo-img" />
           </span>
@@ -36,7 +40,9 @@ export default function Navbar({ onMenuClick }) {
             type="search"
             placeholder="Search the leaderboard..."
             onKeyDown={(event) => {
-              if (event.key === "Enter") navigate(`/leaderboard?search=${encodeURIComponent(event.currentTarget.value)}`);
+              if (event.key === "Enter") {
+                router.push(`/leaderboard?search=${encodeURIComponent(event.currentTarget.value)}`);
+              }
             }}
           />
           <kbd>↵</kbd>
@@ -46,20 +52,52 @@ export default function Navbar({ onMenuClick }) {
             <Sparkles size={13} className="topbar-dsc-badge__icon" />
             <span>Presented by <strong>Data Science Club</strong></span>
           </div>
-          <Link to="/welcome" className="topbar-tour-btn" title="Watch Rungta University Campus Welcome">
+          {["super_admin", "admin", "tpo", "director", "hod", "teacher"].includes(user?.role) && (
+            <Link
+              href="/hierarchy"
+              className={`topbar-tour-btn ${pathname === "/hierarchy" ? "opacity-100 ring-2 ring-white/50" : ""}`}
+              title="College Hierarchical Management System"
+            >
+              🏛️ Hierarchy
+            </Link>
+          )}
+          <Link href="/welcome" className="topbar-tour-btn" title="Watch Rungta University Campus Welcome">
             <span className="tour-live-dot" /> Campus Intro
           </Link>
           <button className="icon-button topbar-notice" aria-label="Notifications"><Bell size={19} /></button>
           {user ? (
             <div className="account-menu">
-              <NavLink to={user.role === "admin" ? "/admin" : "/profile"} className="avatar" aria-label="Open profile">
+              <Link
+                href={
+                  ["super_admin", "admin", "tpo", "director", "hod", "teacher"].includes(user.role)
+                    ? "/hierarchy"
+                    : "/profile"
+                }
+                className={`avatar ${(pathname === "/admin" || pathname === "/profile" || pathname === "/hierarchy") ? "is-active" : ""}`}
+                aria-label="Open profile"
+              >
                 {getInitials(user.name)}
-              </NavLink>
-              <div className="account-menu__info"><strong>{user.name}</strong><span>{user.role === "admin" ? "Administrator" : "Student"}</span></div>
+              </Link>
+              <div className="account-menu__info">
+                <strong>{user.name}</strong>
+                <span>
+                  {["super_admin", "admin"].includes(user.role)
+                    ? "Super Admin"
+                    : user.role === "tpo"
+                    ? "TPO Head"
+                    : user.role === "director"
+                    ? "Director"
+                    : user.role === "hod"
+                    ? "HOD"
+                    : user.role === "teacher"
+                    ? "Teacher"
+                    : "Student"}
+                </span>
+              </div>
               <button className="icon-button" onClick={signOut} aria-label="Sign out"><LogOut size={17} /></button>
             </div>
           ) : (
-            <Link to="/login" className="topbar-login"><UserRound size={17} /> Sign in</Link>
+            <Link href="/login" className="topbar-login"><UserRound size={17} /> Sign in</Link>
           )}
         </div>
       </div>

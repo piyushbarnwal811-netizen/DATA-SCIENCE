@@ -1,3 +1,5 @@
+"use client";
+
 import { useEffect, useState } from "react";
 import { API_BASE_URL } from "./api.js";
 
@@ -9,6 +11,10 @@ const listeners = {
 };
 
 function initEventSource() {
+  if (typeof window === "undefined" || typeof EventSource === "undefined") {
+    return;
+  }
+
   if (eventSource && (eventSource.readyState === EventSource.OPEN || eventSource.readyState === EventSource.CONNECTING)) {
     return;
   }

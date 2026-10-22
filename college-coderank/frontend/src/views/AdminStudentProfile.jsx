@@ -1,3 +1,5 @@
+"use client";
+
 import { useCallback, useEffect, useState } from "react";
 import {
   ArrowLeft,
@@ -10,7 +12,8 @@ import {
   Trophy,
   UserRound
 } from "lucide-react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import Link from "next/link";
+import { useParams, useRouter } from "next/navigation";
 import Loader from "../components/Loader.jsx";
 import RecentSolvedProblems from "../components/RecentSolvedProblems.jsx";
 import StatCard from "../components/StatCard.jsx";
@@ -21,7 +24,7 @@ import { formatNumber, getInitials } from "../utils/helpers.js";
 
 export default function AdminStudentProfile() {
   const { id } = useParams();
-  const navigate = useNavigate();
+  const router = useRouter();
   const [student, setStudent] = useState(null);
   const [positions, setPositions] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -123,7 +126,7 @@ export default function AdminStudentProfile() {
     setError("");
     try {
       await api.delete(`/admin/students/${encodeURIComponent(id)}`);
-      navigate("/admin", { replace: true });
+      router.replace("/admin");
     } catch (requestError) {
       setError(errorMessage(requestError, "Could not delete this student."));
     } finally {
@@ -135,7 +138,7 @@ export default function AdminStudentProfile() {
   if (!student) {
     return (
       <>
-        <Link className="back-link" to="/leaderboard">
+        <Link className="back-link" href="/leaderboard">
           <ArrowLeft size={15} /> Back to leaderboard
         </Link>
         <div className="inline-error" role="alert">{error || "Student profile not found."}</div>
@@ -148,7 +151,7 @@ export default function AdminStudentProfile() {
   return (
     <>
       <div className="profile-header-actions">
-        <Link className="back-link" to="/leaderboard">
+        <Link className="back-link" href="/leaderboard">
           <ArrowLeft size={15} /> Back to leaderboard
         </Link>
         <div className="live-status-pill">

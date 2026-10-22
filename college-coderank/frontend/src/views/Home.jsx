@@ -1,6 +1,8 @@
+"use client";
+
 import { useEffect, useState } from "react";
 import { ArrowRight, ArrowUpRight, Award, Flame, Github, GraduationCap, Medal, Sparkles, Users, Zap } from "lucide-react";
-import { Link } from "react-router-dom";
+import Link from "next/link";
 import api, { errorMessage } from "../services/api.js";
 import { formatNumber, getInitials } from "../utils/helpers.js";
 import { SAMPLE_STUDENTS } from "../utils/dashboardData.js";
@@ -46,8 +48,8 @@ export default function Home() {
           <h1>Small commits.<br /><span>Big campus energy.</span></h1>
           <p>See who's building, solving and showing up at Rungta University. An official competitive coding initiative proudly presented by the <strong>Data Science Club</strong>.</p>
           <div className="welcome-card__btn-row">
-            <Link className="button button--white" to="/leaderboard">Explore leaderboard <ArrowRight size={16} /></Link>
-            <Link className="button button--campus-intro" to="/welcome"><GraduationCap size={16} /> Campus Intro</Link>
+            <Link className="button button--white" href="/leaderboard">Explore leaderboard <ArrowRight size={16} /></Link>
+            <Link className="button button--campus-intro" href="/welcome"><GraduationCap size={16} /> Campus Intro</Link>
           </div>
         </div>
         <div className="welcome-art" aria-hidden="true">
@@ -164,7 +166,7 @@ export default function Home() {
       <section className="section-card leaderboard-preview">
         <div className="section-heading">
           <div><span className="eyebrow">CAMPUS PULSE</span><h2>Leaderboard <span className="live-dot" /> <span className="live-label">LIVE</span></h2></div>
-          <Link className="text-link" to="/leaderboard">See all <ArrowUpRight size={16} /></Link>
+          <Link className="text-link" href="/leaderboard">See all <ArrowUpRight size={16} /></Link>
         </div>
         {topStudents.length ? (
           <div className="leaderboard-list">
@@ -188,7 +190,7 @@ export default function Home() {
       <div className="bottom-callout">
         <div className="bottom-callout__icon"><Flame size={20} /></div>
         <div><strong>Every streak starts with one problem.</strong><span>Show up today. Future you will be glad you did.</span></div>
-        <Link to="/leaderboard" aria-label="Open leaderboard"><ArrowRight size={19} /></Link>
+        <Link href="/leaderboard" aria-label="Open leaderboard"><ArrowRight size={19} /></Link>
       </div>
     </>
   );

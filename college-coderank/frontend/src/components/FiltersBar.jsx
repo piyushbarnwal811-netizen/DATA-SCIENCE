@@ -1,3 +1,5 @@
+"use client";
+
 import { FileSpreadsheet, RotateCcw, Search } from "lucide-react";
 
 export default function FiltersBar({

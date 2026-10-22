@@ -1,9 +1,12 @@
+"use client";
+
 import { useEffect, useState } from "react";
 import { ArrowRight, Award, Compass, GraduationCap, LogIn, Sparkles, UserPlus } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 export default function WelcomeSplash() {
-  const navigate = useNavigate();
+  const router = useRouter();
   const targetText = "Welcome to Rungta University";
   const [typedText, setTypedText] = useState("");
   const [charIndex, setCharIndex] = useState(0);
@@ -36,13 +39,13 @@ export default function WelcomeSplash() {
           </div>
         </div>
         <div className="welcome-splash__top-links">
-          <Link to="/login" className="welcome-splash__top-link welcome-splash__top-link--red">
+          <Link href="/login" className="welcome-splash__top-link welcome-splash__top-link--red">
             <LogIn size={14} /> Student Login
           </Link>
-          <Link to="/register" className="welcome-splash__top-link welcome-splash__top-link--outline">
+          <Link href="/register" className="welcome-splash__top-link welcome-splash__top-link--outline">
             <UserPlus size={14} /> Register
           </Link>
-          <Link to="/leaderboard" className="welcome-splash__top-link welcome-splash__top-link--ghost">
+          <Link href="/leaderboard" className="welcome-splash__top-link welcome-splash__top-link--ghost">
             <Compass size={14} /> Leaderboard
           </Link>
         </div>
@@ -71,7 +74,7 @@ export default function WelcomeSplash() {
             <span className={`welcome-splash__cursor ${isTypingComplete ? "welcome-splash__cursor--done" : ""}`}>|</span>
           </h1>
           <p className={`welcome-splash__sub ${isTypingComplete ? "is-visible" : ""}`}>
-            Rungta International Skills University · Department of Computer Science & Engineering
+            Rungta International Skills University · Department of Computer Science &amp; Engineering
           </p>
           <p className={`welcome-splash__motto ${isTypingComplete ? "is-visible" : ""}`}>
             An official initiative presented by the <strong>Data Science Club</strong> · Real-time algorithmic intelligence tracking across LeetCode, CodeChef, GeeksforGeeks, GitHub &amp; HackerRank
@@ -84,21 +87,21 @@ export default function WelcomeSplash() {
             <button
               type="button"
               className="welcome-splash__primary-btn"
-              onClick={() => navigate("/login")}
+              onClick={() => router.push("/login")}
             >
               <LogIn size={16} /> Student / Admin Login <ArrowRight size={16} />
             </button>
             <button
               type="button"
               className="welcome-splash__secondary-btn"
-              onClick={() => navigate("/register")}
+              onClick={() => router.push("/register")}
             >
               <UserPlus size={16} /> New Registration
             </button>
             <button
               type="button"
               className="welcome-splash__tertiary-btn"
-              onClick={() => navigate("/leaderboard")}
+              onClick={() => router.push("/leaderboard")}
             >
               <Compass size={16} /> View Leaderboard
             </button>

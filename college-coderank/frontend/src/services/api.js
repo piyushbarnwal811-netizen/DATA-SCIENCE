@@ -1,7 +1,8 @@
 import axios from "axios";
 
-// Dynamically determine the backend root URL (Vite or CRA compatible) with localhost fallback
+// Dynamically determine the backend root URL (Next.js, Vite, or CRA compatible) with localhost fallback
 const RAW_API_URL =
+  (typeof process !== "undefined" && process.env?.NEXT_PUBLIC_API_URL) ||
   (typeof import.meta !== "undefined" && import.meta.env?.VITE_API_URL) ||
   (typeof process !== "undefined" && process.env?.REACT_APP_API_URL) ||
   "http://localhost:5000";

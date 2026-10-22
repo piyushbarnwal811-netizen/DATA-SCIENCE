@@ -1,21 +1,31 @@
+"use client";
+
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import api from "../services/api.js";
 
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(() => {
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  // Initialize session safely in browser
+  useEffect(() => {
     try {
-      return JSON.parse(localStorage.getItem("ccr_user") || "null");
+      const storedUser = localStorage.getItem("ccr_user");
+      if (storedUser) {
+        setUser(JSON.parse(storedUser));
+      }
     } catch {
-      return null;
+      // ignore JSON parse or storage errors
     }
-  });
-  const [loading, setLoading] = useState(Boolean(localStorage.getItem("ccr_token")));
+  }, []);
 
   const acceptSession = useCallback((data) => {
-    localStorage.setItem("ccr_token", data.token);
-    localStorage.setItem("ccr_user", JSON.stringify(data.user));
+    if (typeof window !== "undefined") {
+      localStorage.setItem("ccr_token", data.token);
+      localStorage.setItem("ccr_user", JSON.stringify(data.user));
+    }
     setUser(data.user);
     return data.user;
   }, []);
@@ -23,6 +33,14 @@ export function AuthProvider({ children }) {
   const login = useCallback(async (credentials) => {
     try {
       const { data } = await api.post("/auth/login", credentials);
+      if (data.status === "FORCE_PASSWORD_CHANGE" || data.must_change_password) {
+        if (typeof window !== "undefined") {
+          localStorage.setItem("ccr_token", data.token);
+          localStorage.setItem("ccr_user", JSON.stringify(data.user));
+        }
+        setUser(data.user);
+        return { ...data.user, status: "FORCE_PASSWORD_CHANGE", must_change_password: true };
+      }
       return acceptSession(data);
     } catch (error) {
       if (error.response?.status === 404) {
@@ -31,6 +49,15 @@ export function AuthProvider({ children }) {
       }
       throw error;
     }
+  }, [acceptSession]);
+
+  const forceChangePassword = useCallback(async ({ currentPassword, newPassword, confirmPassword }) => {
+    const { data } = await api.post("/auth/force-change-password", {
+      current_password: currentPassword,
+      new_password: newPassword,
+      confirm_password: confirmPassword
+    });
+    return acceptSession(data);
   }, [acceptSession]);
 
   const register = useCallback(async (details) => {
@@ -55,12 +82,15 @@ export function AuthProvider({ children }) {
   }, [acceptSession]);
 
   const logout = useCallback(() => {
-    localStorage.removeItem("ccr_token");
-    localStorage.removeItem("ccr_user");
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("ccr_token");
+      localStorage.removeItem("ccr_user");
+    }
     setUser(null);
   }, []);
 
   useEffect(() => {
+    if (typeof window === "undefined") return;
     const token = localStorage.getItem("ccr_token");
     if (!token) {
       setLoading(false);
@@ -85,14 +115,15 @@ export function AuthProvider({ children }) {
   }, [logout]);
 
   useEffect(() => {
+    if (typeof window === "undefined") return;
     const clearSession = () => setUser(null);
     window.addEventListener("ccr:unauthorized", clearSession);
     return () => window.removeEventListener("ccr:unauthorized", clearSession);
   }, []);
 
   const value = useMemo(
-    () => ({ user, loading, login, register, logout }),
-    [user, loading, login, register, logout]
+    () => ({ user, loading, login, register, logout, forceChangePassword }),
+    [user, loading, login, register, logout, forceChangePassword]
   );
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
