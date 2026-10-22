@@ -10,8 +10,8 @@ export default function ResetPassword() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const token = searchParams.get("token") || "";
-  const email = searchParams.get("email") || "";
+  const token = searchParams?.get("token") || "";
+  const email = searchParams?.get("email") || "";
 
   const [verifying, setVerifying] = useState(true);
   const [tokenValid, setTokenValid] = useState(false);

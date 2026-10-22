@@ -12,13 +12,13 @@ import { SAMPLE_STUDENTS } from "../utils/dashboardData.js";
 
 export default function Leaderboard() {
   const { user } = useAuth();
-  const [searchParams] = useSearchParams();
+  const searchParams = useSearchParams();
   const [filters, setFilters] = useState({
-    search: searchParams.get("search") ?? "",
+    search: searchParams?.get("search") ?? "",
     branch: "",
     section: "",
     year: "",
-    limit: searchParams.get("limit") ?? ""
+    limit: searchParams?.get("limit") ?? ""
   });
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
