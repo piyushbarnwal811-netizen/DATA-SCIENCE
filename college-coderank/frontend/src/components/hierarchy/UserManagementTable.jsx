@@ -22,9 +22,9 @@ import {
 import api from "../../services/api.js";
 
 const ROLE_BADGES = {
-  super_admin: { label: "Super Admin", color: "bg-purple-100 text-purple-800 border-purple-200" },
-  tpo: { label: "TPO", color: "bg-blue-100 text-blue-800 border-blue-200" },
-  director: { label: "Director", color: "bg-amber-100 text-amber-800 border-amber-200" },
+  super_admin: { label: "Super Admin", color: "bg-red-100 text-red-800 border-red-200" },
+  tpo: { label: "TPO", color: "bg-amber-100 text-amber-800 border-amber-200" },
+  director: { label: "Director", color: "bg-rose-100 text-rose-800 border-rose-200" },
   hod: { label: "HOD", color: "bg-emerald-100 text-emerald-800 border-emerald-200" },
   teacher: { label: "Teacher", color: "bg-sky-100 text-sky-800 border-sky-200" }
 };
@@ -329,7 +329,7 @@ export default function UserManagementTable({ canEdit = true }) {
       {modalOpen && (
         <div className="hierarchy-modal-backdrop" onClick={() => setModalOpen(false)}>
           <div className="hierarchy-modal-dialog" onClick={(e) => e.stopPropagation()}>
-            <div className="hierarchy-modal-header bg-gradient-to-r from-purple-600 to-indigo-700">
+            <div className="hierarchy-modal-header bg-gradient-to-r from-red-600 to-rose-700">
               <div>
                 <span className="modal-level-tag">STAFF ACCOUNT DIRECTORY</span>
                 <h2 className="modal-node-title">

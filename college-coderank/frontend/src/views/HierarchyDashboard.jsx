@@ -42,7 +42,7 @@ export default function HierarchyDashboard() {
           <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
           <span className="text-slate-500">Active Verified Session:</span>
           <strong className="text-slate-800 font-extrabold">{user?.name}</strong>
-          <span className="inline-block px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">
+          <span className="inline-block px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-red-50 text-red-700 border border-red-200">
             {currentRole.toUpperCase()}
           </span>
         </div>
@@ -52,7 +52,7 @@ export default function HierarchyDashboard() {
             <button
               type="button"
               onClick={openTreeModal}
-              className="inline-flex items-center gap-1 text-indigo-600 hover:text-indigo-800 font-bold underline cursor-pointer"
+              className="inline-flex items-center gap-1 text-red-600 hover:text-red-800 font-bold underline cursor-pointer"
             >
               <Layers size={13} />
               <span>Inspect University Tree</span>
@@ -88,7 +88,7 @@ export default function HierarchyDashboard() {
           <div className="bg-white rounded-2xl max-w-5xl w-full max-h-[90vh] flex flex-col shadow-2xl border border-slate-200 overflow-hidden">
             <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 bg-slate-50">
               <div className="flex items-center gap-2">
-                <Layers size={18} className="text-indigo-600" />
+                <Layers size={18} className="text-red-600" />
                 <h3 className="font-extrabold text-slate-800 text-sm">
                   Live University Organizational Hierarchy Tree
                 </h3>

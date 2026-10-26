@@ -24,15 +24,15 @@ export default function RoleScopedPanel({ user, treeData, overviewData, onSwitch
   // 1. Super Admin View
   if (role === "super_admin") {
     return (
-      <div className="role-panel-card bg-gradient-to-r from-purple-900/10 via-indigo-900/5 to-transparent border-purple-200">
+      <div className="role-panel-card bg-gradient-to-r from-red-900/10 via-rose-900/5 to-transparent border-red-200">
         <div className="flex items-start justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-purple-600 text-white flex items-center justify-center shadow-md">
+            <div className="w-10 h-10 rounded-xl bg-red-600 text-white flex items-center justify-center shadow-md">
               <ShieldCheck size={22} />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <span className="px-2 py-0.5 bg-purple-100 text-purple-800 text-[10px] font-bold rounded uppercase">
+                <span className="px-2 py-0.5 bg-red-100 text-red-800 text-[10px] font-bold rounded uppercase">
                   Super Administrator
                 </span>
                 <span className="text-xs text-slate-500 font-medium">Universal Control Center</span>

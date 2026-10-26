@@ -23,8 +23,8 @@ const DEMO_ACCOUNTS = [
     email: "piyushbarnwal811@gmail.com",
     badge: "👑 Full Control",
     icon: ShieldCheck,
-    color: "from-purple-600 to-indigo-700",
-    bgActive: "bg-purple-900/30 text-purple-300 border-purple-500/50"
+    color: "from-red-600 to-rose-700",
+    bgActive: "bg-red-900/30 text-red-300 border-red-500/50"
   },
   {
     role: "tpo",

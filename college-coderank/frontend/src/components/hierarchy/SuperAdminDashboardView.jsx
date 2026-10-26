@@ -26,7 +26,10 @@ import {
   Clock,
   RotateCcw,
   Ban,
-  ExternalLink
+  ExternalLink,
+  Sparkles,
+  Eye,
+  EyeOff
 } from "lucide-react";
 import api, { errorMessage } from "../../services/api.js";
 
@@ -48,6 +51,8 @@ export default function SuperAdminDashboardView({ onInspectTree }) {
   const [tempCredsModal, setTempCredsModal] = useState(null); // { name, email, password, role }
   const [deleteConfirmModal, setDeleteConfirmModal] = useState(null); // { id, name, role }
   const [copied, setCopied] = useState(false);
+  const [showTpoPassword, setShowTpoPassword] = useState(false);
+  const [showDirPassword, setShowDirPassword] = useState(false);
 
   // Tab Data States
   const [tpos, setTpos] = useState([]);
@@ -74,7 +79,9 @@ export default function SuperAdminDashboardView({ onInspectTree }) {
     employeeId: "",
     phone: "",
     designation: "Head - Training & Placement Office (TPO)",
-    temporaryPassword: ""
+    password: "",
+    temporaryPassword: "",
+    mustChangePassword: false
   });
 
   const [dirForm, setDirForm] = useState({
@@ -85,7 +92,9 @@ export default function SuperAdminDashboardView({ onInspectTree }) {
     designation: "Director of Faculty / Institute",
     qualification: "",
     directorateId: "",
-    temporaryPassword: ""
+    password: "",
+    temporaryPassword: "",
+    mustChangePassword: false
   });
 
   const [dirateForm, setDirateForm] = useState({
@@ -246,19 +255,36 @@ export default function SuperAdminDashboardView({ onInspectTree }) {
     setTimeout(() => setSuccessMsg(""), 5000);
   };
 
+  const generatePassword = () => {
+    const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789";
+    const specials = "!@#$%^&*";
+    let pass = "";
+    for (let i = 0; i < 7; i++) pass += chars.charAt(Math.floor(Math.random() * chars.length));
+    pass += specials.charAt(Math.floor(Math.random() * specials.length));
+    for (let i = 0; i < 3; i++) pass += chars.charAt(Math.floor(Math.random() * chars.length));
+    return pass;
+  };
+
   // Handle TPO Creation
   const handleCreateTpo = async (e) => {
     e.preventDefault();
     setSubmitting(true);
     setError("");
     try {
-      const { data } = await api.post("/hierarchy/tpos", tpoForm);
+      const { data } = await api.post("/hierarchy/tpos", {
+        ...tpoForm,
+        password: tpoForm.password?.trim() || undefined,
+        temporaryPassword: tpoForm.password?.trim() || tpoForm.temporaryPassword?.trim() || undefined,
+        mustChangePassword: Boolean(tpoForm.mustChangePassword)
+      });
       setShowTpoModal(false);
+      const chosenPassword = data.credentials?.password || data.temporaryCredentials?.temporaryPassword;
       setTempCredsModal({
         name: data.tpo.name,
-        email: data.temporaryCredentials.email,
-        password: data.temporaryCredentials.temporaryPassword,
-        role: "TPO"
+        email: data.tpo.email || data.credentials?.email || data.temporaryCredentials?.email,
+        password: chosenPassword,
+        role: "TPO",
+        mustChangePassword: data.tpo?.mustChangePassword
       });
       setTpoForm({
         name: "",
@@ -266,7 +292,9 @@ export default function SuperAdminDashboardView({ onInspectTree }) {
         employeeId: "",
         phone: "",
         designation: "Head - Training & Placement Office (TPO)",
-        temporaryPassword: ""
+        password: "",
+        temporaryPassword: "",
+        mustChangePassword: false
       });
       showSuccess("TPO account created successfully!");
       refreshAll();
@@ -283,13 +311,20 @@ export default function SuperAdminDashboardView({ onInspectTree }) {
     setSubmitting(true);
     setError("");
     try {
-      const { data } = await api.post("/hierarchy/directors", dirForm);
+      const { data } = await api.post("/hierarchy/directors", {
+        ...dirForm,
+        password: dirForm.password?.trim() || undefined,
+        temporaryPassword: dirForm.password?.trim() || dirForm.temporaryPassword?.trim() || undefined,
+        mustChangePassword: Boolean(dirForm.mustChangePassword)
+      });
       setShowDirModal(false);
+      const chosenPassword = data.credentials?.password || data.temporaryCredentials?.temporaryPassword;
       setTempCredsModal({
         name: data.director.name,
-        email: data.temporaryCredentials.email,
-        password: data.temporaryCredentials.temporaryPassword,
-        role: "Director"
+        email: data.director.email || data.credentials?.email || data.temporaryCredentials?.email,
+        password: chosenPassword,
+        role: "Director",
+        mustChangePassword: data.director?.mustChangePassword
       });
       setDirForm({
         name: "",
@@ -299,7 +334,9 @@ export default function SuperAdminDashboardView({ onInspectTree }) {
         designation: "Director of Faculty / Institute",
         qualification: "",
         directorateId: "",
-        temporaryPassword: ""
+        password: "",
+        temporaryPassword: "",
+        mustChangePassword: false
       });
       showSuccess("Director account created successfully!");
       refreshAll();
@@ -371,7 +408,8 @@ export default function SuperAdminDashboardView({ onInspectTree }) {
 
   const copyCreds = () => {
     if (!tempCredsModal) return;
-    const text = `College CodeRank Credentials:\nOfficial Email: ${tempCredsModal.email}\nTemporary Password: ${tempCredsModal.password}\n\nPlease log in and change your password immediately.`;
+    const origin = typeof window !== "undefined" ? window.location.origin : "";
+    const text = `College CodeRank Credentials (${tempCredsModal.role})\n\nName: ${tempCredsModal.name}\nOfficial Email: ${tempCredsModal.email}\nPassword: ${tempCredsModal.password}\nLogin URL: ${origin}/login\nPolicy: ${tempCredsModal.mustChangePassword ? "Change Password Required on First Login" : "Direct Permanent Login"}`;
     navigator.clipboard.writeText(text);
     setCopied(true);
     setTimeout(() => setCopied(false), 2500);
@@ -391,7 +429,7 @@ export default function SuperAdminDashboardView({ onInspectTree }) {
   return (
     <div className="space-y-6">
       {/* 1. Header Banner */}
-      <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white rounded-2xl p-6 shadow-xl border border-indigo-900/40">
+      <div className="bg-gradient-to-r from-slate-900 via-red-950 to-slate-900 text-white rounded-2xl p-6 shadow-xl border border-red-900/40">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <div className="flex items-center gap-2 mb-2">
@@ -424,7 +462,7 @@ export default function SuperAdminDashboardView({ onInspectTree }) {
               <button
                 type="button"
                 onClick={onInspectTree}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white transition-all cursor-pointer shadow-md"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-red-600 hover:bg-red-500 text-white transition-all cursor-pointer shadow-md"
               >
                 <Layers size={13} />
                 <span>Inspect Hierarchy Tree</span>
@@ -501,7 +539,7 @@ export default function SuperAdminDashboardView({ onInspectTree }) {
           onClick={() => setActiveTab("tpos")}
           className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
             activeTab === "tpos"
-              ? "bg-indigo-600 text-white shadow-sm"
+              ? "bg-red-600 text-white shadow-sm"
               : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
           }`}
         >
@@ -517,7 +555,7 @@ export default function SuperAdminDashboardView({ onInspectTree }) {
           onClick={() => setActiveTab("directors")}
           className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
             activeTab === "directors"
-              ? "bg-indigo-600 text-white shadow-sm"
+              ? "bg-red-600 text-white shadow-sm"
               : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
           }`}
         >
@@ -533,7 +571,7 @@ export default function SuperAdminDashboardView({ onInspectTree }) {
           onClick={() => setActiveTab("accounts")}
           className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
             activeTab === "accounts"
-              ? "bg-indigo-600 text-white shadow-sm"
+              ? "bg-red-600 text-white shadow-sm"
               : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
           }`}
         >
@@ -546,7 +584,7 @@ export default function SuperAdminDashboardView({ onInspectTree }) {
           onClick={() => setActiveTab("audit")}
           className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
             activeTab === "audit"
-              ? "bg-indigo-600 text-white shadow-sm"
+              ? "bg-red-600 text-white shadow-sm"
               : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
           }`}
         >
@@ -559,7 +597,7 @@ export default function SuperAdminDashboardView({ onInspectTree }) {
           onClick={() => setActiveTab("settings")}
           className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
             activeTab === "settings"
-              ? "bg-indigo-600 text-white shadow-sm"
+              ? "bg-red-600 text-white shadow-sm"
               : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
           }`}
         >
@@ -584,7 +622,7 @@ export default function SuperAdminDashboardView({ onInspectTree }) {
                 <button
                   type="button"
                   onClick={() => setShowTpoInviteModal(true)}
-                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm cursor-pointer transition-all"
+                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold bg-red-600 hover:bg-red-700 text-white shadow-sm cursor-pointer transition-all"
                 >
                   <Mail size={15} />
                   <span>Send TPO Invitation</span>
@@ -604,7 +642,7 @@ export default function SuperAdminDashboardView({ onInspectTree }) {
             <div className="bg-slate-50/70 border border-slate-200 rounded-xl p-4 space-y-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <Mail size={16} className="text-indigo-600" />
+                  <Mail size={16} className="text-red-600" />
                   <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider">
                     TPO Email Setup Invitations ({tpoInvitations.length})
                   </h3>
@@ -673,7 +711,7 @@ export default function SuperAdminDashboardView({ onInspectTree }) {
                                   type="button"
                                   onClick={() => handleResendInvitation(inv)}
                                   title="Resend Invitation Email"
-                                  className="inline-flex items-center gap-1 px-2 py-1 text-[11px] font-bold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 rounded-md cursor-pointer"
+                                  className="inline-flex items-center gap-1 px-2 py-1 text-[11px] font-bold text-red-700 bg-red-50 hover:bg-red-100 rounded-md cursor-pointer"
                                 >
                                   <RotateCcw size={11} /> Resend
                                 </button>
@@ -702,7 +740,7 @@ export default function SuperAdminDashboardView({ onInspectTree }) {
             <div className="space-y-3 pt-2">
               <div className="flex items-center justify-between">
                 <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-2">
-                  <Briefcase size={16} className="text-indigo-600" />
+                  <Briefcase size={16} className="text-red-600" />
                   Active TPO Accounts ({tpos.length})
                 </h3>
                 <span className="text-[11px] text-slate-400">Authenticated university staff</span>
@@ -808,7 +846,7 @@ export default function SuperAdminDashboardView({ onInspectTree }) {
                 <button
                   type="button"
                   onClick={() => setShowDirInviteModal(true)}
-                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm cursor-pointer transition-all"
+                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold bg-red-600 hover:bg-red-700 text-white shadow-sm cursor-pointer transition-all"
                 >
                   <Mail size={15} />
                   <span>Send Director Invitation</span>
@@ -828,7 +866,7 @@ export default function SuperAdminDashboardView({ onInspectTree }) {
             <div className="bg-slate-50/70 border border-slate-200 rounded-xl p-4 space-y-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <Mail size={16} className="text-indigo-600" />
+                  <Mail size={16} className="text-red-600" />
                   <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider">
                     Director Email Invitations ({directorInvitations.length})
                   </h3>
@@ -860,7 +898,7 @@ export default function SuperAdminDashboardView({ onInspectTree }) {
                           <td className="py-2.5 px-3 font-mono text-slate-600">{inv.email}</td>
                           <td className="py-2.5 px-3">
                             {inv.directorate ? (
-                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-red-50 text-red-700 border border-red-200">
                                 {inv.directorate.name}
                               </span>
                             ) : (
@@ -894,7 +932,7 @@ export default function SuperAdminDashboardView({ onInspectTree }) {
                                   type="button"
                                   onClick={() => handleResendInvitation(inv)}
                                   title="Resend Invitation Email"
-                                  className="inline-flex items-center gap-1 px-2 py-1 text-[11px] font-bold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 rounded-md cursor-pointer"
+                                  className="inline-flex items-center gap-1 px-2 py-1 text-[11px] font-bold text-red-700 bg-red-50 hover:bg-red-100 rounded-md cursor-pointer"
                                 >
                                   <RotateCcw size={11} /> Resend
                                 </button>
@@ -923,7 +961,7 @@ export default function SuperAdminDashboardView({ onInspectTree }) {
             <div className="space-y-3 pt-2">
               <div className="flex items-center justify-between">
                 <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-2">
-                  <Building size={16} className="text-indigo-600" />
+                  <Building size={16} className="text-red-600" />
                   Active Director Accounts ({directors.length})
                 </h3>
                 <span className="text-[11px] text-slate-400">Authenticated university leadership</span>
@@ -960,7 +998,7 @@ export default function SuperAdminDashboardView({ onInspectTree }) {
                           <td className="py-3.5 px-3 font-mono text-slate-600">{dir.email}</td>
                           <td className="py-3.5 px-3">
                             {dir.directorateId ? (
-                              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">
+                              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-red-50 text-red-700 border border-red-200">
                                 {dir.directorateId.name} ({dir.directorateId.code})
                               </span>
                             ) : (
@@ -1046,14 +1084,14 @@ export default function SuperAdminDashboardView({ onInspectTree }) {
                   placeholder="Search by name, email, employee ID..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-9 pr-3 py-1.5 text-xs bg-white rounded-lg border border-slate-300 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                  className="w-full pl-9 pr-3 py-1.5 text-xs bg-white rounded-lg border border-slate-300 focus:outline-none focus:ring-1 focus:ring-red-500"
                 />
               </div>
 
               <select
                 value={roleFilter}
                 onChange={(e) => setRoleFilter(e.target.value)}
-                className="py-1.5 px-3 text-xs bg-white rounded-lg border border-slate-300 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                className="py-1.5 px-3 text-xs bg-white rounded-lg border border-slate-300 focus:outline-none focus:ring-1 focus:ring-red-500"
               >
                 <option value="">All Roles (Universal)</option>
                 <option value="super_admin">Super Admin</option>
@@ -1066,7 +1104,7 @@ export default function SuperAdminDashboardView({ onInspectTree }) {
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
-                className="py-1.5 px-3 text-xs bg-white rounded-lg border border-slate-300 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                className="py-1.5 px-3 text-xs bg-white rounded-lg border border-slate-300 focus:outline-none focus:ring-1 focus:ring-red-500"
               >
                 <option value="">All Account Statuses</option>
                 <option value="active">Active</option>
@@ -1178,7 +1216,7 @@ export default function SuperAdminDashboardView({ onInspectTree }) {
                   placeholder="Filter logs by user name, email, action, details..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-9 pr-3 py-1.5 text-xs bg-white rounded-lg border border-slate-300 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                  className="w-full pl-9 pr-3 py-1.5 text-xs bg-white rounded-lg border border-slate-300 focus:outline-none focus:ring-1 focus:ring-red-500"
                 />
               </div>
             </div>
@@ -1218,7 +1256,7 @@ export default function SuperAdminDashboardView({ onInspectTree }) {
                           </span>
                         </td>
                         <td className="py-3 px-3">
-                          <span className="inline-block px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">
+                          <span className="inline-block px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-red-50 text-red-700 border border-red-200">
                             {log.action}
                           </span>
                         </td>
@@ -1246,7 +1284,7 @@ export default function SuperAdminDashboardView({ onInspectTree }) {
               <button
                 type="button"
                 onClick={() => setShowDirateModal(true)}
-                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm cursor-pointer transition-all"
+                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold bg-red-600 hover:bg-red-700 text-white shadow-sm cursor-pointer transition-all"
               >
                 <Plus size={15} />
                 <span>+ Add Directorate</span>
@@ -1263,7 +1301,7 @@ export default function SuperAdminDashboardView({ onInspectTree }) {
                 <button
                   type="button"
                   onClick={() => setShowDirateModal(true)}
-                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold bg-indigo-600 text-white hover:bg-indigo-700 cursor-pointer"
+                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold bg-red-600 text-white hover:bg-red-700 cursor-pointer"
                 >
                   <Plus size={14} /> Add Directorate
                 </button>
@@ -1274,7 +1312,7 @@ export default function SuperAdminDashboardView({ onInspectTree }) {
                   <div key={dir._id} className="p-5 rounded-xl border border-slate-200 bg-slate-50/50 hover:bg-slate-50 transition-all space-y-3">
                     <div className="flex items-start justify-between gap-2">
                       <div>
-                        <span className="text-[10px] font-black uppercase tracking-wider text-indigo-600 bg-indigo-50 border border-indigo-200 px-2 py-0.5 rounded">
+                        <span className="text-[10px] font-black uppercase tracking-wider text-red-600 bg-red-50 border border-red-200 px-2 py-0.5 rounded">
                           {dir.code}
                         </span>
                         <h3 className="font-extrabold text-slate-800 text-sm mt-1">{dir.name}</h3>
@@ -1312,7 +1350,7 @@ export default function SuperAdminDashboardView({ onInspectTree }) {
           <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-200 space-y-4">
             <div className="flex items-center justify-between pb-3 border-b border-slate-100">
               <h3 className="font-extrabold text-slate-800 text-sm flex items-center gap-2">
-                <Briefcase size={16} className="text-indigo-600" />
+                <Briefcase size={16} className="text-red-600" />
                 Create Official TPO Account
               </h3>
               <button type="button" onClick={() => setShowTpoModal(false)} className="text-slate-400 hover:text-slate-600 cursor-pointer">
@@ -1329,7 +1367,7 @@ export default function SuperAdminDashboardView({ onInspectTree }) {
                   placeholder="e.g. Dr. Alok Verma"
                   value={tpoForm.name}
                   onChange={(e) => setTpoForm({ ...tpoForm, name: e.target.value })}
-                  className="w-full text-xs px-3 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                  className="w-full text-xs px-3 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-1 focus:ring-red-500"
                 />
               </div>
 
@@ -1341,7 +1379,7 @@ export default function SuperAdminDashboardView({ onInspectTree }) {
                   placeholder="tpo@rungta.org"
                   value={tpoForm.email}
                   onChange={(e) => setTpoForm({ ...tpoForm, email: e.target.value })}
-                  className="w-full text-xs px-3 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                  className="w-full text-xs px-3 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-1 focus:ring-red-500"
                 />
               </div>
 
@@ -1353,7 +1391,7 @@ export default function SuperAdminDashboardView({ onInspectTree }) {
                     placeholder="EMP-TPO-01"
                     value={tpoForm.employeeId}
                     onChange={(e) => setTpoForm({ ...tpoForm, employeeId: e.target.value })}
-                    className="w-full text-xs px-3 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                    className="w-full text-xs px-3 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-1 focus:ring-red-500"
                   />
                 </div>
                 <div>
@@ -1363,23 +1401,58 @@ export default function SuperAdminDashboardView({ onInspectTree }) {
                     placeholder="+91 94252 00001"
                     value={tpoForm.phone}
                     onChange={(e) => setTpoForm({ ...tpoForm, phone: e.target.value })}
-                    className="w-full text-xs px-3 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                    className="w-full text-xs px-3 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-1 focus:ring-red-500"
                   />
                 </div>
               </div>
 
-              <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">Temporary Password (Optional)</label>
-                <input
-                  type="text"
-                  placeholder="Leave empty to auto-generate secure password"
-                  value={tpoForm.temporaryPassword}
-                  onChange={(e) => setTpoForm({ ...tpoForm, temporaryPassword: e.target.value })}
-                  className="w-full text-xs px-3 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                />
-                <span className="text-[10px] text-slate-400 mt-0.5 block">
-                  The officer will be forced to change this password on their first login.
-                </span>
+              {/* Password Setting Section */}
+              <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-2">
+                <div className="flex items-center justify-between">
+                  <label className="block text-xs font-extrabold text-slate-800">
+                    Account Password (Direct Set)
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const p = generatePassword();
+                      setTpoForm((prev) => ({ ...prev, password: p }));
+                    }}
+                    className="inline-flex items-center gap-1 text-[11px] font-bold text-red-600 hover:text-red-700 cursor-pointer"
+                  >
+                    <Sparkles size={12} />
+                    <span>Quick Generate</span>
+                  </button>
+                </div>
+
+                <div className="relative">
+                  <input
+                    type={showTpoPassword ? "text" : "password"}
+                    placeholder="Enter custom password or click Quick Generate"
+                    value={tpoForm.password}
+                    onChange={(e) => setTpoForm({ ...tpoForm, password: e.target.value })}
+                    className="w-full text-xs pl-3 pr-10 py-2 rounded-lg border border-slate-300 bg-white focus:outline-none focus:ring-1 focus:ring-red-500 font-mono"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowTpoPassword(!showTpoPassword)}
+                    className="absolute right-2.5 top-2.5 text-slate-400 hover:text-slate-600 cursor-pointer"
+                  >
+                    {showTpoPassword ? <EyeOff size={15} /> : <Eye size={15} />}
+                  </button>
+                </div>
+
+                <label className="flex items-center gap-2 cursor-pointer pt-1">
+                  <input
+                    type="checkbox"
+                    checked={tpoForm.mustChangePassword}
+                    onChange={(e) => setTpoForm({ ...tpoForm, mustChangePassword: e.target.checked })}
+                    className="rounded border-slate-300 text-red-600 focus:ring-red-500 h-3.5 w-3.5 cursor-pointer"
+                  />
+                  <span className="text-[11px] text-slate-600">
+                    Require officer to change password on first login
+                  </span>
+                </label>
               </div>
 
               <div className="flex justify-end gap-2 pt-3 border-t border-slate-100">
@@ -1393,7 +1466,7 @@ export default function SuperAdminDashboardView({ onInspectTree }) {
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="px-4 py-2 text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg shadow-sm cursor-pointer disabled:opacity-50"
+                  className="px-4 py-2 text-xs font-bold bg-red-600 hover:bg-red-700 text-white rounded-lg shadow-sm cursor-pointer disabled:opacity-50"
                 >
                   {submitting ? "Creating..." : "Create TPO Account"}
                 </button>
@@ -1409,7 +1482,7 @@ export default function SuperAdminDashboardView({ onInspectTree }) {
           <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-200 space-y-4">
             <div className="flex items-center justify-between pb-3 border-b border-slate-100">
               <h3 className="font-extrabold text-slate-800 text-sm flex items-center gap-2">
-                <Building size={16} className="text-indigo-600" />
+                <Building size={16} className="text-red-600" />
                 Create Official Director Account
               </h3>
               <button type="button" onClick={() => setShowDirModal(false)} className="text-slate-400 hover:text-slate-600 cursor-pointer">
@@ -1426,7 +1499,7 @@ export default function SuperAdminDashboardView({ onInspectTree }) {
                   placeholder="e.g. Dr. Rajesh Sharma"
                   value={dirForm.name}
                   onChange={(e) => setDirForm({ ...dirForm, name: e.target.value })}
-                  className="w-full text-xs px-3 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                  className="w-full text-xs px-3 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-1 focus:ring-red-500"
                 />
               </div>
 
@@ -1438,7 +1511,7 @@ export default function SuperAdminDashboardView({ onInspectTree }) {
                   placeholder="director.eng@rungta.org"
                   value={dirForm.email}
                   onChange={(e) => setDirForm({ ...dirForm, email: e.target.value })}
-                  className="w-full text-xs px-3 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                  className="w-full text-xs px-3 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-1 focus:ring-red-500"
                 />
               </div>
 
@@ -1447,7 +1520,7 @@ export default function SuperAdminDashboardView({ onInspectTree }) {
                 <select
                   value={dirForm.directorateId}
                   onChange={(e) => setDirForm({ ...dirForm, directorateId: e.target.value })}
-                  className="w-full text-xs px-3 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                  className="w-full text-xs px-3 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-1 focus:ring-red-500"
                 >
                   <option value="">-- Assign Later --</option>
                   {directorates.map((d) => (
@@ -1466,7 +1539,7 @@ export default function SuperAdminDashboardView({ onInspectTree }) {
                     placeholder="EMP-DIR-01"
                     value={dirForm.employeeId}
                     onChange={(e) => setDirForm({ ...dirForm, employeeId: e.target.value })}
-                    className="w-full text-xs px-3 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                    className="w-full text-xs px-3 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-1 focus:ring-red-500"
                   />
                 </div>
                 <div>
@@ -1476,20 +1549,58 @@ export default function SuperAdminDashboardView({ onInspectTree }) {
                     placeholder="+91 94252 00002"
                     value={dirForm.phone}
                     onChange={(e) => setDirForm({ ...dirForm, phone: e.target.value })}
-                    className="w-full text-xs px-3 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                    className="w-full text-xs px-3 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-1 focus:ring-red-500"
                   />
                 </div>
               </div>
 
-              <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">Temporary Password (Optional)</label>
-                <input
-                  type="text"
-                  placeholder="Auto-generated if empty"
-                  value={dirForm.temporaryPassword}
-                  onChange={(e) => setDirForm({ ...dirForm, temporaryPassword: e.target.value })}
-                  className="w-full text-xs px-3 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                />
+              {/* Password Setting Section */}
+              <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-2">
+                <div className="flex items-center justify-between">
+                  <label className="block text-xs font-extrabold text-slate-800">
+                    Account Password (Direct Set)
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const p = generatePassword();
+                      setDirForm((prev) => ({ ...prev, password: p }));
+                    }}
+                    className="inline-flex items-center gap-1 text-[11px] font-bold text-red-600 hover:text-red-700 cursor-pointer"
+                  >
+                    <Sparkles size={12} />
+                    <span>Quick Generate</span>
+                  </button>
+                </div>
+
+                <div className="relative">
+                  <input
+                    type={showDirPassword ? "text" : "password"}
+                    placeholder="Enter custom password or click Quick Generate"
+                    value={dirForm.password}
+                    onChange={(e) => setDirForm({ ...dirForm, password: e.target.value })}
+                    className="w-full text-xs pl-3 pr-10 py-2 rounded-lg border border-slate-300 bg-white focus:outline-none focus:ring-1 focus:ring-red-500 font-mono"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowDirPassword(!showDirPassword)}
+                    className="absolute right-2.5 top-2.5 text-slate-400 hover:text-slate-600 cursor-pointer"
+                  >
+                    {showDirPassword ? <EyeOff size={15} /> : <Eye size={15} />}
+                  </button>
+                </div>
+
+                <label className="flex items-center gap-2 cursor-pointer pt-1">
+                  <input
+                    type="checkbox"
+                    checked={dirForm.mustChangePassword}
+                    onChange={(e) => setDirForm({ ...dirForm, mustChangePassword: e.target.checked })}
+                    className="rounded border-slate-300 text-red-600 focus:ring-red-500 h-3.5 w-3.5 cursor-pointer"
+                  />
+                  <span className="text-[11px] text-slate-600">
+                    Require Director to change password on first login
+                  </span>
+                </label>
               </div>
 
               <div className="flex justify-end gap-2 pt-3 border-t border-slate-100">
@@ -1503,7 +1614,7 @@ export default function SuperAdminDashboardView({ onInspectTree }) {
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="px-4 py-2 text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg shadow-sm cursor-pointer disabled:opacity-50"
+                  className="px-4 py-2 text-xs font-bold bg-red-600 hover:bg-red-700 text-white rounded-lg shadow-sm cursor-pointer disabled:opacity-50"
                 >
                   {submitting ? "Creating..." : "Create Director"}
                 </button>
@@ -1519,7 +1630,7 @@ export default function SuperAdminDashboardView({ onInspectTree }) {
           <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-200 space-y-4">
             <div className="flex items-center justify-between pb-3 border-b border-slate-100">
               <h3 className="font-extrabold text-slate-800 text-sm flex items-center gap-2">
-                <Building size={16} className="text-indigo-600" />
+                <Building size={16} className="text-red-600" />
                 Add Directorate / Faculty
               </h3>
               <button type="button" onClick={() => setShowDirateModal(false)} className="text-slate-400 hover:text-slate-600 cursor-pointer">
@@ -1536,7 +1647,7 @@ export default function SuperAdminDashboardView({ onInspectTree }) {
                   placeholder="e.g. Faculty of Engineering & Technology"
                   value={dirateForm.name}
                   onChange={(e) => setDirateForm({ ...dirateForm, name: e.target.value })}
-                  className="w-full text-xs px-3 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                  className="w-full text-xs px-3 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-1 focus:ring-red-500"
                 />
               </div>
 
@@ -1549,7 +1660,7 @@ export default function SuperAdminDashboardView({ onInspectTree }) {
                     placeholder="FET"
                     value={dirateForm.code}
                     onChange={(e) => setDirateForm({ ...dirateForm, code: e.target.value })}
-                    className="w-full text-xs px-3 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-1 focus:ring-indigo-500 uppercase font-mono"
+                    className="w-full text-xs px-3 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-1 focus:ring-red-500 uppercase font-mono"
                   />
                 </div>
                 <div>
@@ -1559,7 +1670,7 @@ export default function SuperAdminDashboardView({ onInspectTree }) {
                     placeholder="Block A - Main Tower"
                     value={dirateForm.building}
                     onChange={(e) => setDirateForm({ ...dirateForm, building: e.target.value })}
-                    className="w-full text-xs px-3 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                    className="w-full text-xs px-3 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-1 focus:ring-red-500"
                   />
                 </div>
               </div>
@@ -1571,7 +1682,7 @@ export default function SuperAdminDashboardView({ onInspectTree }) {
                   placeholder="Brief overview of disciplines covered..."
                   value={dirateForm.description}
                   onChange={(e) => setDirateForm({ ...dirateForm, description: e.target.value })}
-                  className="w-full text-xs px-3 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                  className="w-full text-xs px-3 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-1 focus:ring-red-500"
                 />
               </div>
 
@@ -1586,7 +1697,7 @@ export default function SuperAdminDashboardView({ onInspectTree }) {
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="px-4 py-2 text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg shadow-sm cursor-pointer disabled:opacity-50"
+                  className="px-4 py-2 text-xs font-bold bg-red-600 hover:bg-red-700 text-white rounded-lg shadow-sm cursor-pointer disabled:opacity-50"
                 >
                   {submitting ? "Adding..." : "Add Directorate"}
                 </button>
@@ -1596,27 +1707,35 @@ export default function SuperAdminDashboardView({ onInspectTree }) {
         </div>
       )}
 
-      {/* ================= MODAL: TEMPORARY CREDENTIALS POPUP ================= */}
+      {/* ================= MODAL: CREDENTIALS POPUP ================= */}
       {tempCredsModal && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-emerald-200 space-y-4">
-            <div className="flex items-center gap-2 text-emerald-700 font-extrabold text-sm">
+          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-red-200 space-y-4">
+            <div className="flex items-center gap-2 text-red-700 font-extrabold text-sm">
               <CheckCircle2 size={18} className="text-emerald-600" />
               <span>{tempCredsModal.role} Account Credentials Created</span>
             </div>
 
             <p className="text-xs text-slate-600">
-              Please share these temporary credentials securely with <strong>{tempCredsModal.name}</strong>. The user will be required to set a permanent password upon first login.
+              The {tempCredsModal.role} account for <strong>{tempCredsModal.name}</strong> has been configured. Share these credentials with the user:
             </p>
 
-            <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-2 font-mono text-xs">
-              <div className="flex justify-between">
+            <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-2.5 font-mono text-xs">
+              <div className="flex justify-between items-center pb-1.5 border-b border-slate-200">
                 <span className="text-slate-400">Official Email:</span>
-                <strong className="text-slate-800">{tempCredsModal.email}</strong>
+                <strong className="text-slate-800 font-bold">{tempCredsModal.email}</strong>
               </div>
-              <div className="flex justify-between">
-                <span className="text-slate-400">Temporary Password:</span>
-                <strong className="text-indigo-600 select-all">{tempCredsModal.password}</strong>
+              <div className="flex justify-between items-center">
+                <span className="text-slate-400">Account Password:</span>
+                <strong className="text-red-600 text-sm font-bold bg-red-50 px-2 py-0.5 rounded border border-red-200 select-all">
+                  {tempCredsModal.password}
+                </strong>
+              </div>
+              <div className="flex justify-between items-center pt-1 border-t border-slate-200 text-[11px]">
+                <span className="text-slate-400">First-Login Policy:</span>
+                <span className="text-slate-600 font-sans">
+                  {tempCredsModal.mustChangePassword ? "Change Password Required" : "Direct Permanent Login"}
+                </span>
               </div>
             </div>
 
@@ -1627,12 +1746,12 @@ export default function SuperAdminDashboardView({ onInspectTree }) {
                 className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg cursor-pointer"
               >
                 {copied ? <Check size={14} className="text-emerald-600" /> : <Copy size={14} />}
-                <span>{copied ? "Copied to Clipboard!" : "Copy Credentials"}</span>
+                <span>{copied ? "Copied All Credentials!" : "Copy Credentials"}</span>
               </button>
               <button
                 type="button"
                 onClick={() => setTempCredsModal(null)}
-                className="px-4 py-2 text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg cursor-pointer"
+                className="px-4 py-2 text-xs font-bold bg-red-600 hover:bg-red-700 text-white rounded-lg cursor-pointer"
               >
                 Done
               </button>
@@ -1680,7 +1799,7 @@ export default function SuperAdminDashboardView({ onInspectTree }) {
           <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-200 space-y-4">
             <div className="flex items-center justify-between pb-3 border-b border-slate-100">
               <h3 className="font-extrabold text-slate-800 text-sm flex items-center gap-2">
-                <Mail size={16} className="text-indigo-600" />
+                <Mail size={16} className="text-red-600" />
                 Issue TPO Account Invitation
               </h3>
               <button
@@ -1692,12 +1811,12 @@ export default function SuperAdminDashboardView({ onInspectTree }) {
               </button>
             </div>
 
-            <div className="p-3 rounded-xl bg-indigo-50/70 border border-indigo-100 flex items-center justify-between">
+            <div className="p-3 rounded-xl bg-red-50/70 border border-red-100 flex items-center justify-between">
               <div>
-                <span className="text-[10px] font-bold text-indigo-500 uppercase tracking-wider block">Assigned Role</span>
-                <span className="text-xs font-bold text-indigo-950">Training & Placement Officer (TPO)</span>
+                <span className="text-[10px] font-bold text-red-500 uppercase tracking-wider block">Assigned Role</span>
+                <span className="text-xs font-bold text-red-950">Training & Placement Officer (TPO)</span>
               </div>
-              <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-indigo-200/80 text-indigo-800">
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-red-200/80 text-red-800">
                 Institutional Level
               </span>
             </div>
@@ -1711,7 +1830,7 @@ export default function SuperAdminDashboardView({ onInspectTree }) {
                   placeholder="e.g. Dr. Alok Verma"
                   value={tpoInviteForm.name}
                   onChange={(e) => setTpoInviteForm({ ...tpoInviteForm, name: e.target.value })}
-                  className="w-full text-xs px-3 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                  className="w-full text-xs px-3 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-1 focus:ring-red-500"
                 />
               </div>
 
@@ -1723,7 +1842,7 @@ export default function SuperAdminDashboardView({ onInspectTree }) {
                   placeholder="tpo.central@rungta.org"
                   value={tpoInviteForm.email}
                   onChange={(e) => setTpoInviteForm({ ...tpoInviteForm, email: e.target.value })}
-                  className="w-full text-xs px-3 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                  className="w-full text-xs px-3 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-1 focus:ring-red-500"
                 />
               </div>
 
@@ -1742,7 +1861,7 @@ export default function SuperAdminDashboardView({ onInspectTree }) {
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg shadow-sm cursor-pointer disabled:opacity-50"
+                  className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold bg-red-600 hover:bg-red-700 text-white rounded-lg shadow-sm cursor-pointer disabled:opacity-50"
                 >
                   <Send size={13} />
                   {submitting ? "Sending..." : "Send Invitation Link"}
@@ -1759,7 +1878,7 @@ export default function SuperAdminDashboardView({ onInspectTree }) {
           <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-200 space-y-4">
             <div className="flex items-center justify-between pb-3 border-b border-slate-100">
               <h3 className="font-extrabold text-slate-800 text-sm flex items-center gap-2">
-                <Mail size={16} className="text-indigo-600" />
+                <Mail size={16} className="text-red-600" />
                 Issue Director Account Invitation
               </h3>
               <button
@@ -1771,12 +1890,12 @@ export default function SuperAdminDashboardView({ onInspectTree }) {
               </button>
             </div>
 
-            <div className="p-3 rounded-xl bg-indigo-50/70 border border-indigo-100 flex items-center justify-between">
+            <div className="p-3 rounded-xl bg-red-50/70 border border-red-100 flex items-center justify-between">
               <div>
-                <span className="text-[10px] font-bold text-indigo-500 uppercase tracking-wider block">Assigned Role</span>
-                <span className="text-xs font-bold text-indigo-950">Director of Faculty / Institute</span>
+                <span className="text-[10px] font-bold text-red-500 uppercase tracking-wider block">Assigned Role</span>
+                <span className="text-xs font-bold text-red-950">Director of Faculty / Institute</span>
               </div>
-              <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-indigo-200/80 text-indigo-800">
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-red-200/80 text-red-800">
                 School Leadership
               </span>
             </div>
@@ -1790,7 +1909,7 @@ export default function SuperAdminDashboardView({ onInspectTree }) {
                   placeholder="e.g. Dr. Rajesh Sharma"
                   value={dirInviteForm.name}
                   onChange={(e) => setDirInviteForm({ ...dirInviteForm, name: e.target.value })}
-                  className="w-full text-xs px-3 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                  className="w-full text-xs px-3 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-1 focus:ring-red-500"
                 />
               </div>
 
@@ -1802,7 +1921,7 @@ export default function SuperAdminDashboardView({ onInspectTree }) {
                   placeholder="director.eng@rungta.org"
                   value={dirInviteForm.email}
                   onChange={(e) => setDirInviteForm({ ...dirInviteForm, email: e.target.value })}
-                  className="w-full text-xs px-3 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                  className="w-full text-xs px-3 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-1 focus:ring-red-500"
                 />
               </div>
 
@@ -1811,7 +1930,7 @@ export default function SuperAdminDashboardView({ onInspectTree }) {
                 <select
                   value={dirInviteForm.directorateId}
                   onChange={(e) => setDirInviteForm({ ...dirInviteForm, directorateId: e.target.value })}
-                  className="w-full text-xs px-3 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                  className="w-full text-xs px-3 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-1 focus:ring-red-500"
                 >
                   <option value="">-- Assign Later --</option>
                   {directorates.map((d) => (
@@ -1837,7 +1956,7 @@ export default function SuperAdminDashboardView({ onInspectTree }) {
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg shadow-sm cursor-pointer disabled:opacity-50"
+                  className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold bg-red-600 hover:bg-red-700 text-white rounded-lg shadow-sm cursor-pointer disabled:opacity-50"
                 >
                   <Send size={13} />
                   {submitting ? "Sending..." : "Send Invitation Link"}
@@ -1851,8 +1970,8 @@ export default function SuperAdminDashboardView({ onInspectTree }) {
       {/* ================= MODAL: INVITATION DISPATCH SUCCESS ================= */}
       {inviteSuccessModal && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-indigo-100 space-y-4">
-            <div className="flex items-center gap-2 text-indigo-700 font-extrabold text-sm">
+          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-red-100 space-y-4">
+            <div className="flex items-center gap-2 text-red-700 font-extrabold text-sm">
               <CheckCircle2 size={20} className="text-emerald-600" />
               <span>Official Invitation Dispatched</span>
             </div>
@@ -1864,7 +1983,7 @@ export default function SuperAdminDashboardView({ onInspectTree }) {
             {inviteSuccessModal.setupLink && (
               <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-200 space-y-2 text-xs">
                 <span className="text-[11px] font-bold text-slate-500 block">Single-Use Setup Link:</span>
-                <div className="p-2 bg-white rounded border border-slate-200 font-mono text-[11px] text-indigo-600 break-all select-all">
+                <div className="p-2 bg-white rounded border border-slate-200 font-mono text-[11px] text-red-600 break-all select-all">
                   {inviteSuccessModal.setupLink}
                 </div>
               </div>
@@ -1888,7 +2007,7 @@ export default function SuperAdminDashboardView({ onInspectTree }) {
               <button
                 type="button"
                 onClick={() => setInviteSuccessModal(null)}
-                className="px-4 py-2 text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg cursor-pointer"
+                className="px-4 py-2 text-xs font-bold bg-red-600 hover:bg-red-700 text-white rounded-lg cursor-pointer"
               >
                 Close
               </button>

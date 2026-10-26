@@ -26,10 +26,10 @@ import NodeDetailModal from "./NodeDetailModal.jsx";
 const LEVEL_CONFIG = {
   super_admin: {
     title: "Level 1: Super Admin",
-    badgeBg: "bg-purple-100 text-purple-800 border-purple-200",
-    border: "border-purple-300 hover:border-purple-500",
-    iconBg: "bg-purple-600 text-white",
-    cardBg: "bg-purple-50/40",
+    badgeBg: "bg-red-100 text-red-800 border-red-200",
+    border: "border-red-300 hover:border-red-500",
+    iconBg: "bg-red-600 text-white",
+    cardBg: "bg-red-50/40",
     icon: ShieldCheck
   },
   tpo: {

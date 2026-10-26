@@ -27,7 +27,7 @@ export default function NodeDetailModal({ node, onClose, onActionClick }) {
   const getLevelColor = (level) => {
     switch (level) {
       case "super_admin":
-        return { bg: "bg-purple-100 text-purple-800 border-purple-300", header: "from-purple-600 to-indigo-700" };
+        return { bg: "bg-red-100 text-red-800 border-red-300", header: "from-red-600 to-rose-700" };
       case "tpo":
         return { bg: "bg-blue-100 text-blue-800 border-blue-300", header: "from-blue-600 to-cyan-600" };
       case "director":
