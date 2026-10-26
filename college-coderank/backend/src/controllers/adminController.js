@@ -1,5 +1,4 @@
 import bcrypt from "bcryptjs";
-import mongoose from "mongoose";
 import Admin from "../models/Admin.js";
 import Department from "../models/Department.js";
 import Student from "../models/Student.js";
@@ -56,7 +55,7 @@ export async function getAdminOverview(req, res, next) {
 export async function deleteStudent(req, res, next) {
   try {
     const { id } = req.params;
-    if (!mongoose.isValidObjectId(id)) {
+    if (!id || typeof id !== "string") {
       return res.status(400).json({ message: "Invalid student ID." });
     }
 

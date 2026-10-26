@@ -1,6 +1,5 @@
 import crypto from "crypto";
 import bcrypt from "bcryptjs";
-import mongoose from "mongoose";
 import Invitation from "../models/Invitation.js";
 import Admin from "../models/Admin.js";
 import Directorate from "../models/Directorate.js";
@@ -14,7 +13,7 @@ import { sendInvitationEmail } from "../services/emailService.js";
 async function logAudit(user, action, entityType, entityId, details, req) {
   try {
     await AuditLog.create({
-      userId: user?._id || user?.id ? new mongoose.Types.ObjectId(user._id || user.id) : null,
+      userId: user?._id || user?.id ? String(user._id || user.id) : null,
       userName: user?.name || "System Admin",
       userEmail: user?.email || "admin@rungta.ac.in",
       role: user?.role || "system",

@@ -1,6 +1,5 @@
 import crypto from "crypto";
 import bcrypt from "bcryptjs";
-import mongoose from "mongoose";
 import Admin from "../models/Admin.js";
 import Directorate from "../models/Directorate.js";
 import Department from "../models/Department.js";
@@ -17,7 +16,7 @@ import Student from "../models/Student.js";
 async function logAudit(user, action, entityType, entityId, details, req) {
   try {
     await AuditLog.create({
-      userId: user?.id ? new mongoose.Types.ObjectId(user.id) : null,
+      userId: user?.id ? String(user.id) : null,
       userName: user?.name || "System Admin",
       userEmail: user?.email || "admin@rungta.ac.in",
       role: user?.role || "super_admin",
