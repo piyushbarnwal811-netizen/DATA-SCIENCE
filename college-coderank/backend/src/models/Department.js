@@ -10,7 +10,8 @@ const departmentSchema = new mongoose.Schema(
     floor: { type: String, trim: true },
     contactEmail: { type: String, lowercase: true, trim: true },
     sections: [{ type: String, trim: true }],
-    status: { type: String, enum: ["active", "inactive"], default: "active" }
+    status: { type: String, enum: ["active", "inactive"], default: "active" },
+    createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "Admin" }
   },
   { timestamps: true }
 );

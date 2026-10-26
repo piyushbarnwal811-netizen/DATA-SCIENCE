@@ -17,13 +17,21 @@ const adminSchema = new mongoose.Schema(
     qualification: { type: String, trim: true },
     status: {
       type: String,
-      enum: ["active", "on_leave", "inactive"],
-      default: "active"
+      enum: ["active", "inactive", "suspended"],
+      default: "active",
+      index: true
     },
     directorateId: { type: mongoose.Schema.Types.ObjectId, ref: "Directorate", index: true },
     departmentId: { type: mongoose.Schema.Types.ObjectId, ref: "Department", index: true },
     assignedSections: [{ type: mongoose.Schema.Types.ObjectId, ref: "Section" }],
     assignedSubjects: [{ type: String, trim: true }],
+    createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "Admin" },
+    reportsTo: { type: mongoose.Schema.Types.ObjectId, ref: "Admin", index: true },
+    mustChangePassword: { type: Boolean, default: false },
+    resetPasswordTokenHash: { type: String },
+    resetPasswordExpiresAt: { type: Date },
+    resetPasswordUsed: { type: Boolean, default: false },
+    tokenVersion: { type: Number, default: 0 },
     maxWeeklyHours: { type: Number, default: 20 },
     avatar: { type: String }
   },

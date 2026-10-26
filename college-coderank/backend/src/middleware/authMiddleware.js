@@ -52,8 +52,15 @@ export async function requireAuth(req, res, next) {
 
     if (!user) return res.status(401).json({ message: "This account is no longer available." });
 
-    // 2. Intercept student accounts if must_change_password is still active in database
-    if (rawRole === "student" && (user.mustChangePassword || user.must_change_password)) {
+    // 2. Check if account is inactive or suspended
+    if (user.status === "inactive" || user.status === "suspended") {
+      return res.status(403).json({
+        message: "Your account has been deactivated or suspended. Please contact the administrator."
+      });
+    }
+
+    // 3. Intercept accounts if must_change_password is still active in database
+    if (user.mustChangePassword || user.must_change_password) {
       return res.status(403).json({
         status: "FORCE_PASSWORD_CHANGE",
         code: "PASSWORD_CHANGE_REQUIRED",
@@ -62,7 +69,7 @@ export async function requireAuth(req, res, next) {
       });
     }
 
-    // 3. Invalidate older sessions if tokenVersion has been incremented (e.g. after password reset)
+    // 4. Invalidate older sessions if tokenVersion has been incremented (e.g. after password reset)
     if (payload.tokenVersion !== undefined && user.tokenVersion !== undefined) {
       if (payload.tokenVersion !== user.tokenVersion) {
         return res.status(401).json({
@@ -122,21 +129,27 @@ export async function requirePasswordChangePendingAuth(req, res, next) {
   }
 
   try {
-    const student = await Student.findById(payload.sub).select("+password");
-    if (!student) {
-      return res.status(401).json({ message: "Student account not found." });
+    let user = await Student.findById(payload.sub).select("+password");
+    let userRole = "student";
+    if (!user) {
+      user = await Admin.findById(payload.sub).select("+password");
+      userRole = user?.role || "super_admin";
+    }
+    if (!user) {
+      return res.status(401).json({ message: "Account not found." });
     }
 
     // Check tokenVersion match
-    if (payload.tokenVersion !== undefined && student.tokenVersion !== undefined) {
-      if (payload.tokenVersion !== student.tokenVersion) {
+    if (payload.tokenVersion !== undefined && user.tokenVersion !== undefined) {
+      if (payload.tokenVersion !== user.tokenVersion) {
         return res.status(401).json({
           message: "This session token has been revoked. Please sign in again."
         });
       }
     }
 
-    req.user = student;
+    req.user = user;
+    req.userRole = userRole;
     return next();
   } catch (error) {
     return next(error);

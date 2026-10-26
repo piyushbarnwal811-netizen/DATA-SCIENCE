@@ -8,7 +8,6 @@ import StudentAnalyticsDashboard from "../components/analytics/StudentAnalyticsD
 import { useAuth } from "../context/AuthContext.jsx";
 import api, { errorMessage } from "../services/api.js";
 import { useRealtimeSync } from "../services/realtime.js";
-import { SAMPLE_STUDENTS } from "../utils/dashboardData.js";
 
 export default function Leaderboard() {
   const { user } = useAuth();
@@ -105,40 +104,13 @@ export default function Leaderboard() {
     }
   };
 
-  // Determine students list: either live from backend, or fallback to sample data filtered
+  // Determine students list: live genuine records from backend
   const activeStudents = useMemo(() => {
     if (data && Array.isArray(data.students)) {
       return data.students;
     }
-
-    // Filter fallback sample students
-    let filtered = [...SAMPLE_STUDENTS];
-    if (filters.branch) {
-      filtered = filtered.filter((s) => s.branch === filters.branch);
-    }
-    if (filters.section) {
-      filtered = filtered.filter((s) => s.section === filters.section);
-    }
-    if (filters.year) {
-      filtered = filtered.filter((s) => s.year === Number(filters.year));
-    }
-    if (filters.search) {
-      const q = filters.search.toLowerCase().trim();
-      filtered = filtered.filter(
-        (s) => s.name.toLowerCase().includes(q) || (s.studentId && s.studentId.toLowerCase().includes(q))
-      );
-    }
-
-    filtered.sort((a, b) => (b.score || 0) - (a.score || 0));
-    filtered = filtered.map((s, index) => ({ ...s, rank: index + 1 }));
-
-    if (filters.limit) {
-      const lim = Number(filters.limit);
-      if (lim > 0) filtered = filtered.slice(0, lim);
-    }
-
-    return filtered;
-  }, [data, filters]);
+    return [];
+  }, [data]);
 
   // Departments for filters dropdown
   const departments = useMemo(() => {

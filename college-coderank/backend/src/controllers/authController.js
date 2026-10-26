@@ -37,11 +37,12 @@ export function createToken(user, role) {
  * Generates a restricted-scope JWT for users flagged with must_change_password: true.
  * Blocks all standard portal features until force-change-password is completed.
  */
-export function createRestrictedToken(user) {
+export function createRestrictedToken(user, role = "student") {
+  const effectiveRole = user.role || (role === "admin" ? "super_admin" : role);
   return jwt.sign(
     {
       sub: String(user._id || user.id),
-      role: "student",
+      role: effectiveRole,
       scope: "FORCE_PASSWORD_CHANGE",
       tokenVersion: user.tokenVersion ?? 0
     },
@@ -269,7 +270,27 @@ export async function login(req, res, next) {
       if (!staffUser.password || !(await bcrypt.compare(password, staffUser.password))) {
         return res.status(401).json({ message: "Email or password is incorrect." });
       }
+
+      if (staffUser.status === "inactive" || staffUser.status === "suspended") {
+        return res.status(403).json({
+          message: "Your account has been deactivated or suspended. Please contact the administrator."
+        });
+      }
+
       const userRole = staffUser.role || "super_admin";
+      const isForced = Boolean(staffUser.mustChangePassword);
+
+      if (isForced) {
+        return res.status(200).json({
+          status: "FORCE_PASSWORD_CHANGE",
+          must_change_password: true,
+          mustChangePassword: true,
+          message: "First-time login detected. You hold a temporary password and must set a new one before continuing.",
+          token: createRestrictedToken(staffUser, userRole),
+          user: publicUser(staffUser, userRole)
+        });
+      }
+
       return res.json({ token: createToken(staffUser, userRole), user: publicUser(staffUser, userRole) });
     }
 
@@ -307,13 +328,15 @@ export async function forceChangePassword(req, res, next) {
       });
     }
 
-    // req.user was populated with student (+password) by requirePasswordChangePendingAuth
-    const student = req.user;
-    if (!student.password) {
+    // req.user was populated with student or admin (+password) by requirePasswordChangePendingAuth
+    const user = req.user;
+    const effectiveRole = req.userRole || user.role || "student";
+
+    if (!user.password) {
       return res.status(400).json({ message: "No password configured for this account." });
     }
 
-    const isMatch = await bcrypt.compare(currentPassword, student.password);
+    const isMatch = await bcrypt.compare(currentPassword, user.password);
     if (!isMatch) {
       return res.status(401).json({ message: "Current password is incorrect." });
     }
@@ -332,20 +355,20 @@ export async function forceChangePassword(req, res, next) {
     // Hash with bcrypt (10 rounds per spec)
     const hashedPassword = await bcrypt.hash(newPassword, 10);
 
-    student.password = hashedPassword;
-    student.mustChangePassword = false;
+    user.password = hashedPassword;
+    user.mustChangePassword = false;
     // Invalidate prior temporary session tokens
-    student.tokenVersion = (student.tokenVersion || 0) + 1;
-    await student.save();
+    user.tokenVersion = (user.tokenVersion || 0) + 1;
+    await user.save();
 
     // Return fresh full-access JWT
-    const fullAccessToken = createToken(student, "student");
+    const fullAccessToken = createToken(user, effectiveRole);
 
     return res.status(200).json({
       status: "SUCCESS",
       message: "Password changed successfully! You now have full access to the portal.",
       token: fullAccessToken,
-      user: publicUser(student, "student")
+      user: publicUser(user, effectiveRole)
     });
   } catch (error) {
     return next(error);

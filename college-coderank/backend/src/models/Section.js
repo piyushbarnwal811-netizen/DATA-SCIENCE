@@ -12,7 +12,8 @@ const sectionSchema = new mongoose.Schema(
     totalStudents: { type: Number, default: 0, min: 0 },
     classTeacherId: { type: mongoose.Schema.Types.ObjectId, ref: "Admin", index: true },
     primaryClassroomId: { type: mongoose.Schema.Types.ObjectId, ref: "Classroom" },
-    status: { type: String, enum: ["active", "vacant", "archived"], default: "active" }
+    status: { type: String, enum: ["active", "vacant", "archived"], default: "active" },
+    createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "Admin" }
   },
   { timestamps: true }
 );

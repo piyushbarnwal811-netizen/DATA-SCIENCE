@@ -3,7 +3,11 @@ import Student from "../models/Student.js";
 import { syncStudentAllStats } from "./studentSync.js";
 
 export function startStatsScheduler() {
-  const syncSchedule = process.env.AUTO_SYNC_CRON || process.env.LEETCODE_SYNC_CRON || "*/2 * * * *";
+  const syncSchedule =
+    process.env.AUTO_SYNC_CRON ||
+    process.env.SYNC_CRON ||
+    process.env.LEETCODE_SYNC_CRON ||
+    "0 0 * * *";
   if (!cron.validate(syncSchedule)) {
     throw new Error(`Invalid sync schedule cron expression: ${syncSchedule}`);
   }

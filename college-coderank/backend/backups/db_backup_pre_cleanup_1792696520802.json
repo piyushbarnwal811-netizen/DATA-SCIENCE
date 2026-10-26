@@ -1,0 +1,2933 @@
+{
+  "timestamp": "2026-10-22T19:15:20.801Z",
+  "counts": {
+    "admins": 16,
+    "students": 21,
+    "directorates": 2,
+    "departments": 8,
+    "sections": 9,
+    "subjects": 7,
+    "classrooms": 10,
+    "assignments": 7,
+    "auditLogs": 4
+  },
+  "data": {
+    "admins": [
+      {
+        "_id": "6ac4faa7dd12674eeee2f34d",
+        "name": "College Admin",
+        "email": "piyushbarnwal811@gmail.com",
+        "createdAt": "2026-10-06T13:41:59.280Z",
+        "updatedAt": "2026-10-06T13:41:59.280Z",
+        "__v": 0
+      },
+      {
+        "_id": "6ada1617a6cc111e8cdc8f81",
+        "email": "tpo@rungta.ac.in",
+        "__v": 0,
+        "assignedSections": [],
+        "assignedSubjects": [],
+        "createdAt": "2026-10-22T13:56:39.304Z",
+        "designation": "Head - Training & Placement Office (TPO)",
+        "employeeId": "EMP-TPO-01",
+        "maxWeeklyHours": 20,
+        "name": "Dr. Alok Verma",
+        "phone": "+91 94252 11001",
+        "qualification": "Ph.D. in Management & Industrial Relations",
+        "role": "tpo",
+        "status": "active",
+        "updatedAt": "2026-10-22T13:56:39.304Z"
+      },
+      {
+        "_id": "6ada1618a6cc111e8cdc8f82",
+        "email": "director.eng@rungta.ac.in",
+        "__v": 0,
+        "assignedSections": [],
+        "assignedSubjects": [],
+        "createdAt": "2026-10-22T13:56:39.400Z",
+        "designation": "Director - Faculty of Engineering & Technology",
+        "employeeId": "EMP-DIR-ENG",
+        "maxWeeklyHours": 20,
+        "name": "Dr. Sunita Rao",
+        "phone": "+91 94252 22002",
+        "qualification": "Ph.D. in Mechanical Systems, M.Tech (IIT Kharagpur)",
+        "role": "director",
+        "status": "active",
+        "updatedAt": "2026-10-22T13:56:39.554Z",
+        "directorateId": "6ada16174a17d6ba353dcb6a"
+      },
+      {
+        "_id": "6ada1618a6cc111e8cdc8f83",
+        "email": "director.cs@rungta.ac.in",
+        "__v": 0,
+        "assignedSections": [],
+        "assignedSubjects": [],
+        "createdAt": "2026-10-22T13:56:39.447Z",
+        "designation": "Director - School of Computing & Artificial Intelligence",
+        "employeeId": "EMP-DIR-SCAI",
+        "maxWeeklyHours": 20,
+        "name": "Dr. Rajesh Sharma",
+        "phone": "+91 94252 33003",
+        "qualification": "Ph.D. in Computer Science, Post-Doc (IISc Bangalore)",
+        "role": "director",
+        "status": "active",
+        "updatedAt": "2026-10-22T13:56:39.584Z",
+        "directorateId": "6ada16174a17d6ba353dcb6e"
+      },
+      {
+        "_id": "6ada1618a6cc111e8cdc8f84",
+        "email": "hod.cse@rungta.ac.in",
+        "__v": 0,
+        "assignedSections": [],
+        "assignedSubjects": [],
+        "createdAt": "2026-10-22T13:56:39.613Z",
+        "designation": "Professor & Head of Computer Science Department",
+        "directorateId": "6ada16174a17d6ba353dcb6e",
+        "employeeId": "EMP-HOD-CSE",
+        "maxWeeklyHours": 20,
+        "name": "Dr. Anand Mishra",
+        "phone": "+91 94252 44004",
+        "qualification": "Ph.D. in Distributed Systems & Cloud",
+        "role": "hod",
+        "status": "active",
+        "updatedAt": "2026-10-22T13:56:39.866Z",
+        "departmentId": "6ac87074cb049a67ca9387ae"
+      },
+      {
+        "_id": "6ada1618a6cc111e8cdc8f85",
+        "email": "hod.ds@rungta.ac.in",
+        "__v": 0,
+        "assignedSections": [],
+        "assignedSubjects": [],
+        "createdAt": "2026-10-22T13:56:39.644Z",
+        "designation": "Professor & Head of Data Science & AI Department",
+        "directorateId": "6ada16174a17d6ba353dcb6e",
+        "employeeId": "EMP-HOD-DSAI",
+        "maxWeeklyHours": 20,
+        "name": "Dr. Neha Kapoor",
+        "phone": "+91 94252 55005",
+        "qualification": "Ph.D. in Deep Learning & NLP",
+        "role": "hod",
+        "status": "active",
+        "updatedAt": "2026-10-22T13:56:39.891Z",
+        "departmentId": "6ac8707bcb049a67ca9387b0"
+      },
+      {
+        "_id": "6ada1618a6cc111e8cdc8f86",
+        "email": "hod.it@rungta.ac.in",
+        "__v": 0,
+        "assignedSections": [],
+        "assignedSubjects": [],
+        "createdAt": "2026-10-22T13:56:39.689Z",
+        "designation": "Head of Information Technology Department",
+        "directorateId": "6ada16174a17d6ba353dcb6a",
+        "employeeId": "EMP-HOD-IT",
+        "maxWeeklyHours": 20,
+        "name": "Dr. Vikram Patel",
+        "phone": "+91 94252 66006",
+        "qualification": "Ph.D. in Cyber Defense & Network Security",
+        "role": "hod",
+        "status": "active",
+        "updatedAt": "2026-10-22T13:56:39.919Z",
+        "departmentId": "6ac87076cb049a67ca9387af"
+      },
+      {
+        "_id": "6ada1618a6cc111e8cdc8f87",
+        "email": "hod.me@rungta.ac.in",
+        "__v": 0,
+        "assignedSections": [],
+        "assignedSubjects": [],
+        "createdAt": "2026-10-22T13:56:39.716Z",
+        "designation": "Head of Mechanical Engineering Department",
+        "directorateId": "6ada16174a17d6ba353dcb6a",
+        "employeeId": "EMP-HOD-ME",
+        "maxWeeklyHours": 20,
+        "name": "Dr. Sanjay Verma",
+        "phone": "+91 94252 77007",
+        "qualification": "Ph.D. in Robotics & Thermal Dynamics",
+        "role": "hod",
+        "status": "active",
+        "updatedAt": "2026-10-22T13:56:39.949Z",
+        "departmentId": "6ada1618a6cc111e8cdc8f88"
+      },
+      {
+        "_id": "6ada1618a6cc111e8cdc8f89",
+        "email": "amit.sen@rungta.ac.in",
+        "__v": 0,
+        "assignedSections": [
+          "6ada1619a6cc111e8cdc8f9b",
+          "6ada1619a6cc111e8cdc8f9d"
+        ],
+        "assignedSubjects": [
+          "Data Structures & Algorithms",
+          "Operating Systems"
+        ],
+        "createdAt": "2026-10-22T13:56:39.977Z",
+        "departmentId": "6ac87074cb049a67ca9387ae",
+        "designation": "Associate Professor",
+        "directorateId": "6ada16174a17d6ba353dcb6e",
+        "employeeId": "EMP-TCH-101",
+        "maxWeeklyHours": 18,
+        "name": "Prof. Amit Sen",
+        "phone": "+91 98271 10001",
+        "qualification": "M.Tech in CSE (IIT Roorkee)",
+        "role": "teacher",
+        "status": "active",
+        "updatedAt": "2026-10-22T13:56:40.753Z"
+      },
+      {
+        "_id": "6ada1618a6cc111e8cdc8f8a",
+        "email": "priya.nair@rungta.ac.in",
+        "__v": 0,
+        "assignedSections": [
+          "6ada1619a6cc111e8cdc8f9c"
+        ],
+        "assignedSubjects": [
+          "Database Systems",
+          "Full Stack Engineering"
+        ],
+        "createdAt": "2026-10-22T13:56:40.004Z",
+        "departmentId": "6ac87074cb049a67ca9387ae",
+        "designation": "Assistant Professor",
+        "directorateId": "6ada16174a17d6ba353dcb6e",
+        "employeeId": "EMP-TCH-102",
+        "maxWeeklyHours": 20,
+        "name": "Prof. Priya Nair",
+        "phone": "+91 98271 10002",
+        "qualification": "Ph.D. in Web Architecture & Scalable Systems",
+        "role": "teacher",
+        "status": "active",
+        "updatedAt": "2026-10-22T13:56:40.782Z"
+      },
+      {
+        "_id": "6ada1618a6cc111e8cdc8f8b",
+        "email": "rahul.gupta@rungta.ac.in",
+        "__v": 0,
+        "assignedSections": [
+          "6ada1619a6cc111e8cdc8f9e"
+        ],
+        "assignedSubjects": [
+          "Machine Learning & Neural Networks",
+          "Python for Analytics"
+        ],
+        "createdAt": "2026-10-22T13:56:40.033Z",
+        "departmentId": "6ac8707bcb049a67ca9387b0",
+        "designation": "Associate Professor",
+        "directorateId": "6ada16174a17d6ba353dcb6e",
+        "employeeId": "EMP-TCH-103",
+        "maxWeeklyHours": 18,
+        "name": "Prof. Rahul Gupta",
+        "phone": "+91 98271 10003",
+        "qualification": "M.Tech in Data Science & Artificial Intelligence",
+        "role": "teacher",
+        "status": "active",
+        "updatedAt": "2026-10-22T13:56:40.811Z"
+      },
+      {
+        "_id": "6ada1618a6cc111e8cdc8f8c",
+        "email": "divya.joshi@rungta.ac.in",
+        "__v": 0,
+        "assignedSections": [
+          "6ada1619a6cc111e8cdc8f9f"
+        ],
+        "assignedSubjects": [
+          "Big Data Processing & Apache Spark",
+          "Natural Language Processing"
+        ],
+        "createdAt": "2026-10-22T13:56:40.061Z",
+        "departmentId": "6ac8707bcb049a67ca9387b0",
+        "designation": "Assistant Professor",
+        "directorateId": "6ada16174a17d6ba353dcb6e",
+        "employeeId": "EMP-TCH-104",
+        "maxWeeklyHours": 16,
+        "name": "Prof. Divya Joshi",
+        "phone": "+91 98271 10004",
+        "qualification": "M.Tech in Artificial Intelligence",
+        "role": "teacher",
+        "status": "active",
+        "updatedAt": "2026-10-22T13:56:40.839Z"
+      },
+      {
+        "_id": "6ada1618a6cc111e8cdc8f8d",
+        "email": "gaurav.mehta@rungta.ac.in",
+        "__v": 0,
+        "assignedSections": [
+          "6ada1619a6cc111e8cdc8fa0"
+        ],
+        "assignedSubjects": [
+          "Cloud Architecture & Kubernetes",
+          "Network Protocols"
+        ],
+        "createdAt": "2026-10-22T13:56:40.091Z",
+        "departmentId": "6ac87076cb049a67ca9387af",
+        "designation": "Assistant Professor",
+        "directorateId": "6ada16174a17d6ba353dcb6a",
+        "employeeId": "EMP-TCH-105",
+        "maxWeeklyHours": 20,
+        "name": "Prof. Gaurav Mehta",
+        "phone": "+91 98271 10005",
+        "qualification": "M.Tech in Information Technology",
+        "role": "teacher",
+        "status": "active",
+        "updatedAt": "2026-10-22T13:56:40.867Z"
+      },
+      {
+        "_id": "6ada1618a6cc111e8cdc8f8e",
+        "email": "sneha.kulkarni@rungta.ac.in",
+        "__v": 0,
+        "assignedSections": [
+          "6ada1619a6cc111e8cdc8fa1"
+        ],
+        "assignedSubjects": [
+          "Cryptography & Cyber Defense",
+          "Information Security"
+        ],
+        "createdAt": "2026-10-22T13:56:40.118Z",
+        "departmentId": "6ac87076cb049a67ca9387af",
+        "designation": "Assistant Professor",
+        "directorateId": "6ada16174a17d6ba353dcb6a",
+        "employeeId": "EMP-TCH-106",
+        "maxWeeklyHours": 18,
+        "name": "Prof. Sneha Kulkarni",
+        "phone": "+91 98271 10006",
+        "qualification": "M.Tech in Cyber Security",
+        "role": "teacher",
+        "status": "active",
+        "updatedAt": "2026-10-22T13:56:40.897Z"
+      },
+      {
+        "_id": "6ada1618a6cc111e8cdc8f8f",
+        "email": "manoj.tiwari@rungta.ac.in",
+        "__v": 0,
+        "assignedSections": [
+          "6ada1619a6cc111e8cdc8fa2"
+        ],
+        "assignedSubjects": [
+          "Computer Aided Design (CAD)",
+          "Applied Robotics"
+        ],
+        "createdAt": "2026-10-22T13:56:40.147Z",
+        "departmentId": "6ada1618a6cc111e8cdc8f88",
+        "designation": "Assistant Professor",
+        "directorateId": "6ada16174a17d6ba353dcb6a",
+        "employeeId": "EMP-TCH-107",
+        "maxWeeklyHours": 20,
+        "name": "Prof. Manoj Tiwari",
+        "phone": "+91 98271 10007",
+        "qualification": "M.Tech in CAD/CAM Design",
+        "role": "teacher",
+        "status": "active",
+        "updatedAt": "2026-10-22T13:56:40.925Z"
+      },
+      {
+        "_id": "6ada1618a6cc111e8cdc8f90",
+        "email": "ritu.saxena@rungta.ac.in",
+        "__v": 0,
+        "assignedSections": [],
+        "assignedSubjects": [],
+        "createdAt": "2026-10-22T13:56:40.175Z",
+        "departmentId": "6ac87074cb049a67ca9387ae",
+        "designation": "Lecturer & AI Research Fellow (Floating / Unassigned)",
+        "directorateId": "6ada16174a17d6ba353dcb6e",
+        "employeeId": "EMP-TCH-108",
+        "maxWeeklyHours": 14,
+        "name": "Prof. Ritu Saxena",
+        "phone": "+91 98271 10008",
+        "qualification": "M.Tech in Computer Engineering",
+        "role": "teacher",
+        "status": "active",
+        "updatedAt": "2026-10-22T13:56:40.175Z"
+      }
+    ],
+    "students": [
+      {
+        "_id": "6ac4fcbfdd12674eeee2f374",
+        "name": "Piyush kumar barnwal",
+        "email": "piyushbarnwal811@gmail.com",
+        "studentId": "RU-25-10966",
+        "branch": "Computer Science and Engineering (AI & ML)",
+        "section": "G",
+        "year": 2,
+        "leetcodeUsername": "uTunmjvLvv",
+        "githubUsername": "piyushbarnwal811-netizen",
+        "hackerrankUsername": "piyushbarnwal811",
+        "score": 625,
+        "isActive": true,
+        "stats": {
+          "leetcode": {
+            "easy": 64,
+            "medium": 76,
+            "hard": 40,
+            "total": 180
+          },
+          "github": {
+            "publicRepos": 22,
+            "followers": 2
+          },
+          "hackerrank": {
+            "points": 3,
+            "solved": 1,
+            "badges": 1
+          },
+          "lastSyncedAt": "2026-10-22T19:14:02.335Z",
+          "recentAccepted": [
+            {
+              "title": "How Many Numbers Are Smaller Than the Current Number",
+              "titleSlug": "how-many-numbers-are-smaller-than-the-current-number",
+              "difficulty": "Easy",
+              "solvedAt": "2026-10-22T09:17:21.000Z"
+            },
+            {
+              "title": "Minimum Operations to Sort a Permutation",
+              "titleSlug": "minimum-operations-to-sort-a-permutation",
+              "difficulty": "Medium",
+              "solvedAt": "2026-10-22T08:52:16.000Z"
+            },
+            {
+              "title": "Minimum Operations to Sort a String",
+              "titleSlug": "minimum-operations-to-sort-a-string",
+              "difficulty": "Medium",
+              "solvedAt": "2026-10-21T17:34:57.000Z"
+            },
+            {
+              "title": "Sum of Sortable Integers",
+              "titleSlug": "sum-of-sortable-integers",
+              "difficulty": "Hard",
+              "solvedAt": "2026-10-20T14:45:45.000Z"
+            },
+            {
+              "title": "Final Value of Variable After Performing Operations",
+              "titleSlug": "final-value-of-variable-after-performing-operations",
+              "difficulty": "Easy",
+              "solvedAt": "2026-10-19T18:30:56.000Z"
+            },
+            {
+              "title": "Number of Good Pairs",
+              "titleSlug": "number-of-good-pairs",
+              "difficulty": "Easy",
+              "solvedAt": "2026-10-19T17:27:28.000Z"
+            },
+            {
+              "title": "Kids With the Greatest Number of Candies",
+              "titleSlug": "kids-with-the-greatest-number-of-candies",
+              "difficulty": "Easy",
+              "solvedAt": "2026-10-19T17:24:47.000Z"
+            },
+            {
+              "title": "Concatenation of Array",
+              "titleSlug": "concatenation-of-array",
+              "difficulty": "Easy",
+              "solvedAt": "2026-10-19T08:44:17.000Z"
+            },
+            {
+              "title": "Richest Customer Wealth",
+              "titleSlug": "richest-customer-wealth",
+              "difficulty": "Easy",
+              "solvedAt": "2026-10-19T08:30:13.000Z"
+            },
+            {
+              "title": "Running Sum of 1d Array",
+              "titleSlug": "running-sum-of-1d-array",
+              "difficulty": "Easy",
+              "solvedAt": "2026-10-19T08:17:49.000Z"
+            },
+            {
+              "title": "Find Target Indices After Sorting Array",
+              "titleSlug": "find-target-indices-after-sorting-array",
+              "difficulty": "Easy",
+              "solvedAt": "2026-10-19T04:43:07.000Z"
+            },
+            {
+              "title": "Add Two Integers",
+              "titleSlug": "add-two-integers",
+              "difficulty": "Easy",
+              "solvedAt": "2026-10-19T04:34:08.000Z"
+            },
+            {
+              "title": "Number of Ways to Reorder Array to Get Same BST",
+              "titleSlug": "number-of-ways-to-reorder-array-to-get-same-bst",
+              "difficulty": "Hard",
+              "solvedAt": "2026-10-18T12:05:52.000Z"
+            },
+            {
+              "title": "Build Array from Permutation",
+              "titleSlug": "build-array-from-permutation",
+              "difficulty": "Easy",
+              "solvedAt": "2026-10-17T18:38:45.000Z"
+            },
+            {
+              "title": "Minimum Swaps to Sort by Digit Sum",
+              "titleSlug": "minimum-swaps-to-sort-by-digit-sum",
+              "difficulty": "Medium",
+              "solvedAt": "2026-10-17T08:54:52.000Z"
+            }
+          ],
+          "codechef": {
+            "rating": 0,
+            "stars": "1★",
+            "division": "",
+            "highestRating": 0,
+            "problemsSolved": 43,
+            "globalRank": 0,
+            "countryRank": 0
+          },
+          "geeksforgeeks": {
+            "score": 1,
+            "problemsSolved": 3,
+            "monthlyScore": 0,
+            "instituteRank": ""
+          }
+        },
+        "createdAt": "2026-10-06T13:50:55.224Z",
+        "updatedAt": "2026-10-22T19:14:02.337Z",
+        "__v": 29,
+        "codechefUsername": "fair_stork_76",
+        "geeksforgeeksUsername": "piyushbartqde",
+        "mustChangePassword": false,
+        "tokenVersion": 0
+      },
+      {
+        "_id": "6ac769aaf12a30ebfe2a87ee",
+        "name": "NIKHIL KUMAR",
+        "email": "nikhil.kumar@rungta.org",
+        "studentId": "RU-25-10886",
+        "branch": "Computer Science and Engineering (AI & ML)",
+        "section": "G",
+        "year": 2,
+        "leetcodeUsername": "",
+        "githubUsername": "",
+        "hackerrankUsername": "",
+        "score": 0,
+        "isActive": true,
+        "stats": {
+          "leetcode": {
+            "easy": 0,
+            "medium": 0,
+            "hard": 0,
+            "total": 0
+          },
+          "github": {
+            "publicRepos": 0,
+            "followers": 0
+          },
+          "hackerrank": {
+            "points": 0,
+            "solved": 0,
+            "badges": 0
+          },
+          "lastSyncedAt": "2026-10-09T16:41:03.132Z",
+          "recentAccepted": []
+        },
+        "createdAt": "2026-10-08T10:00:10.012Z",
+        "updatedAt": "2026-10-09T16:41:03.133Z",
+        "__v": 0
+      },
+      {
+        "_id": "6ac76af1f12a30ebfe2a8812",
+        "name": "Mahek Siddiqui",
+        "email": "mahek.siddiqui@rungta.org",
+        "studentId": "RU-25-10766",
+        "branch": "Computer Science and Engineering (AI & ML)",
+        "section": "G",
+        "year": 2,
+        "leetcodeUsername": "MAHEK_SIDDIQUI",
+        "githubUsername": "smahek763-a11y",
+        "hackerrankUsername": "smahek763",
+        "score": 239,
+        "isActive": true,
+        "stats": {
+          "leetcode": {
+            "easy": 105,
+            "medium": 23,
+            "hard": 5,
+            "total": 133
+          },
+          "github": {
+            "publicRepos": 10,
+            "followers": 0
+          },
+          "hackerrank": {
+            "points": 208,
+            "solved": 13,
+            "badges": 3
+          },
+          "lastSyncedAt": "2026-10-22T19:14:04.495Z",
+          "recentAccepted": [
+            {
+              "title": "Peak Index in a Mountain Array",
+              "titleSlug": "peak-index-in-a-mountain-array",
+              "difficulty": "Medium",
+              "solvedAt": "2026-10-22T18:44:15.000Z"
+            },
+            {
+              "title": "Find Peak Element",
+              "titleSlug": "find-peak-element",
+              "difficulty": "Medium",
+              "solvedAt": "2026-10-22T18:42:06.000Z"
+            },
+            {
+              "title": "Find Minimum in Rotated Sorted Array",
+              "titleSlug": "find-minimum-in-rotated-sorted-array",
+              "difficulty": "Medium",
+              "solvedAt": "2026-10-22T18:21:21.000Z"
+            },
+            {
+              "title": "Reverse Integer",
+              "titleSlug": "reverse-integer",
+              "difficulty": "Medium",
+              "solvedAt": "2026-10-21T16:41:45.000Z"
+            },
+            {
+              "title": "Rotate Array",
+              "titleSlug": "rotate-array",
+              "difficulty": "Medium",
+              "solvedAt": "2026-10-20T17:17:00.000Z"
+            },
+            {
+              "title": "Remove Duplicates from Sorted Array II",
+              "titleSlug": "remove-duplicates-from-sorted-array-ii",
+              "difficulty": "Medium",
+              "solvedAt": "2026-10-20T12:48:28.000Z"
+            },
+            {
+              "title": "Remove Duplicates from Sorted Array",
+              "titleSlug": "remove-duplicates-from-sorted-array",
+              "difficulty": "Easy",
+              "solvedAt": "2026-10-20T12:37:43.000Z"
+            },
+            {
+              "title": "Find Target Indices After Sorting Array",
+              "titleSlug": "find-target-indices-after-sorting-array",
+              "difficulty": "Easy",
+              "solvedAt": "2026-10-19T10:10:45.000Z"
+            },
+            {
+              "title": "Monotonic Array",
+              "titleSlug": "monotonic-array",
+              "difficulty": "Easy",
+              "solvedAt": "2026-10-18T13:41:55.000Z"
+            },
+            {
+              "title": "Last Visited Cell in a Directional Grid",
+              "titleSlug": "last-visited-cell-in-a-directional-grid",
+              "difficulty": "Medium",
+              "solvedAt": "2026-10-18T03:24:45.000Z"
+            },
+            {
+              "title": "Minimum Deletions to Make Array Sharp",
+              "titleSlug": "minimum-deletions-to-make-array-sharp",
+              "difficulty": "Easy",
+              "solvedAt": "2026-10-18T03:06:37.000Z"
+            },
+            {
+              "title": "Maximum Nesting Depth of the Parentheses",
+              "titleSlug": "maximum-nesting-depth-of-the-parentheses",
+              "difficulty": "Easy",
+              "solvedAt": "2026-10-17T13:42:27.000Z"
+            },
+            {
+              "title": "Binary Search",
+              "titleSlug": "binary-search",
+              "difficulty": "Easy",
+              "solvedAt": "2026-10-16T04:27:56.000Z"
+            },
+            {
+              "title": "Heaters",
+              "titleSlug": "heaters",
+              "difficulty": "Medium",
+              "solvedAt": "2026-10-16T04:13:07.000Z"
+            },
+            {
+              "title": "Minimum Number of Days to Make m Bouquets",
+              "titleSlug": "minimum-number-of-days-to-make-m-bouquets",
+              "difficulty": "Medium",
+              "solvedAt": "2026-10-14T10:19:58.000Z"
+            },
+            {
+              "title": "First Bad Version",
+              "titleSlug": "first-bad-version",
+              "difficulty": "Easy",
+              "solvedAt": "2026-10-14T04:28:50.000Z"
+            },
+            {
+              "title": "Number of Segments in a String",
+              "titleSlug": "number-of-segments-in-a-string",
+              "difficulty": "Easy",
+              "solvedAt": "2026-10-13T16:06:23.000Z"
+            },
+            {
+              "title": "Meeting Rooms III",
+              "titleSlug": "meeting-rooms-iii",
+              "difficulty": "Hard",
+              "solvedAt": "2026-10-13T09:46:57.000Z"
+            },
+            {
+              "title": "Smallest Index With Digit Sum Equal to Index",
+              "titleSlug": "smallest-index-with-digit-sum-equal-to-index",
+              "difficulty": "Easy",
+              "solvedAt": "2026-10-12T18:16:59.000Z"
+            },
+            {
+              "title": "Sum of Squares of Special Elements",
+              "titleSlug": "sum-of-squares-of-special-elements",
+              "difficulty": "Easy",
+              "solvedAt": "2026-10-11T03:42:58.000Z"
+            }
+          ],
+          "codechef": {
+            "countryRank": 0,
+            "division": "",
+            "globalRank": 0,
+            "highestRating": 0,
+            "problemsSolved": 0,
+            "rating": 0,
+            "stars": "1★"
+          },
+          "geeksforgeeks": {
+            "instituteRank": "",
+            "monthlyScore": 0,
+            "problemsSolved": 0,
+            "score": 0
+          }
+        },
+        "createdAt": "2026-10-08T10:05:37.019Z",
+        "updatedAt": "2026-10-22T19:14:04.497Z",
+        "__v": 23,
+        "codechefUsername": "",
+        "geeksforgeeksUsername": "",
+        "mustChangePassword": false,
+        "tokenVersion": 0
+      },
+      {
+        "_id": "6ac76d46f12a30ebfe2a8854",
+        "name": "Khushi  Singh",
+        "email": "khushi.singh@rungta.org",
+        "studentId": "RU - 25 - 10682",
+        "branch": "Computer Science and Engineering (AI & ML)",
+        "section": "G",
+        "year": 2,
+        "leetcodeUsername": "khushisingh1234",
+        "githubUsername": "khushisingh02048",
+        "hackerrankUsername": "khushisingh02048@gmail.com",
+        "score": 134,
+        "isActive": true,
+        "stats": {
+          "leetcode": {
+            "easy": 91,
+            "medium": 9,
+            "hard": 0,
+            "total": 100
+          },
+          "github": {
+            "publicRepos": 8,
+            "followers": 0
+          },
+          "hackerrank": {
+            "points": 0,
+            "solved": 0,
+            "badges": 0
+          },
+          "lastSyncedAt": "2026-10-22T19:14:05.833Z",
+          "recentAccepted": [
+            {
+              "title": "4Sum",
+              "titleSlug": "4sum",
+              "difficulty": "Medium",
+              "solvedAt": "2026-06-13T18:31:46.000Z"
+            },
+            {
+              "title": "Next Permutation",
+              "titleSlug": "next-permutation",
+              "difficulty": "Medium",
+              "solvedAt": "2026-06-13T18:30:09.000Z"
+            },
+            {
+              "title": "3Sum",
+              "titleSlug": "3sum",
+              "difficulty": "Medium",
+              "solvedAt": "2026-06-13T18:27:10.000Z"
+            },
+            {
+              "title": "Edit Distance",
+              "titleSlug": "edit-distance",
+              "difficulty": "Medium",
+              "solvedAt": "2026-06-13T18:24:34.000Z"
+            },
+            {
+              "title": "Simplify Path",
+              "titleSlug": "simplify-path",
+              "difficulty": "Medium",
+              "solvedAt": "2026-06-13T18:19:58.000Z"
+            },
+            {
+              "title": "Multiply Strings",
+              "titleSlug": "multiply-strings",
+              "difficulty": "Medium",
+              "solvedAt": "2026-06-13T18:17:30.000Z"
+            },
+            {
+              "title": "Count and Say",
+              "titleSlug": "count-and-say",
+              "difficulty": "Medium",
+              "solvedAt": "2026-06-13T18:14:04.000Z"
+            },
+            {
+              "title": "Longest Palindromic Substring",
+              "titleSlug": "longest-palindromic-substring",
+              "difficulty": "Medium",
+              "solvedAt": "2026-06-13T18:12:46.000Z"
+            },
+            {
+              "title": "Longest Substring Without Repeating Characters",
+              "titleSlug": "longest-substring-without-repeating-characters",
+              "difficulty": "Medium",
+              "solvedAt": "2026-06-13T18:11:16.000Z"
+            },
+            {
+              "title": "Can Place Flowers",
+              "titleSlug": "can-place-flowers",
+              "difficulty": "Easy",
+              "solvedAt": "2026-06-13T18:08:55.000Z"
+            },
+            {
+              "title": "Longest Harmonious Subsequence",
+              "titleSlug": "longest-harmonious-subsequence",
+              "difficulty": "Easy",
+              "solvedAt": "2026-06-13T18:06:40.000Z"
+            },
+            {
+              "title": "Distribute Candies",
+              "titleSlug": "distribute-candies",
+              "difficulty": "Easy",
+              "solvedAt": "2026-06-13T18:03:15.000Z"
+            },
+            {
+              "title": "Array Partition",
+              "titleSlug": "array-partition",
+              "difficulty": "Easy",
+              "solvedAt": "2026-06-13T18:01:19.000Z"
+            },
+            {
+              "title": "Relative Ranks",
+              "titleSlug": "relative-ranks",
+              "difficulty": "Easy",
+              "solvedAt": "2026-06-13T17:57:29.000Z"
+            },
+            {
+              "title": "Next Greater Element I",
+              "titleSlug": "next-greater-element-i",
+              "difficulty": "Easy",
+              "solvedAt": "2026-06-13T17:55:22.000Z"
+            },
+            {
+              "title": "Teemo Attacking",
+              "titleSlug": "teemo-attacking",
+              "difficulty": "Easy",
+              "solvedAt": "2026-06-13T17:52:06.000Z"
+            },
+            {
+              "title": "Max Consecutive Ones",
+              "titleSlug": "max-consecutive-ones",
+              "difficulty": "Easy",
+              "solvedAt": "2026-06-13T17:50:05.000Z"
+            },
+            {
+              "title": "Island Perimeter",
+              "titleSlug": "island-perimeter",
+              "difficulty": "Easy",
+              "solvedAt": "2026-06-13T17:47:38.000Z"
+            },
+            {
+              "title": "Assign Cookies",
+              "titleSlug": "assign-cookies",
+              "difficulty": "Easy",
+              "solvedAt": "2026-06-13T17:44:55.000Z"
+            },
+            {
+              "title": "Find All Numbers Disappeared in an Array",
+              "titleSlug": "find-all-numbers-disappeared-in-an-array",
+              "difficulty": "Easy",
+              "solvedAt": "2026-06-13T17:42:48.000Z"
+            }
+          ],
+          "codechef": {
+            "countryRank": 0,
+            "division": "",
+            "globalRank": 0,
+            "highestRating": 0,
+            "problemsSolved": 0,
+            "rating": 0,
+            "stars": "1★"
+          },
+          "geeksforgeeks": {
+            "instituteRank": "",
+            "monthlyScore": 0,
+            "problemsSolved": 0,
+            "score": 0
+          }
+        },
+        "createdAt": "2026-10-08T10:15:34.368Z",
+        "updatedAt": "2026-10-22T19:14:05.835Z",
+        "__v": 1,
+        "codechefUsername": "",
+        "geeksforgeeksUsername": "",
+        "mustChangePassword": false,
+        "tokenVersion": 0
+      },
+      {
+        "_id": "6ac87091cb049a67ca9387b3",
+        "email": "diya.joshi57@rungta.ac.in",
+        "__v": 0,
+        "branch": "IT",
+        "createdAt": "2026-10-09T04:41:52.453Z",
+        "githubUsername": "diyajoshi57",
+        "hackerrankUsername": "diya_joshi57",
+        "isActive": true,
+        "leetcodeUsername": "diyajoshi_57",
+        "name": "Diya Joshi 57",
+        "score": 782,
+        "section": "A",
+        "stats": {
+          "leetcode": {
+            "easy": 110,
+            "medium": 132,
+            "hard": 40,
+            "total": 282
+          },
+          "github": {
+            "publicRepos": 38,
+            "followers": 18
+          },
+          "hackerrank": {
+            "points": 0,
+            "solved": 0,
+            "badges": 0
+          },
+          "lastSyncedAt": "2026-10-22T19:14:07.096Z",
+          "recentAccepted": [],
+          "codechef": {
+            "countryRank": 0,
+            "division": "",
+            "globalRank": 0,
+            "highestRating": 0,
+            "problemsSolved": 0,
+            "rating": 0,
+            "stars": "1★"
+          },
+          "geeksforgeeks": {
+            "instituteRank": "",
+            "monthlyScore": 0,
+            "problemsSolved": 0,
+            "score": 0
+          }
+        },
+        "studentId": "STU1057",
+        "updatedAt": "2026-10-22T19:14:07.097Z",
+        "year": 3,
+        "codechefUsername": "",
+        "geeksforgeeksUsername": "",
+        "mustChangePassword": false,
+        "tokenVersion": 0
+      },
+      {
+        "_id": "6ac87096cb049a67ca9387b4",
+        "email": "nisha.gupta192@rungta.ac.in",
+        "__v": 0,
+        "branch": "ECE",
+        "createdAt": "2026-10-09T04:41:58.136Z",
+        "githubUsername": "nishagupta192",
+        "hackerrankUsername": "nisha_gupta192",
+        "isActive": true,
+        "leetcodeUsername": "nisha_192",
+        "name": "Nisha Gupta 192",
+        "score": 925,
+        "section": "B",
+        "stats": {
+          "leetcode": {
+            "easy": 145,
+            "medium": 175,
+            "hard": 45,
+            "total": 365
+          },
+          "github": {
+            "publicRepos": 15,
+            "followers": 12
+          },
+          "hackerrank": {
+            "points": 0,
+            "solved": 0,
+            "badges": 0
+          },
+          "lastSyncedAt": "2026-10-22T19:14:08.576Z",
+          "recentAccepted": [],
+          "codechef": {
+            "countryRank": 0,
+            "division": "",
+            "globalRank": 0,
+            "highestRating": 0,
+            "problemsSolved": 0,
+            "rating": 0,
+            "stars": "1★"
+          },
+          "geeksforgeeks": {
+            "instituteRank": "",
+            "monthlyScore": 0,
+            "problemsSolved": 0,
+            "score": 0
+          }
+        },
+        "studentId": "STU1192",
+        "updatedAt": "2026-10-22T19:14:08.577Z",
+        "year": 4,
+        "codechefUsername": "",
+        "geeksforgeeksUsername": "",
+        "mustChangePassword": false,
+        "tokenVersion": 0
+      },
+      {
+        "_id": "6ac8709dcb049a67ca9387b5",
+        "email": "dev.mehta237@rungta.ac.in",
+        "__v": 0,
+        "branch": "IT",
+        "createdAt": "2026-10-09T04:42:04.557Z",
+        "githubUsername": "devmehta237",
+        "hackerrankUsername": "dev_mehta237",
+        "isActive": true,
+        "leetcodeUsername": "devmehta_237",
+        "name": "Dev Mehta 237",
+        "score": 696,
+        "section": "A",
+        "stats": {
+          "leetcode": {
+            "easy": 98,
+            "medium": 130,
+            "hard": 36,
+            "total": 264
+          },
+          "github": {
+            "publicRepos": 14,
+            "followers": 9
+          },
+          "hackerrank": {
+            "points": 0,
+            "solved": 0,
+            "badges": 0
+          },
+          "lastSyncedAt": "2026-10-22T19:14:10.898Z",
+          "recentAccepted": [],
+          "codechef": {
+            "countryRank": 0,
+            "division": "",
+            "globalRank": 0,
+            "highestRating": 0,
+            "problemsSolved": 0,
+            "rating": 0,
+            "stars": "1★"
+          },
+          "geeksforgeeks": {
+            "instituteRank": "",
+            "monthlyScore": 0,
+            "problemsSolved": 0,
+            "score": 0
+          }
+        },
+        "studentId": "STU1237",
+        "updatedAt": "2026-10-22T19:14:10.899Z",
+        "year": 3,
+        "codechefUsername": "",
+        "geeksforgeeksUsername": "",
+        "mustChangePassword": false,
+        "tokenVersion": 0
+      },
+      {
+        "_id": "6ac870a0cb049a67ca9387b6",
+        "email": "tanya.singh169@rungta.ac.in",
+        "__v": 0,
+        "branch": "IT",
+        "createdAt": "2026-10-09T04:42:07.389Z",
+        "githubUsername": "tanyasingh169",
+        "hackerrankUsername": "tanya_singh169",
+        "isActive": true,
+        "leetcodeUsername": "tanya_169",
+        "name": "Tanya Singh 169",
+        "score": 670,
+        "section": "B",
+        "stats": {
+          "leetcode": {
+            "easy": 86,
+            "medium": 118,
+            "hard": 32,
+            "total": 236
+          },
+          "github": {
+            "publicRepos": 35,
+            "followers": 22
+          },
+          "hackerrank": {
+            "points": 0,
+            "solved": 0,
+            "badges": 0
+          },
+          "lastSyncedAt": "2026-10-22T19:14:12.227Z",
+          "recentAccepted": [],
+          "codechef": {
+            "countryRank": 0,
+            "division": "",
+            "globalRank": 0,
+            "highestRating": 0,
+            "problemsSolved": 0,
+            "rating": 0,
+            "stars": "1★"
+          },
+          "geeksforgeeks": {
+            "instituteRank": "",
+            "monthlyScore": 0,
+            "problemsSolved": 0,
+            "score": 0
+          }
+        },
+        "studentId": "STU1169",
+        "updatedAt": "2026-10-22T19:14:12.228Z",
+        "year": 2,
+        "codechefUsername": "",
+        "geeksforgeeksUsername": "",
+        "mustChangePassword": false,
+        "tokenVersion": 0
+      },
+      {
+        "_id": "6ac870a2cb049a67ca9387b7",
+        "email": "karan.mehta203@rungta.ac.in",
+        "__v": 0,
+        "branch": "Data Science",
+        "createdAt": "2026-10-09T04:42:09.559Z",
+        "githubUsername": "karanmehta203",
+        "hackerrankUsername": "karan_mehta203",
+        "isActive": true,
+        "leetcodeUsername": "karan_203",
+        "name": "Karan Mehta 203",
+        "score": 625,
+        "section": "A",
+        "stats": {
+          "leetcode": {
+            "easy": 92,
+            "medium": 115,
+            "hard": 30,
+            "total": 237
+          },
+          "github": {
+            "publicRepos": 19,
+            "followers": 14
+          },
+          "hackerrank": {
+            "points": 0,
+            "solved": 0,
+            "badges": 0
+          },
+          "lastSyncedAt": "2026-10-22T19:14:13.846Z",
+          "recentAccepted": [],
+          "codechef": {
+            "countryRank": 0,
+            "division": "",
+            "globalRank": 0,
+            "highestRating": 0,
+            "problemsSolved": 0,
+            "rating": 0,
+            "stars": "1★"
+          },
+          "geeksforgeeks": {
+            "instituteRank": "",
+            "monthlyScore": 0,
+            "problemsSolved": 0,
+            "score": 0
+          }
+        },
+        "studentId": "STU1203",
+        "updatedAt": "2026-10-22T19:14:13.847Z",
+        "year": 3,
+        "codechefUsername": "",
+        "geeksforgeeksUsername": "",
+        "mustChangePassword": false,
+        "tokenVersion": 0
+      },
+      {
+        "_id": "6ac870a4cb049a67ca9387b8",
+        "email": "aarav.sharma180@rungta.ac.in",
+        "__v": 0,
+        "branch": "Computer Science",
+        "createdAt": "2026-10-09T04:42:11.520Z",
+        "githubUsername": "aaravsharma180",
+        "hackerrankUsername": "aarav_sharma180",
+        "isActive": true,
+        "leetcodeUsername": "aarav_180",
+        "name": "Aarav Sharma 180",
+        "score": 945,
+        "section": "A",
+        "stats": {
+          "leetcode": {
+            "easy": 130,
+            "medium": 180,
+            "hard": 55,
+            "total": 365
+          },
+          "github": {
+            "publicRepos": 0,
+            "followers": 0
+          },
+          "hackerrank": {
+            "points": 0,
+            "solved": 0,
+            "badges": 0
+          },
+          "lastSyncedAt": "2026-10-22T19:14:15.215Z",
+          "recentAccepted": [],
+          "codechef": {
+            "countryRank": 0,
+            "division": "",
+            "globalRank": 0,
+            "highestRating": 0,
+            "problemsSolved": 0,
+            "rating": 0,
+            "stars": "1★"
+          },
+          "geeksforgeeks": {
+            "instituteRank": "",
+            "monthlyScore": 0,
+            "problemsSolved": 0,
+            "score": 0
+          }
+        },
+        "studentId": "STU1180",
+        "updatedAt": "2026-10-22T19:14:15.216Z",
+        "year": 4,
+        "codechefUsername": "",
+        "geeksforgeeksUsername": "",
+        "mustChangePassword": false,
+        "tokenVersion": 0
+      },
+      {
+        "_id": "6ac870a6cb049a67ca9387b9",
+        "email": "priya.verma1025@rungta.ac.in",
+        "__v": 1,
+        "branch": "Computer Science",
+        "createdAt": "2026-10-09T04:42:13.671Z",
+        "githubUsername": "priyaverma1025",
+        "hackerrankUsername": "priya_verma1025",
+        "isActive": true,
+        "leetcodeUsername": "priya_1025",
+        "name": "Priya Verma 1025",
+        "score": 58,
+        "section": "B",
+        "stats": {
+          "leetcode": {
+            "easy": 2,
+            "medium": 0,
+            "hard": 0,
+            "total": 2
+          },
+          "github": {
+            "publicRepos": 28,
+            "followers": 19
+          },
+          "hackerrank": {
+            "points": 0,
+            "solved": 0,
+            "badges": 0
+          },
+          "lastSyncedAt": "2026-10-22T19:14:16.326Z",
+          "recentAccepted": [
+            {
+              "title": "Reverse Bits",
+              "titleSlug": "reverse-bits",
+              "difficulty": "Easy",
+              "solvedAt": "2026-07-15T16:59:06.000Z"
+            },
+            {
+              "title": "GCD of Odd and Even Sums",
+              "titleSlug": "gcd-of-odd-and-even-sums",
+              "difficulty": "Easy",
+              "solvedAt": "2026-07-15T16:52:30.000Z"
+            }
+          ],
+          "codechef": {
+            "countryRank": 0,
+            "division": "",
+            "globalRank": 0,
+            "highestRating": 0,
+            "problemsSolved": 0,
+            "rating": 0,
+            "stars": "1★"
+          },
+          "geeksforgeeks": {
+            "instituteRank": "",
+            "monthlyScore": 0,
+            "problemsSolved": 0,
+            "score": 0
+          }
+        },
+        "studentId": "STU1025",
+        "updatedAt": "2026-10-22T19:14:16.327Z",
+        "year": 3,
+        "codechefUsername": "",
+        "geeksforgeeksUsername": "",
+        "mustChangePassword": false,
+        "tokenVersion": 0
+      },
+      {
+        "_id": "6ac870a8cb049a67ca9387ba",
+        "email": "rohan.patel1298@rungta.ac.in",
+        "__v": 0,
+        "branch": "Data Science",
+        "createdAt": "2026-10-09T04:42:16.012Z",
+        "githubUsername": "rohanpatel1298",
+        "hackerrankUsername": "rohan_patel1298",
+        "isActive": true,
+        "leetcodeUsername": "rohan_1298",
+        "name": "Rohan Patel 1298",
+        "score": 774,
+        "section": "B",
+        "stats": {
+          "leetcode": {
+            "easy": 105,
+            "medium": 145,
+            "hard": 38,
+            "total": 288
+          },
+          "github": {
+            "publicRepos": 22,
+            "followers": 15
+          },
+          "hackerrank": {
+            "points": 0,
+            "solved": 0,
+            "badges": 0
+          },
+          "lastSyncedAt": "2026-10-22T19:14:17.041Z",
+          "recentAccepted": [],
+          "codechef": {
+            "countryRank": 0,
+            "division": "",
+            "globalRank": 0,
+            "highestRating": 0,
+            "problemsSolved": 0,
+            "rating": 0,
+            "stars": "1★"
+          },
+          "geeksforgeeks": {
+            "instituteRank": "",
+            "monthlyScore": 0,
+            "problemsSolved": 0,
+            "score": 0
+          }
+        },
+        "studentId": "STU1298",
+        "updatedAt": "2026-10-22T19:14:17.042Z",
+        "year": 2,
+        "codechefUsername": "",
+        "geeksforgeeksUsername": "",
+        "mustChangePassword": false,
+        "tokenVersion": 0
+      },
+      {
+        "_id": "6ac870abcb049a67ca9387bb",
+        "email": "ananya.roy1266@rungta.ac.in",
+        "__v": 0,
+        "branch": "AI",
+        "createdAt": "2026-10-09T04:42:18.425Z",
+        "githubUsername": "ananyaroy1266",
+        "hackerrankUsername": "ananya_roy1266",
+        "isActive": true,
+        "leetcodeUsername": "ananya_1266",
+        "name": "Ananya Roy 1266",
+        "score": 762,
+        "section": "A",
+        "stats": {
+          "leetcode": {
+            "easy": 95,
+            "medium": 135,
+            "hard": 42,
+            "total": 272
+          },
+          "github": {
+            "publicRepos": 26,
+            "followers": 17
+          },
+          "hackerrank": {
+            "points": 0,
+            "solved": 0,
+            "badges": 0
+          },
+          "lastSyncedAt": "2026-10-22T19:14:20.694Z",
+          "recentAccepted": [],
+          "codechef": {
+            "countryRank": 0,
+            "division": "",
+            "globalRank": 0,
+            "highestRating": 0,
+            "problemsSolved": 0,
+            "rating": 0,
+            "stars": "1★"
+          },
+          "geeksforgeeks": {
+            "instituteRank": "",
+            "monthlyScore": 0,
+            "problemsSolved": 0,
+            "score": 0
+          }
+        },
+        "studentId": "STU1266",
+        "updatedAt": "2026-10-22T19:14:20.695Z",
+        "year": 2,
+        "codechefUsername": "",
+        "geeksforgeeksUsername": "",
+        "mustChangePassword": false,
+        "tokenVersion": 0
+      },
+      {
+        "_id": "6ac870accb049a67ca9387bc",
+        "email": "sid.jain1091@rungta.ac.in",
+        "__v": 0,
+        "branch": "Computer Science",
+        "createdAt": "2026-10-09T04:42:20.065Z",
+        "githubUsername": "sidjain1091",
+        "hackerrankUsername": "sid_jain1091",
+        "isActive": true,
+        "leetcodeUsername": "sid_1091",
+        "name": "Siddharth Jain 1091",
+        "score": 726,
+        "section": "A",
+        "stats": {
+          "leetcode": {
+            "easy": 88,
+            "medium": 140,
+            "hard": 34,
+            "total": 262
+          },
+          "github": {
+            "publicRepos": 24,
+            "followers": 11
+          },
+          "hackerrank": {
+            "points": 0,
+            "solved": 0,
+            "badges": 0
+          },
+          "lastSyncedAt": "2026-10-22T19:14:21.588Z",
+          "recentAccepted": [],
+          "codechef": {
+            "countryRank": 0,
+            "division": "",
+            "globalRank": 0,
+            "highestRating": 0,
+            "problemsSolved": 0,
+            "rating": 0,
+            "stars": "1★"
+          },
+          "geeksforgeeks": {
+            "instituteRank": "",
+            "monthlyScore": 0,
+            "problemsSolved": 0,
+            "score": 0
+          }
+        },
+        "studentId": "STU1091",
+        "updatedAt": "2026-10-22T19:14:21.588Z",
+        "year": 3,
+        "codechefUsername": "",
+        "geeksforgeeksUsername": "",
+        "mustChangePassword": false,
+        "tokenVersion": 0
+      },
+      {
+        "_id": "6ac870adcb049a67ca9387bd",
+        "email": "kavya.nair1159@rungta.ac.in",
+        "__v": 0,
+        "branch": "ECE",
+        "createdAt": "2026-10-09T04:42:21.032Z",
+        "githubUsername": "kavyanair1159",
+        "hackerrankUsername": "kavya_nair1159",
+        "isActive": true,
+        "leetcodeUsername": "kavya_1159",
+        "name": "Kavya Nair 1159",
+        "score": 622,
+        "section": "A",
+        "stats": {
+          "leetcode": {
+            "easy": 82,
+            "medium": 112,
+            "hard": 28,
+            "total": 222
+          },
+          "github": {
+            "publicRepos": 32,
+            "followers": 20
+          },
+          "hackerrank": {
+            "points": 0,
+            "solved": 0,
+            "badges": 0
+          },
+          "lastSyncedAt": "2026-10-22T19:14:22.758Z",
+          "recentAccepted": [],
+          "codechef": {
+            "countryRank": 0,
+            "division": "",
+            "globalRank": 0,
+            "highestRating": 0,
+            "problemsSolved": 0,
+            "rating": 0,
+            "stars": "1★"
+          },
+          "geeksforgeeks": {
+            "instituteRank": "",
+            "monthlyScore": 0,
+            "problemsSolved": 0,
+            "score": 0
+          }
+        },
+        "studentId": "STU1159",
+        "updatedAt": "2026-10-22T19:14:22.759Z",
+        "year": 3,
+        "codechefUsername": "",
+        "geeksforgeeksUsername": "",
+        "mustChangePassword": false,
+        "tokenVersion": 0
+      },
+      {
+        "_id": "6ac870aecb049a67ca9387be",
+        "email": "vikram.m1262@rungta.ac.in",
+        "__v": 0,
+        "branch": "IT",
+        "createdAt": "2026-10-09T04:42:21.964Z",
+        "githubUsername": "vikram1262",
+        "hackerrankUsername": "vikram_1262",
+        "isActive": true,
+        "leetcodeUsername": "vikram_1262",
+        "name": "Vikram Malhotra 1262",
+        "score": 657,
+        "section": "B",
+        "stats": {
+          "leetcode": {
+            "easy": 85,
+            "medium": 120,
+            "hard": 30,
+            "total": 235
+          },
+          "github": {
+            "publicRepos": 31,
+            "followers": 16
+          },
+          "hackerrank": {
+            "points": 0,
+            "solved": 0,
+            "badges": 0
+          },
+          "lastSyncedAt": "2026-10-22T19:14:23.652Z",
+          "recentAccepted": [],
+          "codechef": {
+            "countryRank": 0,
+            "division": "",
+            "globalRank": 0,
+            "highestRating": 0,
+            "problemsSolved": 0,
+            "rating": 0,
+            "stars": "1★"
+          },
+          "geeksforgeeks": {
+            "instituteRank": "",
+            "monthlyScore": 0,
+            "problemsSolved": 0,
+            "score": 0
+          }
+        },
+        "studentId": "STU1262",
+        "updatedAt": "2026-10-22T19:14:23.653Z",
+        "year": 4,
+        "codechefUsername": "",
+        "geeksforgeeksUsername": "",
+        "mustChangePassword": false,
+        "tokenVersion": 0
+      },
+      {
+        "_id": "6ac87cf062c1505b1e3a679d",
+        "name": "Palak Kumari",
+        "email": "palak.kumari1@rungta.org",
+        "studentId": "RU-25-10940",
+        "branch": "Computer Science and Engineering (AI & ML)",
+        "section": "G",
+        "year": 2,
+        "leetcodeUsername": "UgeimDKqbe",
+        "githubUsername": "palakkumari31052008-boop",
+        "hackerrankUsername": "palakkumari31051",
+        "score": 108,
+        "isActive": true,
+        "stats": {
+          "leetcode": {
+            "easy": 67,
+            "medium": 7,
+            "hard": 0,
+            "total": 74
+          },
+          "github": {
+            "publicRepos": 10,
+            "followers": 0
+          },
+          "hackerrank": {
+            "points": 0,
+            "solved": 0,
+            "badges": 0
+          },
+          "lastSyncedAt": "2026-10-22T19:14:24.898Z",
+          "recentAccepted": [
+            {
+              "title": "Maximum Average Subarray I",
+              "titleSlug": "maximum-average-subarray-i",
+              "difficulty": "Easy",
+              "solvedAt": "2026-10-22T06:02:10.000Z"
+            },
+            {
+              "title": "Minimum Deletions to Make Array Sharp",
+              "titleSlug": "minimum-deletions-to-make-array-sharp",
+              "difficulty": "Easy",
+              "solvedAt": "2026-10-18T03:35:45.000Z"
+            },
+            {
+              "title": "Intersection of Two Arrays",
+              "titleSlug": "intersection-of-two-arrays",
+              "difficulty": "Easy",
+              "solvedAt": "2026-10-15T16:46:09.000Z"
+            },
+            {
+              "title": "Contains Duplicate",
+              "titleSlug": "contains-duplicate",
+              "difficulty": "Easy",
+              "solvedAt": "2026-10-15T16:03:29.000Z"
+            },
+            {
+              "title": "Happy Number",
+              "titleSlug": "happy-number",
+              "difficulty": "Easy",
+              "solvedAt": "2026-10-11T12:17:59.000Z"
+            },
+            {
+              "title": "Three Fibonacci Sum",
+              "titleSlug": "three-fibonacci-sum",
+              "difficulty": "Easy",
+              "solvedAt": "2026-10-11T03:19:05.000Z"
+            },
+            {
+              "title": "Product of Array Except Self",
+              "titleSlug": "product-of-array-except-self",
+              "difficulty": "Medium",
+              "solvedAt": "2026-10-10T18:01:22.000Z"
+            },
+            {
+              "title": "Squares of a Sorted Array",
+              "titleSlug": "squares-of-a-sorted-array",
+              "difficulty": "Easy",
+              "solvedAt": "2026-10-10T17:29:02.000Z"
+            },
+            {
+              "title": "Move Zeroes",
+              "titleSlug": "move-zeroes",
+              "difficulty": "Easy",
+              "solvedAt": "2026-10-09T16:24:08.000Z"
+            },
+            {
+              "title": "Reverse Linked List",
+              "titleSlug": "reverse-linked-list",
+              "difficulty": "Easy",
+              "solvedAt": "2026-10-08T17:58:57.000Z"
+            },
+            {
+              "title": "Transform Array Using Pair Operations",
+              "titleSlug": "transform-array-using-pair-operations",
+              "difficulty": "Medium",
+              "solvedAt": "2026-09-26T15:40:29.000Z"
+            },
+            {
+              "title": "Smallest Index With Digit Sum Equal to Index",
+              "titleSlug": "smallest-index-with-digit-sum-equal-to-index",
+              "difficulty": "Easy",
+              "solvedAt": "2026-09-24T17:18:18.000Z"
+            },
+            {
+              "title": "Middle of the Linked List",
+              "titleSlug": "middle-of-the-linked-list",
+              "difficulty": "Easy",
+              "solvedAt": "2026-09-19T13:20:06.000Z"
+            },
+            {
+              "title": "Convert Binary Number in a Linked List to Integer",
+              "titleSlug": "convert-binary-number-in-a-linked-list-to-integer",
+              "difficulty": "Easy",
+              "solvedAt": "2026-09-18T17:04:01.000Z"
+            },
+            {
+              "title": "Cyclically Shift Rows and Columns",
+              "titleSlug": "cyclically-shift-rows-and-columns",
+              "difficulty": "Easy",
+              "solvedAt": "2026-09-13T03:04:51.000Z"
+            },
+            {
+              "title": "Linked List Cycle",
+              "titleSlug": "linked-list-cycle",
+              "difficulty": "Easy",
+              "solvedAt": "2026-09-11T18:16:32.000Z"
+            },
+            {
+              "title": "Power of Four",
+              "titleSlug": "power-of-four",
+              "difficulty": "Easy",
+              "solvedAt": "2026-09-09T19:41:46.000Z"
+            },
+            {
+              "title": "Ant on the Boundary",
+              "titleSlug": "ant-on-the-boundary",
+              "difficulty": "Easy",
+              "solvedAt": "2026-09-03T18:07:47.000Z"
+            },
+            {
+              "title": "Find the Child Who Has the Ball After K Seconds",
+              "titleSlug": "find-the-child-who-has-the-ball-after-k-seconds",
+              "difficulty": "Easy",
+              "solvedAt": "2026-09-03T17:47:13.000Z"
+            }
+          ],
+          "codechef": {
+            "countryRank": 0,
+            "division": "",
+            "globalRank": 0,
+            "highestRating": 0,
+            "problemsSolved": 0,
+            "rating": 0,
+            "stars": "1★"
+          },
+          "geeksforgeeks": {
+            "instituteRank": "",
+            "monthlyScore": 0,
+            "problemsSolved": 0,
+            "score": 0
+          }
+        },
+        "createdAt": "2026-10-09T05:34:40.628Z",
+        "updatedAt": "2026-10-22T19:14:24.902Z",
+        "__v": 9,
+        "codechefUsername": "",
+        "geeksforgeeksUsername": "",
+        "mustChangePassword": false,
+        "tokenVersion": 0
+      },
+      {
+        "_id": "6aca9a72dfb4aa3216eddebd",
+        "name": "Piyush kumar",
+        "email": "piyush.kumar5@rungta.org",
+        "studentId": "RU-26-00870",
+        "branch": "Computer Science and Engineering",
+        "section": "M",
+        "year": 1,
+        "leetcodeUsername": "",
+        "githubUsername": "",
+        "hackerrankUsername": "",
+        "codechefUsername": "",
+        "score": 0,
+        "isActive": true,
+        "stats": {
+          "leetcode": {
+            "easy": 0,
+            "medium": 0,
+            "hard": 0,
+            "total": 0
+          },
+          "github": {
+            "publicRepos": 0,
+            "followers": 0
+          },
+          "hackerrank": {
+            "points": 0,
+            "solved": 0,
+            "badges": 0
+          },
+          "codechef": {
+            "rating": 0,
+            "stars": "1★",
+            "division": "",
+            "highestRating": 0,
+            "problemsSolved": 0,
+            "globalRank": 0,
+            "countryRank": 0
+          },
+          "lastSyncedAt": null,
+          "recentAccepted": []
+        },
+        "createdAt": "2026-10-10T20:05:06.187Z",
+        "updatedAt": "2026-10-10T20:05:06.187Z",
+        "__v": 0
+      },
+      {
+        "_id": "6aca9ae1dfb4aa3216eddf02",
+        "name": "Komal Singh",
+        "email": "komal.singh@rungta.org",
+        "studentId": "RU-2510692",
+        "branch": "Computer Science and Engineering (AI & ML)",
+        "section": "G",
+        "year": 2,
+        "leetcodeUsername": "Ktj2J8FIvq",
+        "githubUsername": "komal23085",
+        "hackerrankUsername": "https:",
+        "codechefUsername": "https:",
+        "score": 36,
+        "isActive": true,
+        "stats": {
+          "leetcode": {
+            "easy": 23,
+            "medium": 1,
+            "hard": 0,
+            "total": 24
+          },
+          "github": {
+            "publicRepos": 5,
+            "followers": 0
+          },
+          "hackerrank": {
+            "points": 0,
+            "solved": 0,
+            "badges": 0
+          },
+          "codechef": {
+            "rating": 0,
+            "stars": "1★",
+            "division": "",
+            "highestRating": 0,
+            "problemsSolved": 0,
+            "globalRank": 0,
+            "countryRank": 0
+          },
+          "lastSyncedAt": "2026-10-22T19:14:29.568Z",
+          "recentAccepted": [
+            {
+              "title": "Find the Safest Path in a Grid",
+              "titleSlug": "find-the-safest-path-in-a-grid",
+              "difficulty": "Medium",
+              "solvedAt": "2026-07-24T13:14:05.000Z"
+            },
+            {
+              "title": "Move Zeroes",
+              "titleSlug": "move-zeroes",
+              "difficulty": "Easy",
+              "solvedAt": "2026-06-07T18:04:03.000Z"
+            },
+            {
+              "title": "Richest Customer Wealth",
+              "titleSlug": "richest-customer-wealth",
+              "difficulty": "Easy",
+              "solvedAt": "2026-06-07T18:01:18.000Z"
+            },
+            {
+              "title": "Valid Palindrome",
+              "titleSlug": "valid-palindrome",
+              "difficulty": "Easy",
+              "solvedAt": "2026-06-07T17:57:00.000Z"
+            },
+            {
+              "title": "Best Time to Buy and Sell Stock",
+              "titleSlug": "best-time-to-buy-and-sell-stock",
+              "difficulty": "Easy",
+              "solvedAt": "2026-06-07T17:52:57.000Z"
+            },
+            {
+              "title": "Remove Duplicates from Sorted Array",
+              "titleSlug": "remove-duplicates-from-sorted-array",
+              "difficulty": "Easy",
+              "solvedAt": "2026-06-07T17:48:57.000Z"
+            },
+            {
+              "title": "Matrix Diagonal Sum",
+              "titleSlug": "matrix-diagonal-sum",
+              "difficulty": "Easy",
+              "solvedAt": "2026-06-07T16:24:10.000Z"
+            },
+            {
+              "title": "Reshape the Matrix",
+              "titleSlug": "reshape-the-matrix",
+              "difficulty": "Easy",
+              "solvedAt": "2026-05-28T17:36:33.000Z"
+            },
+            {
+              "title": "Reverse String",
+              "titleSlug": "reverse-string",
+              "difficulty": "Easy",
+              "solvedAt": "2026-05-28T17:25:22.000Z"
+            },
+            {
+              "title": "Remove Element",
+              "titleSlug": "remove-element",
+              "difficulty": "Easy",
+              "solvedAt": "2026-05-28T17:20:37.000Z"
+            },
+            {
+              "title": "Merge Sorted Array",
+              "titleSlug": "merge-sorted-array",
+              "difficulty": "Easy",
+              "solvedAt": "2026-05-28T17:11:15.000Z"
+            },
+            {
+              "title": "Weighted Word Mapping",
+              "titleSlug": "weighted-word-mapping",
+              "difficulty": "Easy",
+              "solvedAt": "2026-05-28T16:53:30.000Z"
+            },
+            {
+              "title": "Vowel-Consonant Score",
+              "titleSlug": "vowel-consonant-score",
+              "difficulty": "Easy",
+              "solvedAt": "2026-05-28T16:42:38.000Z"
+            },
+            {
+              "title": "Reverse Degree of a String",
+              "titleSlug": "reverse-degree-of-a-string",
+              "difficulty": "Easy",
+              "solvedAt": "2026-05-28T16:36:32.000Z"
+            },
+            {
+              "title": "Final Value of Variable After Performing Operations",
+              "titleSlug": "final-value-of-variable-after-performing-operations",
+              "difficulty": "Easy",
+              "solvedAt": "2026-05-28T16:28:59.000Z"
+            },
+            {
+              "title": "Robot Return to Origin",
+              "titleSlug": "robot-return-to-origin",
+              "difficulty": "Easy",
+              "solvedAt": "2026-05-28T16:21:15.000Z"
+            },
+            {
+              "title": "Separate the Digits in an Array",
+              "titleSlug": "separate-the-digits-in-an-array",
+              "difficulty": "Easy",
+              "solvedAt": "2026-05-27T18:46:10.000Z"
+            },
+            {
+              "title": "Check If Digits Are Equal in String After Operations I",
+              "titleSlug": "check-if-digits-are-equal-in-string-after-operations-i",
+              "difficulty": "Easy",
+              "solvedAt": "2026-05-27T18:23:12.000Z"
+            },
+            {
+              "title": "Calculate Digit Sum of a String",
+              "titleSlug": "calculate-digit-sum-of-a-string",
+              "difficulty": "Easy",
+              "solvedAt": "2026-05-27T17:42:14.000Z"
+            },
+            {
+              "title": "Count Integers With Even Digit Sum",
+              "titleSlug": "count-integers-with-even-digit-sum",
+              "difficulty": "Easy",
+              "solvedAt": "2026-05-27T17:36:02.000Z"
+            }
+          ],
+          "geeksforgeeks": {
+            "instituteRank": "",
+            "monthlyScore": 0,
+            "problemsSolved": 0,
+            "score": 0
+          }
+        },
+        "createdAt": "2026-10-10T20:06:57.791Z",
+        "updatedAt": "2026-10-22T19:14:29.570Z",
+        "__v": 1,
+        "geeksforgeeksUsername": "",
+        "mustChangePassword": false,
+        "tokenVersion": 0
+      },
+      {
+        "_id": "6acb22ec3c35b1fff6f5c9ff",
+        "name": "Muskan kashyap",
+        "email": "muskan.kashyap@rungta.org",
+        "studentId": "25-10855",
+        "branch": "Computer Science and Engineering (AI & ML)",
+        "section": "G",
+        "year": 2,
+        "leetcodeUsername": "Muskan_zone",
+        "githubUsername": "muskankashyap-spice",
+        "hackerrankUsername": "",
+        "codechefUsername": "",
+        "score": 72,
+        "isActive": true,
+        "stats": {
+          "leetcode": {
+            "easy": 18,
+            "medium": 7,
+            "hard": 3,
+            "total": 28
+          },
+          "github": {
+            "publicRepos": 9,
+            "followers": 0
+          },
+          "hackerrank": {
+            "points": 0,
+            "solved": 0,
+            "badges": 0
+          },
+          "codechef": {
+            "rating": 0,
+            "stars": "1★",
+            "division": "",
+            "highestRating": 0,
+            "problemsSolved": 0,
+            "globalRank": 0,
+            "countryRank": 0
+          },
+          "lastSyncedAt": "2026-10-22T19:14:34.706Z",
+          "recentAccepted": [
+            {
+              "title": "Count Commas in Range",
+              "titleSlug": "count-commas-in-range",
+              "difficulty": "Easy",
+              "solvedAt": "2026-09-08T15:26:30.000Z"
+            },
+            {
+              "title": "Distinct Subsequences II",
+              "titleSlug": "distinct-subsequences-ii",
+              "difficulty": "Hard",
+              "solvedAt": "2026-09-07T17:56:53.000Z"
+            },
+            {
+              "title": "Distinct Subsequences",
+              "titleSlug": "distinct-subsequences",
+              "difficulty": "Hard",
+              "solvedAt": "2026-09-06T06:54:16.000Z"
+            },
+            {
+              "title": "Missing Number",
+              "titleSlug": "missing-number",
+              "difficulty": "Easy",
+              "solvedAt": "2026-09-04T04:58:56.000Z"
+            },
+            {
+              "title": "Smallest Stable Index I",
+              "titleSlug": "smallest-stable-index-i",
+              "difficulty": "Easy",
+              "solvedAt": "2026-09-04T04:52:29.000Z"
+            },
+            {
+              "title": "Construct Uniform Parity Array II",
+              "titleSlug": "construct-uniform-parity-array-ii",
+              "difficulty": "Medium",
+              "solvedAt": "2026-09-03T14:04:59.000Z"
+            },
+            {
+              "title": "Smallest Divisible Digit Product I",
+              "titleSlug": "smallest-divisible-digit-product-i",
+              "difficulty": "Easy",
+              "solvedAt": "2026-08-06T13:12:50.000Z"
+            },
+            {
+              "title": "Remove Element",
+              "titleSlug": "remove-element",
+              "difficulty": "Easy",
+              "solvedAt": "2026-07-23T08:36:10.000Z"
+            },
+            {
+              "title": "Count Subarrays With Majority Element I",
+              "titleSlug": "count-subarrays-with-majority-element-i",
+              "difficulty": "Medium",
+              "solvedAt": "2026-06-25T17:10:08.000Z"
+            },
+            {
+              "title": "Maximum Number of Balloons",
+              "titleSlug": "maximum-number-of-balloons",
+              "difficulty": "Easy",
+              "solvedAt": "2026-06-22T16:02:12.000Z"
+            },
+            {
+              "title": "Remove Duplicates from Sorted Array",
+              "titleSlug": "remove-duplicates-from-sorted-array",
+              "difficulty": "Easy",
+              "solvedAt": "2026-06-21T17:29:36.000Z"
+            },
+            {
+              "title": "Length of Last Word",
+              "titleSlug": "length-of-last-word",
+              "difficulty": "Easy",
+              "solvedAt": "2026-06-21T17:12:56.000Z"
+            },
+            {
+              "title": "Reverse Integer",
+              "titleSlug": "reverse-integer",
+              "difficulty": "Medium",
+              "solvedAt": "2026-06-21T17:02:19.000Z"
+            },
+            {
+              "title": "Palindrome Number",
+              "titleSlug": "palindrome-number",
+              "difficulty": "Easy",
+              "solvedAt": "2026-06-21T16:47:38.000Z"
+            },
+            {
+              "title": "Maximum Ice Cream Bars",
+              "titleSlug": "maximum-ice-cream-bars",
+              "difficulty": "Medium",
+              "solvedAt": "2026-06-21T16:32:06.000Z"
+            },
+            {
+              "title": "Find the Highest Altitude",
+              "titleSlug": "find-the-highest-altitude",
+              "difficulty": "Easy",
+              "solvedAt": "2026-06-19T16:00:37.000Z"
+            },
+            {
+              "title": "Longest Substring Without Repeating Characters",
+              "titleSlug": "longest-substring-without-repeating-characters",
+              "difficulty": "Medium",
+              "solvedAt": "2026-06-15T05:21:53.000Z"
+            },
+            {
+              "title": "Delete the Middle Node of a Linked List",
+              "titleSlug": "delete-the-middle-node-of-a-linked-list",
+              "difficulty": "Medium",
+              "solvedAt": "2026-06-15T05:11:23.000Z"
+            },
+            {
+              "title": "Longest Common Prefix",
+              "titleSlug": "longest-common-prefix",
+              "difficulty": "Easy",
+              "solvedAt": "2026-06-12T07:48:58.000Z"
+            },
+            {
+              "title": "Left and Right Sum Differences",
+              "titleSlug": "left-and-right-sum-differences",
+              "difficulty": "Easy",
+              "solvedAt": "2026-06-06T03:43:55.000Z"
+            }
+          ],
+          "geeksforgeeks": {
+            "instituteRank": "",
+            "monthlyScore": 0,
+            "problemsSolved": 0,
+            "score": 0
+          }
+        },
+        "createdAt": "2026-10-11T05:47:24.036Z",
+        "updatedAt": "2026-10-22T19:14:34.708Z",
+        "__v": 1,
+        "geeksforgeeksUsername": "",
+        "mustChangePassword": false,
+        "tokenVersion": 0
+      },
+      {
+        "_id": "6ad3bf98c427382272dbb6e5",
+        "name": "Khushi Gupta",
+        "email": "khushi.gupta1@rungta.org",
+        "studentId": "10676",
+        "branch": "Computer Science and Engineering (AI & ML)",
+        "section": "G",
+        "year": 2,
+        "leetcodeUsername": "",
+        "githubUsername": "",
+        "hackerrankUsername": "",
+        "codechefUsername": "",
+        "geeksforgeeksUsername": "",
+        "score": 0,
+        "isActive": true,
+        "stats": {
+          "leetcode": {
+            "easy": 0,
+            "medium": 0,
+            "hard": 0,
+            "total": 0
+          },
+          "github": {
+            "publicRepos": 0,
+            "followers": 0
+          },
+          "hackerrank": {
+            "points": 0,
+            "solved": 0,
+            "badges": 0
+          },
+          "codechef": {
+            "rating": 0,
+            "stars": "1★",
+            "division": "",
+            "highestRating": 0,
+            "problemsSolved": 0,
+            "globalRank": 0,
+            "countryRank": 0
+          },
+          "geeksforgeeks": {
+            "score": 0,
+            "problemsSolved": 0,
+            "monthlyScore": 0,
+            "instituteRank": ""
+          },
+          "lastSyncedAt": null,
+          "recentAccepted": []
+        },
+        "createdAt": "2026-10-17T18:34:00.159Z",
+        "updatedAt": "2026-10-17T18:34:00.159Z",
+        "__v": 0
+      }
+    ],
+    "directorates": [
+      {
+        "_id": "6ada16174a17d6ba353dcb6a",
+        "name": "Faculty of Engineering & Technology",
+        "code": "FET",
+        "description": "Premier engineering division covering Core, Electronics, and Applied Engineering disciplines.",
+        "directorId": "6ada1618a6cc111e8cdc8f82",
+        "tpoId": "6ada1617a6cc111e8cdc8f81",
+        "building": "Rungta Tech Block 1",
+        "establishedYear": 2008,
+        "status": "active",
+        "createdAt": "2026-10-22T13:56:39.494Z",
+        "updatedAt": "2026-10-22T13:56:39.494Z",
+        "__v": 0
+      },
+      {
+        "_id": "6ada16174a17d6ba353dcb6e",
+        "name": "School of Computing & Artificial Intelligence",
+        "code": "SCAI",
+        "description": "Center of excellence for Computer Science, Data Science, AI, and Next-Gen Computing.",
+        "directorId": "6ada1618a6cc111e8cdc8f83",
+        "tpoId": "6ada1617a6cc111e8cdc8f81",
+        "building": "CV Raman Advanced Computing Center",
+        "establishedYear": 2012,
+        "status": "active",
+        "createdAt": "2026-10-22T13:56:39.526Z",
+        "updatedAt": "2026-10-22T13:56:39.526Z",
+        "__v": 0
+      }
+    ],
+    "departments": [
+      {
+        "_id": "6ac4fcc0619f84a99316b72f",
+        "name": "Computer Science and Engineering (AI & ML)",
+        "__v": 0,
+        "createdAt": "2026-10-06T13:50:55.267Z",
+        "sections": [
+          "G"
+        ],
+        "updatedAt": "2026-10-17T18:34:00.404Z"
+      },
+      {
+        "_id": "6ac87074cb049a67ca9387ae",
+        "name": "Computer Science",
+        "__v": 0,
+        "createdAt": "2026-10-09T04:41:10.357Z",
+        "sections": [
+          "A",
+          "B",
+          "C"
+        ],
+        "updatedAt": "2026-10-22T13:56:39.744Z",
+        "buildingBlock": "Computing Wing A",
+        "code": "CSE",
+        "contactEmail": "cse.dept@rungta.ac.in",
+        "directorateId": "6ada16174a17d6ba353dcb6e",
+        "floor": "3rd Floor",
+        "hodId": "6ada1618a6cc111e8cdc8f84",
+        "status": "active"
+      },
+      {
+        "_id": "6ac87076cb049a67ca9387af",
+        "name": "IT",
+        "__v": 0,
+        "createdAt": "2026-10-09T04:41:25.887Z",
+        "sections": [
+          "A",
+          "B"
+        ],
+        "updatedAt": "2026-10-22T13:56:39.805Z",
+        "buildingBlock": "Tech Block 1",
+        "code": "IT",
+        "contactEmail": "it.dept@rungta.ac.in",
+        "directorateId": "6ada16174a17d6ba353dcb6a",
+        "floor": "2nd Floor",
+        "hodId": "6ada1618a6cc111e8cdc8f86",
+        "status": "active"
+      },
+      {
+        "_id": "6ac8707bcb049a67ca9387b0",
+        "name": "Data Science",
+        "__v": 0,
+        "createdAt": "2026-10-09T04:41:30.734Z",
+        "sections": [
+          "A",
+          "B"
+        ],
+        "updatedAt": "2026-10-22T13:56:39.777Z",
+        "buildingBlock": "Computing Wing B",
+        "code": "DSAI",
+        "contactEmail": "datascience.dept@rungta.ac.in",
+        "directorateId": "6ada16174a17d6ba353dcb6e",
+        "floor": "2nd Floor",
+        "hodId": "6ada1618a6cc111e8cdc8f85",
+        "status": "active"
+      },
+      {
+        "_id": "6ac87088cb049a67ca9387b1",
+        "name": "AI",
+        "__v": 0,
+        "createdAt": "2026-10-09T04:41:43.682Z",
+        "sections": [],
+        "updatedAt": "2026-10-13T06:18:01.453Z"
+      },
+      {
+        "_id": "6ac8708ecb049a67ca9387b2",
+        "name": "ECE",
+        "__v": 0,
+        "createdAt": "2026-10-09T04:41:49.617Z",
+        "sections": [],
+        "updatedAt": "2026-10-13T06:20:03.247Z"
+      },
+      {
+        "_id": "6aca9a72cb049a67ca941d81",
+        "name": "Computer Science and Engineering",
+        "__v": 0,
+        "createdAt": "2026-10-10T20:05:06.429Z",
+        "sections": [],
+        "updatedAt": "2026-10-13T06:18:06.399Z"
+      },
+      {
+        "_id": "6ada1618a6cc111e8cdc8f88",
+        "name": "Mechanical",
+        "__v": 0,
+        "buildingBlock": "Core Engineering Complex",
+        "code": "ME",
+        "contactEmail": "mechanical.dept@rungta.ac.in",
+        "createdAt": "2026-10-22T13:56:39.835Z",
+        "directorateId": "6ada16174a17d6ba353dcb6a",
+        "floor": "Ground Floor",
+        "hodId": "6ada1618a6cc111e8cdc8f87",
+        "sections": [
+          "A",
+          "B"
+        ],
+        "status": "active",
+        "updatedAt": "2026-10-22T13:56:39.835Z"
+      }
+    ],
+    "sections": [
+      {
+        "_id": "6ada1619a6cc111e8cdc8f9b",
+        "departmentId": "6ac87074cb049a67ca9387ae",
+        "name": "CSE-A",
+        "academicYear": "2026-2027",
+        "__v": 0,
+        "capacity": 60,
+        "classTeacherId": "6ada1618a6cc111e8cdc8f89",
+        "createdAt": "2026-10-22T13:56:40.504Z",
+        "directorateId": "6ada16174a17d6ba353dcb6e",
+        "primaryClassroomId": "6ada1618a6cc111e8cdc8f94",
+        "semester": 5,
+        "status": "active",
+        "totalStudents": 58,
+        "updatedAt": "2026-10-22T13:56:40.504Z",
+        "year": 3
+      },
+      {
+        "_id": "6ada1619a6cc111e8cdc8f9c",
+        "departmentId": "6ac87074cb049a67ca9387ae",
+        "name": "CSE-B",
+        "academicYear": "2026-2027",
+        "__v": 0,
+        "capacity": 60,
+        "classTeacherId": "6ada1618a6cc111e8cdc8f8a",
+        "createdAt": "2026-10-22T13:56:40.532Z",
+        "directorateId": "6ada16174a17d6ba353dcb6e",
+        "primaryClassroomId": "6ada1618a6cc111e8cdc8f91",
+        "semester": 5,
+        "status": "active",
+        "totalStudents": 55,
+        "updatedAt": "2026-10-22T13:56:40.532Z",
+        "year": 3
+      },
+      {
+        "_id": "6ada1619a6cc111e8cdc8f9d",
+        "name": "CSE-C",
+        "academicYear": "2026-2027",
+        "departmentId": "6ac87074cb049a67ca9387ae",
+        "__v": 0,
+        "capacity": 60,
+        "classTeacherId": "6ada1618a6cc111e8cdc8f89",
+        "createdAt": "2026-10-22T13:56:40.558Z",
+        "directorateId": "6ada16174a17d6ba353dcb6e",
+        "primaryClassroomId": "6ada1618a6cc111e8cdc8f94",
+        "semester": 3,
+        "status": "active",
+        "totalStudents": 60,
+        "updatedAt": "2026-10-22T13:56:40.558Z",
+        "year": 2
+      },
+      {
+        "_id": "6ada1619a6cc111e8cdc8f9e",
+        "academicYear": "2026-2027",
+        "departmentId": "6ac8707bcb049a67ca9387b0",
+        "name": "DSAI-A",
+        "__v": 0,
+        "capacity": 60,
+        "classTeacherId": "6ada1618a6cc111e8cdc8f8b",
+        "createdAt": "2026-10-22T13:56:40.584Z",
+        "directorateId": "6ada16174a17d6ba353dcb6e",
+        "primaryClassroomId": "6ada1618a6cc111e8cdc8f92",
+        "semester": 5,
+        "status": "active",
+        "totalStudents": 52,
+        "updatedAt": "2026-10-22T13:56:40.584Z",
+        "year": 3
+      },
+      {
+        "_id": "6ada1619a6cc111e8cdc8f9f",
+        "departmentId": "6ac8707bcb049a67ca9387b0",
+        "name": "DSAI-B",
+        "academicYear": "2026-2027",
+        "__v": 0,
+        "capacity": 60,
+        "classTeacherId": "6ada1618a6cc111e8cdc8f8c",
+        "createdAt": "2026-10-22T13:56:40.611Z",
+        "directorateId": "6ada16174a17d6ba353dcb6e",
+        "primaryClassroomId": "6ada1618a6cc111e8cdc8f95",
+        "semester": 3,
+        "status": "active",
+        "totalStudents": 48,
+        "updatedAt": "2026-10-22T13:56:40.611Z",
+        "year": 2
+      },
+      {
+        "_id": "6ada1619a6cc111e8cdc8fa0",
+        "departmentId": "6ac87076cb049a67ca9387af",
+        "name": "IT-A",
+        "academicYear": "2026-2027",
+        "__v": 0,
+        "capacity": 60,
+        "classTeacherId": "6ada1618a6cc111e8cdc8f8d",
+        "createdAt": "2026-10-22T13:56:40.638Z",
+        "directorateId": "6ada16174a17d6ba353dcb6a",
+        "primaryClassroomId": "6ada1618a6cc111e8cdc8f93",
+        "semester": 5,
+        "status": "active",
+        "totalStudents": 51,
+        "updatedAt": "2026-10-22T13:56:40.638Z",
+        "year": 3
+      },
+      {
+        "_id": "6ada1619a6cc111e8cdc8fa1",
+        "departmentId": "6ac87076cb049a67ca9387af",
+        "name": "IT-B",
+        "academicYear": "2026-2027",
+        "__v": 0,
+        "capacity": 60,
+        "classTeacherId": "6ada1618a6cc111e8cdc8f8e",
+        "createdAt": "2026-10-22T13:56:40.665Z",
+        "directorateId": "6ada16174a17d6ba353dcb6a",
+        "primaryClassroomId": "6ada1618a6cc111e8cdc8f96",
+        "semester": 3,
+        "status": "active",
+        "totalStudents": 46,
+        "updatedAt": "2026-10-22T13:56:40.665Z",
+        "year": 2
+      },
+      {
+        "_id": "6ada1619a6cc111e8cdc8fa2",
+        "academicYear": "2026-2027",
+        "departmentId": "6ada1618a6cc111e8cdc8f88",
+        "name": "ME-A",
+        "__v": 0,
+        "capacity": 60,
+        "classTeacherId": "6ada1618a6cc111e8cdc8f8f",
+        "createdAt": "2026-10-22T13:56:40.693Z",
+        "directorateId": "6ada16174a17d6ba353dcb6a",
+        "primaryClassroomId": "6ada1618a6cc111e8cdc8f97",
+        "semester": 5,
+        "status": "active",
+        "totalStudents": 44,
+        "updatedAt": "2026-10-22T13:56:40.693Z",
+        "year": 3
+      },
+      {
+        "_id": "6ada1619a6cc111e8cdc8fa3",
+        "academicYear": "2026-2027",
+        "departmentId": "6ada1618a6cc111e8cdc8f88",
+        "name": "ME-B (Vacant)",
+        "__v": 0,
+        "capacity": 60,
+        "createdAt": "2026-10-22T13:56:40.726Z",
+        "directorateId": "6ada16174a17d6ba353dcb6a",
+        "semester": 3,
+        "status": "vacant",
+        "totalStudents": 0,
+        "updatedAt": "2026-10-22T13:56:40.726Z",
+        "year": 2
+      }
+    ],
+    "subjects": [
+      {
+        "_id": "6ada1619a6cc111e8cdc8fa4",
+        "code": "CS-301",
+        "__v": 0,
+        "createdAt": "2026-10-22T13:56:40.953Z",
+        "credits": 4,
+        "departmentId": "6ac87074cb049a67ca9387ae",
+        "name": "Data Structures & Algorithms",
+        "semester": 5,
+        "type": "Theory",
+        "updatedAt": "2026-10-22T13:56:40.953Z"
+      },
+      {
+        "_id": "6ada1619a6cc111e8cdc8fa5",
+        "code": "CS-302",
+        "__v": 0,
+        "createdAt": "2026-10-22T13:56:40.981Z",
+        "credits": 4,
+        "departmentId": "6ac87074cb049a67ca9387ae",
+        "name": "Operating Systems & Concurrency",
+        "semester": 5,
+        "type": "Theory",
+        "updatedAt": "2026-10-22T13:56:40.981Z"
+      },
+      {
+        "_id": "6ada1619a6cc111e8cdc8fa6",
+        "code": "CS-303L",
+        "__v": 0,
+        "createdAt": "2026-10-22T13:56:41.008Z",
+        "credits": 2,
+        "departmentId": "6ac87074cb049a67ca9387ae",
+        "name": "Full Stack Web Engineering Lab",
+        "semester": 5,
+        "type": "Lab / Practical",
+        "updatedAt": "2026-10-22T13:56:41.008Z"
+      },
+      {
+        "_id": "6ada1619a6cc111e8cdc8fa7",
+        "code": "DS-301",
+        "__v": 0,
+        "createdAt": "2026-10-22T13:56:41.035Z",
+        "credits": 4,
+        "departmentId": "6ac8707bcb049a67ca9387b0",
+        "name": "Machine Learning & Neural Networks",
+        "semester": 5,
+        "type": "Theory",
+        "updatedAt": "2026-10-22T13:56:41.035Z"
+      },
+      {
+        "_id": "6ada1619a6cc111e8cdc8fa8",
+        "code": "DS-302",
+        "__v": 0,
+        "createdAt": "2026-10-22T13:56:41.061Z",
+        "credits": 4,
+        "departmentId": "6ac8707bcb049a67ca9387b0",
+        "name": "Big Data Systems & PySpark",
+        "semester": 5,
+        "type": "Theory",
+        "updatedAt": "2026-10-22T13:56:41.061Z"
+      },
+      {
+        "_id": "6ada1619a6cc111e8cdc8fa9",
+        "code": "IT-301",
+        "__v": 0,
+        "createdAt": "2026-10-22T13:56:41.089Z",
+        "credits": 4,
+        "departmentId": "6ac87076cb049a67ca9387af",
+        "name": "Cloud Architecture & Kubernetes",
+        "semester": 5,
+        "type": "Theory",
+        "updatedAt": "2026-10-22T13:56:41.089Z"
+      },
+      {
+        "_id": "6ada1619a6cc111e8cdc8faa",
+        "code": "ME-301",
+        "__v": 0,
+        "createdAt": "2026-10-22T13:56:41.117Z",
+        "credits": 4,
+        "departmentId": "6ada1618a6cc111e8cdc8f88",
+        "name": "Computer Aided Design (CAD/CAM)",
+        "semester": 5,
+        "type": "Theory",
+        "updatedAt": "2026-10-22T13:56:41.117Z"
+      }
+    ],
+    "classrooms": [
+      {
+        "_id": "6ada1618a6cc111e8cdc8f91",
+        "roomNumber": "LAB-301",
+        "__v": 0,
+        "building": "Rungta Tech Block A",
+        "capacity": 60,
+        "createdAt": "2026-10-22T13:56:40.204Z",
+        "departmentId": "6ac87074cb049a67ca9387ae",
+        "directorateId": "6ada16174a17d6ba353dcb6e",
+        "floor": "3rd Floor",
+        "hasAirConditioning": true,
+        "hasProjector": true,
+        "hasSmartBoard": true,
+        "isAvailable": true,
+        "maintenanceStatus": "Operational",
+        "name": "Advanced AI & GPU Computing Lab",
+        "type": "Computer Lab",
+        "updatedAt": "2026-10-22T13:56:40.204Z",
+        "workstationsCount": 60
+      },
+      {
+        "_id": "6ada1618a6cc111e8cdc8f92",
+        "roomNumber": "LAB-204",
+        "__v": 0,
+        "building": "CV Raman Innovation Wing",
+        "capacity": 55,
+        "createdAt": "2026-10-22T13:56:40.232Z",
+        "departmentId": "6ac8707bcb049a67ca9387b0",
+        "directorateId": "6ada16174a17d6ba353dcb6e",
+        "floor": "2nd Floor",
+        "hasAirConditioning": true,
+        "hasProjector": true,
+        "hasSmartBoard": true,
+        "isAvailable": true,
+        "maintenanceStatus": "Operational",
+        "name": "Data Science & Big Data Research Lab",
+        "type": "Computer Lab",
+        "updatedAt": "2026-10-22T13:56:40.232Z",
+        "workstationsCount": 55
+      },
+      {
+        "_id": "6ada1618a6cc111e8cdc8f93",
+        "roomNumber": "LAB-102",
+        "__v": 0,
+        "building": "Rungta Tech Block A",
+        "capacity": 50,
+        "createdAt": "2026-10-22T13:56:40.260Z",
+        "departmentId": "6ac87076cb049a67ca9387af",
+        "directorateId": "6ada16174a17d6ba353dcb6a",
+        "floor": "1st Floor",
+        "hasAirConditioning": true,
+        "hasProjector": true,
+        "hasSmartBoard": false,
+        "isAvailable": true,
+        "maintenanceStatus": "Operational",
+        "name": "Open Source Systems & Linux Lab",
+        "type": "Computer Lab",
+        "updatedAt": "2026-10-22T13:56:40.260Z",
+        "workstationsCount": 50
+      },
+      {
+        "_id": "6ada1618a6cc111e8cdc8f94",
+        "roomNumber": "LH-101",
+        "__v": 0,
+        "building": "Central Academic Block",
+        "capacity": 120,
+        "createdAt": "2026-10-22T13:56:40.289Z",
+        "departmentId": "6ac87074cb049a67ca9387ae",
+        "directorateId": "6ada16174a17d6ba353dcb6e",
+        "floor": "1st Floor",
+        "hasAirConditioning": true,
+        "hasProjector": true,
+        "hasSmartBoard": true,
+        "isAvailable": true,
+        "maintenanceStatus": "Operational",
+        "name": "Dr. APJ Abdul Kalam Lecture Hall",
+        "type": "Lecture Hall",
+        "updatedAt": "2026-10-22T13:56:40.289Z",
+        "workstationsCount": 0
+      },
+      {
+        "_id": "6ada1618a6cc111e8cdc8f95",
+        "roomNumber": "LH-102",
+        "__v": 0,
+        "building": "Central Academic Block",
+        "capacity": 120,
+        "createdAt": "2026-10-22T13:56:40.330Z",
+        "departmentId": "6ac8707bcb049a67ca9387b0",
+        "directorateId": "6ada16174a17d6ba353dcb6e",
+        "floor": "1st Floor",
+        "hasAirConditioning": true,
+        "hasProjector": true,
+        "hasSmartBoard": true,
+        "isAvailable": true,
+        "maintenanceStatus": "Operational",
+        "name": "Sir CV Raman Lecture Hall",
+        "type": "Lecture Hall",
+        "updatedAt": "2026-10-22T13:56:40.330Z",
+        "workstationsCount": 0
+      },
+      {
+        "_id": "6ada1618a6cc111e8cdc8f96",
+        "roomNumber": "CR-201",
+        "__v": 0,
+        "building": "Tech Block 1",
+        "capacity": 65,
+        "createdAt": "2026-10-22T13:56:40.361Z",
+        "departmentId": "6ac87076cb049a67ca9387af",
+        "directorateId": "6ada16174a17d6ba353dcb6a",
+        "floor": "2nd Floor",
+        "hasAirConditioning": true,
+        "hasProjector": true,
+        "hasSmartBoard": true,
+        "isAvailable": true,
+        "maintenanceStatus": "Operational",
+        "name": "Smart Classroom 201",
+        "type": "Classroom",
+        "updatedAt": "2026-10-22T13:56:40.361Z",
+        "workstationsCount": 0
+      },
+      {
+        "_id": "6ada1618a6cc111e8cdc8f97",
+        "roomNumber": "CR-202",
+        "__v": 0,
+        "building": "Tech Block 1",
+        "capacity": 65,
+        "createdAt": "2026-10-22T13:56:40.388Z",
+        "departmentId": "6ada1618a6cc111e8cdc8f88",
+        "directorateId": "6ada16174a17d6ba353dcb6a",
+        "floor": "2nd Floor",
+        "hasAirConditioning": false,
+        "hasProjector": true,
+        "hasSmartBoard": false,
+        "isAvailable": true,
+        "maintenanceStatus": "Operational",
+        "name": "Interactive Classroom 202",
+        "type": "Classroom",
+        "updatedAt": "2026-10-22T13:56:40.388Z",
+        "workstationsCount": 0
+      },
+      {
+        "_id": "6ada1619a6cc111e8cdc8f98",
+        "roomNumber": "AUD-01",
+        "__v": 0,
+        "building": "University Cultural Complex",
+        "capacity": 350,
+        "createdAt": "2026-10-22T13:56:40.417Z",
+        "floor": "Ground Floor",
+        "hasAirConditioning": true,
+        "hasProjector": true,
+        "hasSmartBoard": true,
+        "isAvailable": true,
+        "maintenanceStatus": "Operational",
+        "name": "Swami Vivekananda Grand Auditorium",
+        "type": "Auditorium",
+        "updatedAt": "2026-10-22T13:56:40.417Z",
+        "workstationsCount": 0
+      },
+      {
+        "_id": "6ada1619a6cc111e8cdc8f99",
+        "roomNumber": "SEM-02",
+        "__v": 0,
+        "building": "Placement Wing Block B",
+        "capacity": 90,
+        "createdAt": "2026-10-22T13:56:40.445Z",
+        "floor": "1st Floor",
+        "hasAirConditioning": true,
+        "hasProjector": true,
+        "hasSmartBoard": true,
+        "isAvailable": true,
+        "maintenanceStatus": "Operational",
+        "name": "TPO Corporate Relations Seminar Hall",
+        "type": "Seminar Hall",
+        "updatedAt": "2026-10-22T13:56:40.445Z",
+        "workstationsCount": 0
+      },
+      {
+        "_id": "6ada1619a6cc111e8cdc8f9a",
+        "roomNumber": "CR-404",
+        "__v": 0,
+        "building": "Tech Block 1",
+        "capacity": 60,
+        "createdAt": "2026-10-22T13:56:40.473Z",
+        "floor": "4th Floor",
+        "hasAirConditioning": true,
+        "hasProjector": true,
+        "hasSmartBoard": true,
+        "isAvailable": true,
+        "maintenanceStatus": "Operational",
+        "name": "Unallocated Expansion Classroom 404",
+        "type": "Classroom",
+        "updatedAt": "2026-10-22T13:56:40.473Z",
+        "workstationsCount": 0
+      }
+    ],
+    "assignments": [
+      {
+        "_id": "6ada1619a6cc111e8cdc8fab",
+        "timeSlot": "09:00 - 10:00",
+        "teacherId": "6ada1618a6cc111e8cdc8f89",
+        "dayOfWeek": "Monday",
+        "sectionId": "6ada1619a6cc111e8cdc8f9b",
+        "__v": 0,
+        "academicYear": "2026-2027",
+        "classroomId": "6ada1618a6cc111e8cdc8f94",
+        "createdAt": "2026-10-22T13:56:41.147Z",
+        "departmentId": "6ac87074cb049a67ca9387ae",
+        "directorateId": "6ada16174a17d6ba353dcb6e",
+        "semester": 5,
+        "slotType": "Lecture",
+        "subjectId": "6ada1619a6cc111e8cdc8fa4",
+        "subjectName": "Data Structures & Algorithms",
+        "updatedAt": "2026-10-22T13:56:41.147Z"
+      },
+      {
+        "_id": "6ada1619a6cc111e8cdc8fac",
+        "sectionId": "6ada1619a6cc111e8cdc8f9b",
+        "dayOfWeek": "Wednesday",
+        "teacherId": "6ada1618a6cc111e8cdc8f89",
+        "timeSlot": "10:00 - 12:00",
+        "__v": 0,
+        "academicYear": "2026-2027",
+        "classroomId": "6ada1618a6cc111e8cdc8f91",
+        "createdAt": "2026-10-22T13:56:41.174Z",
+        "departmentId": "6ac87074cb049a67ca9387ae",
+        "directorateId": "6ada16174a17d6ba353dcb6e",
+        "semester": 5,
+        "slotType": "Lab",
+        "subjectId": "6ada1619a6cc111e8cdc8fa4",
+        "subjectName": "Data Structures & Algorithms",
+        "updatedAt": "2026-10-22T13:56:41.174Z"
+      },
+      {
+        "_id": "6ada1619a6cc111e8cdc8fad",
+        "dayOfWeek": "Tuesday",
+        "timeSlot": "11:15 - 01:15",
+        "sectionId": "6ada1619a6cc111e8cdc8f9c",
+        "teacherId": "6ada1618a6cc111e8cdc8f8a",
+        "__v": 0,
+        "academicYear": "2026-2027",
+        "classroomId": "6ada1618a6cc111e8cdc8f91",
+        "createdAt": "2026-10-22T13:56:41.202Z",
+        "departmentId": "6ac87074cb049a67ca9387ae",
+        "directorateId": "6ada16174a17d6ba353dcb6e",
+        "semester": 5,
+        "slotType": "Lab",
+        "subjectId": "6ada1619a6cc111e8cdc8fa6",
+        "subjectName": "Full Stack Web Engineering Lab",
+        "updatedAt": "2026-10-22T13:56:41.202Z"
+      },
+      {
+        "_id": "6ada1619a6cc111e8cdc8fae",
+        "sectionId": "6ada1619a6cc111e8cdc8f9e",
+        "teacherId": "6ada1618a6cc111e8cdc8f8b",
+        "dayOfWeek": "Monday",
+        "timeSlot": "10:00 - 11:00",
+        "__v": 0,
+        "academicYear": "2026-2027",
+        "classroomId": "6ada1618a6cc111e8cdc8f92",
+        "createdAt": "2026-10-22T13:56:41.235Z",
+        "departmentId": "6ac8707bcb049a67ca9387b0",
+        "directorateId": "6ada16174a17d6ba353dcb6e",
+        "semester": 5,
+        "slotType": "Lecture",
+        "subjectId": "6ada1619a6cc111e8cdc8fa7",
+        "subjectName": "Machine Learning & Neural Networks",
+        "updatedAt": "2026-10-22T13:56:41.235Z"
+      },
+      {
+        "_id": "6ada1619a6cc111e8cdc8faf",
+        "sectionId": "6ada1619a6cc111e8cdc8f9f",
+        "teacherId": "6ada1618a6cc111e8cdc8f8c",
+        "dayOfWeek": "Thursday",
+        "timeSlot": "09:00 - 10:00",
+        "__v": 0,
+        "academicYear": "2026-2027",
+        "classroomId": "6ada1618a6cc111e8cdc8f95",
+        "createdAt": "2026-10-22T13:56:41.265Z",
+        "departmentId": "6ac8707bcb049a67ca9387b0",
+        "directorateId": "6ada16174a17d6ba353dcb6e",
+        "semester": 5,
+        "slotType": "Lecture",
+        "subjectId": "6ada1619a6cc111e8cdc8fa8",
+        "subjectName": "Big Data Systems & PySpark",
+        "updatedAt": "2026-10-22T13:56:41.265Z"
+      },
+      {
+        "_id": "6ada1619a6cc111e8cdc8fb0",
+        "timeSlot": "11:15 - 12:15",
+        "teacherId": "6ada1618a6cc111e8cdc8f8d",
+        "dayOfWeek": "Friday",
+        "sectionId": "6ada1619a6cc111e8cdc8fa0",
+        "__v": 0,
+        "academicYear": "2026-2027",
+        "classroomId": "6ada1618a6cc111e8cdc8f93",
+        "createdAt": "2026-10-22T13:56:41.292Z",
+        "departmentId": "6ac87076cb049a67ca9387af",
+        "directorateId": "6ada16174a17d6ba353dcb6a",
+        "semester": 5,
+        "slotType": "Lecture",
+        "subjectId": "6ada1619a6cc111e8cdc8fa9",
+        "subjectName": "Cloud Architecture & Kubernetes",
+        "updatedAt": "2026-10-22T13:56:41.292Z"
+      },
+      {
+        "_id": "6ada1619a6cc111e8cdc8fb1",
+        "timeSlot": "02:00 - 04:00",
+        "teacherId": "6ada1618a6cc111e8cdc8f8f",
+        "dayOfWeek": "Wednesday",
+        "sectionId": "6ada1619a6cc111e8cdc8fa2",
+        "__v": 0,
+        "academicYear": "2026-2027",
+        "classroomId": "6ada1618a6cc111e8cdc8f97",
+        "createdAt": "2026-10-22T13:56:41.321Z",
+        "departmentId": "6ada1618a6cc111e8cdc8f88",
+        "directorateId": "6ada16174a17d6ba353dcb6a",
+        "semester": 5,
+        "slotType": "Lab",
+        "subjectId": "6ada1619a6cc111e8cdc8faa",
+        "subjectName": "Computer Aided Design (CAD/CAM)",
+        "updatedAt": "2026-10-22T13:56:41.321Z"
+      }
+    ],
+    "auditLogs": [
+      {
+        "_id": "6ada16194a17d6ba353dcbb4",
+        "userId": "6ac4faa7dd12674eeee2f34d",
+        "userName": "College Admin",
+        "userEmail": "piyushbarnwal811@gmail.com",
+        "role": "super_admin",
+        "action": "INITIALIZE_HIERARCHY",
+        "entityType": "University",
+        "entityId": "RISU-ROOT",
+        "details": "Established organizational hierarchy: Super Admin → TPO → Directors → HODs → Sections → Teachers → Classrooms.",
+        "createdAt": "2026-10-22T13:56:41.351Z",
+        "updatedAt": "2026-10-22T13:56:41.351Z",
+        "__v": 0
+      },
+      {
+        "_id": "6ada16194a17d6ba353dcbb6",
+        "userId": "6ac4faa7dd12674eeee2f34d",
+        "userName": "College Admin",
+        "userEmail": "piyushbarnwal811@gmail.com",
+        "role": "super_admin",
+        "action": "APPOINT_DIRECTOR",
+        "entityType": "Directorate",
+        "entityId": "6ada16174a17d6ba353dcb6e",
+        "details": "Appointed Dr. Rajesh Sharma as Director of School of Computing & AI.",
+        "createdAt": "2026-10-22T13:56:41.351Z",
+        "updatedAt": "2026-10-22T13:56:41.351Z",
+        "__v": 0
+      },
+      {
+        "_id": "6ada16194a17d6ba353dcbb5",
+        "userId": "6ac4faa7dd12674eeee2f34d",
+        "userName": "College Admin",
+        "userEmail": "piyushbarnwal811@gmail.com",
+        "role": "super_admin",
+        "action": "APPOINT_TPO",
+        "entityType": "Admin",
+        "entityId": "6ada1617a6cc111e8cdc8f81",
+        "details": "Appointed Dr. Alok Verma as Chief Training & Placement Officer.",
+        "createdAt": "2026-10-22T13:56:41.351Z",
+        "updatedAt": "2026-10-22T13:56:41.351Z",
+        "__v": 0
+      },
+      {
+        "_id": "6ada16194a17d6ba353dcbb7",
+        "userId": "6ada1618a6cc111e8cdc8f84",
+        "userName": "Dr. Anand Mishra",
+        "userEmail": "hod.cse@rungta.ac.in",
+        "role": "hod",
+        "action": "ASSIGN_CLASS_TEACHER",
+        "entityType": "Section",
+        "entityId": "6ada1619a6cc111e8cdc8f9b",
+        "details": "Assigned Prof. Amit Sen as Class Teacher for CSE-A and allocated LH-101.",
+        "createdAt": "2026-10-22T13:56:41.351Z",
+        "updatedAt": "2026-10-22T13:56:41.351Z",
+        "__v": 0
+      }
+    ]
+  }
+}

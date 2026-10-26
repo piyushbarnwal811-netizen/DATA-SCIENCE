@@ -20,10 +20,24 @@ export async function seedAdmin() {
   }
   const email = ADMIN_EMAIL.trim().toLowerCase();
   const existing = await Admin.findOne({ email });
-  if (existing) return;
+  if (existing) {
+    if (existing.role !== "super_admin" || existing.status !== "active") {
+      existing.role = "super_admin";
+      existing.status = "active";
+      await existing.save();
+    }
+    return;
+  }
   const password = await bcrypt.hash(ADMIN_PASSWORD.trim(), 12);
-  await Admin.create({ name: ADMIN_NAME.trim(), email, password });
-  console.log(`Initial admin account created for ${email}.`);
+  await Admin.create({
+    name: ADMIN_NAME.trim(),
+    email,
+    password,
+    role: "super_admin",
+    status: "active",
+    designation: "Chief Campus Administrator"
+  });
+  console.log(`Initial Super Admin account verified for ${email}.`);
 }
 
 export async function getAdminOverview(req, res, next) {

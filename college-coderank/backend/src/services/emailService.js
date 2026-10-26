@@ -270,3 +270,211 @@ export async function sendPasswordChangedConfirmationEmail({ to, studentName, ti
 
   return transporter.sendMail(mailOptions);
 }
+
+/**
+ * Maps role identifier to a human-readable title.
+ */
+function getRoleLabel(role) {
+  switch (role) {
+    case "tpo":
+      return "Training & Placement Officer (TPO)";
+    case "director":
+      return "Director of Faculty / Institute";
+    case "hod":
+      return "Head of Department (HOD)";
+    case "teacher":
+      return "Faculty Member / Teacher";
+    default:
+      return "Institutional Staff";
+  }
+}
+
+/**
+ * HTML Email Template: Institutional Account Setup Invitation
+ */
+export function buildInvitationEmailHtml({
+  recipientName,
+  recipientEmail,
+  role,
+  setupLink,
+  expiresInHours = 24,
+  invitedByName,
+  departmentName,
+  directorateName
+}) {
+  const roleLabel = getRoleLabel(role);
+
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Account Setup Invitation</title>
+</head>
+<body style="margin: 0; padding: 0; background-color: #f8fafc; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #1e293b;">
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color: #f8fafc; padding: 30px 15px;">
+    <tr>
+      <td align="center">
+        <!-- Main Container -->
+        <table role="presentation" width="100%" max-width="600" cellspacing="0" cellpadding="0" border="0" style="max-width: 600px; width: 100%; background-color: #ffffff; border-radius: 14px; overflow: hidden; border: 1px solid #e2e8f0; box-shadow: 0 4px 20px rgba(0,0,0,0.05);">
+          
+          <!-- Header Banner -->
+          <tr>
+            <td style="background: linear-gradient(135deg, #4f46e5 0%, #312e81 100%); padding: 32px 36px; text-align: left;">
+              <div style="display: inline-block; background-color: rgba(255,255,255,0.18); border-radius: 6px; padding: 4px 10px; font-size: 11px; font-weight: 700; color: #ffffff; letter-spacing: 0.5px; margin-bottom: 10px;">
+                RUNGTA INTERNATIONAL SKILLS UNIVERSITY
+              </div>
+              <h1 style="margin: 0; color: #ffffff; font-size: 22px; font-weight: 800; letter-spacing: -0.3px;">
+                Official Account Setup Invitation
+              </h1>
+              <p style="margin: 6px 0 0; color: #e0e7ff; font-size: 13px;">
+                College CodeRank Institutional Management System
+              </p>
+            </td>
+          </tr>
+
+          <!-- Body Content -->
+          <tr>
+            <td style="padding: 36px 36px 28px;">
+              <p style="margin: 0 0 16px; font-size: 16px; line-height: 1.6; color: #1e293b;">
+                Dear <strong>${recipientName || "Colleague"}</strong>,
+              </p>
+              <p style="margin: 0 0 24px; font-size: 14px; line-height: 1.6; color: #475569;">
+                You have been formally invited to join the <strong>College CodeRank Institutional Portal</strong> as an authorized administrative staff member.
+              </p>
+
+              <!-- Assignment Details Card -->
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; margin-bottom: 28px; padding: 18px 20px;">
+                <tr>
+                  <td>
+                    <div style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;">
+                      Assignment Details
+                    </div>
+                    <table width="100%" cellspacing="0" cellpadding="4" border="0">
+                      <tr>
+                        <td width="35%" style="font-size: 13px; color: #64748b; font-weight: 500;">Assigned Role:</td>
+                        <td style="font-size: 13px; color: #1e293b; font-weight: 700;">
+                          <span style="display: inline-block; background-color: #e0e7ff; color: #3730a3; padding: 2px 8px; border-radius: 4px;">
+                            ${roleLabel}
+                          </span>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td style="font-size: 13px; color: #64748b; font-weight: 500;">Official Email:</td>
+                        <td style="font-size: 13px; color: #1e293b; font-weight: 600;">${recipientEmail}</td>
+                      </tr>
+                      ${directorateName ? `
+                      <tr>
+                        <td style="font-size: 13px; color: #64748b; font-weight: 500;">Directorate:</td>
+                        <td style="font-size: 13px; color: #1e293b; font-weight: 600;">${directorateName}</td>
+                      </tr>` : ""}
+                      ${departmentName ? `
+                      <tr>
+                        <td style="font-size: 13px; color: #64748b; font-weight: 500;">Department:</td>
+                        <td style="font-size: 13px; color: #1e293b; font-weight: 600;">${departmentName}</td>
+                      </tr>` : ""}
+                      ${invitedByName ? `
+                      <tr>
+                        <td style="font-size: 13px; color: #64748b; font-weight: 500;">Invited By:</td>
+                        <td style="font-size: 13px; color: #1e293b; font-weight: 600;">${invitedByName}</td>
+                      </tr>` : ""}
+                    </table>
+                  </td>
+                </tr>
+              </table>
+
+              <!-- Action Button -->
+              <table role="presentation" cellspacing="0" cellpadding="0" border="0" style="margin: 0 0 28px;">
+                <tr>
+                  <td align="center" style="border-radius: 8px; background-color: #4f46e5;">
+                    <a href="${setupLink}" target="_blank" style="display: inline-block; padding: 14px 32px; font-size: 14px; font-weight: 700; color: #ffffff; text-decoration: none; border-radius: 8px; letter-spacing: 0.2px;">
+                      Set Up Your Account &rarr;
+                    </a>
+                  </td>
+                </tr>
+              </table>
+
+              <!-- Expiry Alert Box -->
+              <div style="background-color: #fefce8; border-left: 4px solid #eab308; padding: 14px 16px; border-radius: 0 8px 8px 0; margin-bottom: 24px;">
+                <p style="margin: 0; font-size: 13px; line-height: 1.5; color: #854d0e;">
+                  <strong>⏳ Single-Use Invitation:</strong> This link is single-use and will expire in <strong>${expiresInHours} hours</strong>. You will be prompted to set your own password upon opening the link.
+                </p>
+              </div>
+
+              <!-- Raw Link Fallback -->
+              <p style="margin: 0 0 8px; font-size: 12px; color: #64748b; line-height: 1.5;">
+                If the button above does not work, copy and paste this secure link directly into your browser:
+              </p>
+              <p style="margin: 0 0 24px; font-size: 11px; color: #4f46e5; word-break: break-all; background-color: #f8fafc; padding: 10px 12px; border-radius: 6px; border: 1px solid #e2e8f0;">
+                <a href="${setupLink}" style="color: #4f46e5; text-decoration: none;">${setupLink}</a>
+              </p>
+
+              <!-- Security Notice -->
+              <div style="border-top: 1px solid #e2e8f0; padding-top: 20px; margin-top: 8px;">
+                <p style="margin: 0 0 6px; font-size: 12px; font-weight: 700; color: #0f172a;">
+                  Security Guidelines
+                </p>
+                <p style="margin: 0; font-size: 12px; line-height: 1.5; color: #64748b;">
+                  Never share this link with anyone. Our institutional administrators will never ask for your password. If you were not expecting this invitation, please contact your university administrator.
+                </p>
+              </div>
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td style="background-color: #f1f5f9; padding: 22px 36px; text-align: center; border-top: 1px solid #e2e8f0;">
+              <p style="margin: 0 0 4px; font-size: 12px; font-weight: 600; color: #475569;">
+                Rungta International Skills University · Administrative Operations
+              </p>
+              <p style="margin: 0; font-size: 11px; color: #94a3b8;">
+                Automated Institutional Notification · Confidential
+              </p>
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
+}
+
+/**
+ * Sends the Institutional Account Setup Invitation email.
+ */
+export async function sendInvitationEmail({
+  to,
+  recipientName,
+  role,
+  setupLink,
+  expiresInHours = 24,
+  invitedByName,
+  departmentName,
+  directorateName
+}) {
+  const transporter = getTransporter();
+  const from = process.env.EMAIL_FROM || "CodeRank Administration <admin@rungta.ac.in>";
+  const roleLabel = getRoleLabel(role);
+
+  const mailOptions = {
+    from,
+    to,
+    subject: `Official Invitation: Set Up Your ${roleLabel} Account`,
+    text: `Hello ${recipientName},\n\nYou have been invited to join the College CodeRank system as ${roleLabel}.\n\nClick the link below to set up your account and choose your password:\n${setupLink}\n\nThis single-use link is valid for ${expiresInHours} hours.\n\nIf you did not expect this invitation, please contact your campus administrator.\n`,
+    html: buildInvitationEmailHtml({
+      recipientName,
+      recipientEmail: to,
+      role,
+      setupLink,
+      expiresInHours,
+      invitedByName,
+      departmentName,
+      directorateName
+    })
+  };
+
+  return transporter.sendMail(mailOptions);
+}
+

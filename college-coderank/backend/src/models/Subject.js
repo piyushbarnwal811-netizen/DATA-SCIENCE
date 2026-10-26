@@ -11,7 +11,8 @@ const subjectSchema = new mongoose.Schema(
       enum: ["Theory", "Lab / Practical", "Seminar", "Elective"],
       default: "Theory"
     },
-    semester: { type: Number, default: 5, min: 1, max: 10 }
+    semester: { type: Number, default: 5, min: 1, max: 10 },
+    createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "Admin" }
   },
   { timestamps: true }
 );

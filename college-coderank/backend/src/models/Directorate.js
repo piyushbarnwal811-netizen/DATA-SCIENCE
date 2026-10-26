@@ -9,7 +9,8 @@ const directorateSchema = new mongoose.Schema(
     tpoId: { type: mongoose.Schema.Types.ObjectId, ref: "Admin" },
     building: { type: String, trim: true },
     establishedYear: { type: Number, default: 2008 },
-    status: { type: String, enum: ["active", "inactive"], default: "active" }
+    status: { type: String, enum: ["active", "inactive"], default: "active" },
+    createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "Admin" }
   },
   { timestamps: true }
 );

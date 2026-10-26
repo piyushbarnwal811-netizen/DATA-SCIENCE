@@ -1,21 +1,26 @@
-import mongoose from "mongoose";
+import crypto from "crypto";
 import bcrypt from "bcryptjs";
+import mongoose from "mongoose";
 import Admin from "../models/Admin.js";
 import Directorate from "../models/Directorate.js";
 import Department from "../models/Department.js";
 import Section from "../models/Section.js";
-import Classroom from "../models/Classroom.js";
 import Subject from "../models/Subject.js";
+import Classroom from "../models/Classroom.js";
 import TimetableAssignment from "../models/TimetableAssignment.js";
 import AuditLog from "../models/AuditLog.js";
+import Student from "../models/Student.js";
 
+/**
+ * Helper to record actions in the institutional audit log
+ */
 async function logAudit(user, action, entityType, entityId, details, req) {
   try {
     await AuditLog.create({
-      userId: user.id ? new mongoose.Types.ObjectId(user.id) : null,
-      userName: user.name || "System Admin",
-      userEmail: user.email || "admin@rungta.ac.in",
-      role: user.role || "super_admin",
+      userId: user?.id ? new mongoose.Types.ObjectId(user.id) : null,
+      userName: user?.name || "System Admin",
+      userEmail: user?.email || "admin@rungta.ac.in",
+      role: user?.role || "super_admin",
       action,
       entityType,
       entityId: entityId ? String(entityId) : "",
@@ -27,451 +32,57 @@ async function logAudit(user, action, entityType, entityId, details, req) {
   }
 }
 
-/**
- * 1. GET /api/hierarchy/tree
- * Constructs the interactive hierarchical organizational tree scoped by user's role:
- * Super Admin → TPO → Directors → HODs → Sections/Classes → Teachers → Classrooms
- */
-export async function getHierarchyTree(req, res, next) {
-  try {
-    const userRole = req.user.role === "admin" ? "super_admin" : req.user.role;
-    const userId = req.user.id;
-
-    // Fetch master collections with populated references
-    const [
-      allDirectorates,
-      allDepartments,
-      allSections,
-      allTeachers,
-      allClassrooms,
-      allAssignments,
-      allTPOs,
-      superAdmins
-    ] = await Promise.all([
-      Directorate.find({ status: "active" }).populate("directorId", "name email phone designation employeeId"),
-      Department.find({ status: "active" }).populate("hodId", "name email phone designation employeeId"),
-      Section.find().populate("classTeacherId", "name email phone employeeId").populate("primaryClassroomId", "roomNumber name type capacity"),
-      Admin.find({ role: "teacher", status: "active" }).select("-password"),
-      Classroom.find(),
-      TimetableAssignment.find().populate("subjectId", "name code credits"),
-      Admin.find({ role: "tpo", status: "active" }).select("-password"),
-      Admin.find({ role: { $in: ["super_admin", "admin"] }, status: "active" }).select("-password")
-    ]);
-
-    // Role-based scoping filters
-    let visibleDirectorates = allDirectorates;
-    let visibleDepartments = allDepartments;
-    let visibleSections = allSections;
-    let visibleTeachers = allTeachers;
-    let visibleClassrooms = allClassrooms;
-
-    if (userRole === "director") {
-      visibleDirectorates = allDirectorates.filter(
-        (d) => String(d.directorId?._id) === userId || String(d._id) === String(req.user.directorateId)
-      );
-      const dirIds = visibleDirectorates.map((d) => String(d._id));
-      visibleDepartments = allDepartments.filter((dept) => dirIds.includes(String(dept.directorateId)));
-      const deptIds = visibleDepartments.map((dept) => String(dept._id));
-      visibleSections = allSections.filter((s) => deptIds.includes(String(s.departmentId)));
-      visibleTeachers = allTeachers.filter(
-        (t) => deptIds.includes(String(t.departmentId)) || dirIds.includes(String(t.directorateId))
-      );
-      visibleClassrooms = allClassrooms.filter(
-        (c) => !c.directorateId || dirIds.includes(String(c.directorateId))
-      );
-    } else if (userRole === "hod") {
-      visibleDepartments = allDepartments.filter(
-        (dept) => String(dept.hodId?._id) === userId || String(dept._id) === String(req.user.departmentId)
-      );
-      const deptIds = visibleDepartments.map((dept) => String(dept._id));
-      const parentDirIds = visibleDepartments.map((dept) => String(dept.directorateId)).filter(Boolean);
-      visibleDirectorates = allDirectorates.filter((d) => parentDirIds.includes(String(d._id)));
-      visibleSections = allSections.filter((s) => deptIds.includes(String(s.departmentId)));
-      visibleTeachers = allTeachers.filter((t) => deptIds.includes(String(t.departmentId)));
-      visibleClassrooms = allClassrooms.filter(
-        (c) => !c.departmentId || deptIds.includes(String(c.departmentId))
-      );
-    } else if (userRole === "teacher") {
-      const myTeacher = allTeachers.find((t) => String(t._id) === userId) || req.user;
-      visibleTeachers = [myTeacher];
-      const mySectionIds = (myTeacher.assignedSections || []).map((s) => String(s));
-      visibleSections = allSections.filter(
-        (s) => mySectionIds.includes(String(s._id)) || String(s.classTeacherId?._id) === userId
-      );
-      const deptId = String(myTeacher.departmentId);
-      visibleDepartments = allDepartments.filter((dept) => String(dept._id) === deptId);
-      const dirId = visibleDepartments[0]?.directorateId;
-      visibleDirectorates = allDirectorates.filter((d) => String(d._id) === String(dirId));
-      visibleClassrooms = allClassrooms;
-    }
-
-    // Build the Tree Structure:
-    // Root: Super Admin Node
-    const rootAdmin = superAdmins[0] || {
-      _id: "root-admin",
-      name: "Rungta Chancellor Secretariat",
-      email: "chancellor@rungta.ac.in",
-      designation: "Super Administrator"
-    };
-
-    // Level 2: TPO Node
-    const tpoNodes = allTPOs.map((tpoUser) => ({
-      id: `tpo-${tpoUser._id}`,
-      name: tpoUser.name,
-      level: "tpo",
-      role: "TPO",
-      badge: "Training & Placement Officer",
-      details: {
-        email: tpoUser.email,
-        phone: tpoUser.phone,
-        employeeId: tpoUser.employeeId,
-        designation: tpoUser.designation,
-        status: tpoUser.status,
-        responsibilities: "Institution-wide campus placement drive, industry linkage & corporate relations"
-      },
-      stats: {
-        totalInstitutes: visibleDirectorates.length,
-        totalDepartments: visibleDepartments.length,
-        totalStudents: visibleSections.reduce((sum, s) => sum + (s.totalStudents || 0), 0)
-      }
-    }));
-
-    // Level 3: Directors
-    const directorNodes = visibleDirectorates.map((dir) => {
-      const dirHODs = visibleDepartments.filter(
-        (dept) => String(dept.directorateId) === String(dir._id)
-      );
-
-      // Level 4: HODs under each Director
-      const hodNodes = dirHODs.map((dept) => {
-        const hodUser = dept.hodId || {
-          _id: `vacant-hod-${dept._id}`,
-          name: "Unassigned HOD (Position Vacant)",
-          email: dept.contactEmail || "department@rungta.ac.in",
-          designation: "Head of Department"
-        };
-
-        const deptSections = visibleSections.filter(
-          (s) => String(s.departmentId) === String(dept._id)
-        );
-
-        // Level 5: Sections / Classes under each Department
-        const sectionNodes = deptSections.map((sec) => {
-          // Level 6: Teachers teaching in this section (Class teacher and assigned subject teachers)
-          const teacherIdsInSec = [
-            ...new Set([
-              sec.classTeacherId ? String(sec.classTeacherId._id || sec.classTeacherId) : null,
-              ...visibleTeachers
-                .filter((t) => (t.assignedSections || []).map((s) => String(s)).includes(String(sec._id)))
-                .map((t) => String(t._id))
-            ].filter(Boolean))
-          ];
-
-          const secTeachers = visibleTeachers.filter((t) => teacherIdsInSec.includes(String(t._id)));
-
-          // Level 7: Direct Classroom & Lab allocated to this section
-          const primaryRoom = sec.primaryClassroomId
-            ? visibleClassrooms.find((c) => String(c._id) === String(sec.primaryClassroomId?._id || sec.primaryClassroomId))
-            : null;
-
-          // Department labs available for this section
-          const deptLabs = visibleClassrooms.filter(
-            (c) => String(c.departmentId) === String(sec.departmentId) && c.type.toLowerCase().includes("lab")
-          );
-
-          const allocatedRooms = [
-            ...(primaryRoom ? [primaryRoom] : []),
-            ...deptLabs.filter((lab) => !primaryRoom || String(lab._id) !== String(primaryRoom._id))
-          ];
-
-          const classroomNodes = allocatedRooms.map((room) => {
-            const isPrimary = primaryRoom && String(room._id) === String(primaryRoom._id);
-            return {
-              id: `room-${sec._id}-${room._id}`,
-              name: `${room.roomNumber} (${room.type})`,
-              level: "classroom",
-              role: "Classroom / Lab",
-              badge: isPrimary ? "Primary Classroom" : "Department Lab",
-              details: {
-                roomNumber: room.roomNumber,
-                building: room.building,
-                floor: room.floor,
-                type: room.type,
-                capacity: room.capacity,
-                workstations: room.workstationsCount,
-                hasProjector: room.hasProjector,
-                hasSmartBoard: room.hasSmartBoard,
-                hasAirConditioning: room.hasAirConditioning,
-                allocatedSection: sec.name,
-                status: isPrimary ? `Allocated to ${sec.name} (${sec.totalStudents} Students)` : `Available Lab Facility`
-              },
-              stats: {
-                capacity: room.capacity,
-                workstations: room.workstationsCount
-              }
-            };
-          });
-
-          const teacherNodes = secTeachers.map((tch) => {
-            const isClassTeacher = String(sec.classTeacherId?._id || sec.classTeacherId) === String(tch._id);
-            return {
-              id: `tch-${sec._id}-${tch._id}`,
-              name: tch.name,
-              level: "teacher",
-              role: "Teacher",
-              badge: isClassTeacher ? "Class Teacher ⭐" : "Subject Faculty",
-              details: {
-                email: tch.email,
-                phone: tch.phone,
-                employeeId: tch.employeeId,
-                designation: tch.designation,
-                qualification: tch.qualification,
-                assignedSubjects: tch.assignedSubjects || [],
-                assignedSection: sec.name
-              },
-              stats: {
-                subjectsCount: (tch.assignedSubjects || []).length,
-                allocatedRooms: classroomNodes.length
-              },
-              children: classroomNodes
-            };
-          });
-
-          return {
-            id: `sec-${sec._id}`,
-            name: `${sec.name} (Year ${sec.year} · Sem ${sec.semester})`,
-            level: "section",
-            role: "Section / Class",
-            badge: sec.status === "vacant" ? "Vacant Cohort" : `${sec.totalStudents} Students`,
-            details: {
-              sectionName: sec.name,
-              year: sec.year,
-              semester: sec.semester,
-              academicYear: sec.academicYear,
-              capacity: sec.capacity,
-              totalStudents: sec.totalStudents,
-              status: sec.status,
-              classTeacher: sec.classTeacherId?.name || "Not Appointed",
-              primaryRoom: sec.primaryClassroomId?.roomNumber || "Shared"
-            },
-            stats: {
-              students: sec.totalStudents,
-              capacity: sec.capacity,
-              assignedTeachers: teacherNodes.length
-            },
-            children: teacherNodes
-          };
-        });
-
-        const deptTeachers = visibleTeachers.filter(
-          (t) => String(t.departmentId) === String(dept._id)
-        );
-
-        return {
-          id: `hod-${dept._id}`,
-          name: `${dept.name} (${dept.code || "DEPT"})`,
-          subTitle: `HOD: ${hodUser.name}`,
-          level: "hod",
-          role: "HOD",
-          badge: dept.code || "HOD",
-          details: {
-            departmentName: dept.name,
-            code: dept.code,
-            hodName: hodUser.name,
-            hodEmail: hodUser.email,
-            hodPhone: hodUser.phone,
-            employeeId: hodUser.employeeId,
-            buildingBlock: dept.buildingBlock,
-            floor: dept.floor,
-            contactEmail: dept.contactEmail
-          },
-          stats: {
-            sectionsCount: sectionNodes.length,
-            facultyCount: deptTeachers.length,
-            totalStudents: sectionNodes.reduce((sum, s) => sum + (s.stats?.students || 0), 0)
-          },
-          children: sectionNodes
-        };
-      });
-
-      const directorUser = dir.directorId || {
-        _id: `vacant-dir-${dir._id}`,
-        name: "Unassigned Director",
-        email: "director@rungta.ac.in",
-        designation: "Director of Institute"
-      };
-
-      return {
-        id: `dir-${dir._id}`,
-        name: dir.name,
-        subTitle: `Director: ${directorUser.name}`,
-        level: "director",
-        role: "Director",
-        badge: dir.code || "DIRECTOR",
-        details: {
-          directorateName: dir.name,
-          code: dir.code,
-          directorName: directorUser.name,
-          directorEmail: directorUser.email,
-          directorPhone: directorUser.phone,
-          employeeId: directorUser.employeeId,
-          building: dir.building,
-          establishedYear: dir.establishedYear,
-          description: dir.description
-        },
-        stats: {
-          departmentsCount: hodNodes.length,
-          totalStudents: hodNodes.reduce((sum, h) => sum + (h.stats?.totalStudents || 0), 0)
-        },
-        children: hodNodes
-      };
-    });
-
-    // Assemble root tree node
-    const tree = {
-      id: "root-super-admin",
-      name: rootAdmin.name || "Chancellor & Super Admin",
-      level: "super_admin",
-      role: "Super Admin",
-      badge: "University Head Authority",
-      details: {
-        email: rootAdmin.email,
-        phone: rootAdmin.phone || "+91 98765 43210",
-        designation: rootAdmin.designation || "Chief Campus Administrator",
-        institution: "Rungta International Skills University",
-        authority: "Full Institutional Control across Super Admin → TPO → Directors → HODs → Sections → Teachers → Classrooms"
-      },
-      stats: {
-        totalInstitutes: visibleDirectorates.length,
-        totalDepartments: visibleDepartments.length,
-        totalTeachers: visibleTeachers.length,
-        totalSections: visibleSections.length,
-        totalClassrooms: visibleClassrooms.length,
-        totalStudents: visibleSections.reduce((sum, s) => sum + (s.totalStudents || 0), 0)
-      },
-      tpoNodes,
-      children: directorNodes
-    };
-
-    return res.json({
-      tree,
-      scope: {
-        userRole,
-        readOnly: userRole === "tpo",
-        accessibleInstitutes: visibleDirectorates.length,
-        accessibleDepartments: visibleDepartments.length
-      }
-    });
-  } catch (error) {
-    return next(error);
-  }
-}
+// =========================================================================
+// 1. SUPER ADMIN MODULES
+// =========================================================================
 
 /**
- * 2. GET /api/hierarchy/overview
- * High-level summary metrics, unassigned teachers, vacant sections, classroom allocation rate
+ * GET /api/hierarchy/super-admin/overview
+ * Real high-level institutional statistics for Super Admin dashboard.
+ * Focused on top-level metrics, not an expanded tree of the entire college.
  */
-export async function getHierarchyOverview(req, res, next) {
+export async function getSuperAdminOverview(req, res, next) {
   try {
-    const userRole = req.user.role === "admin" ? "super_admin" : req.user.role;
-    const userId = req.user.id;
-
-    let dirQuery = { status: "active" };
-    let deptQuery = { status: "active" };
-    let secQuery = {};
-    let tchQuery = { role: "teacher", status: "active" };
-    let roomQuery = {};
-
-    if (userRole === "director") {
-      dirQuery = { directorId: userId };
-      const myDirs = await Directorate.find(dirQuery).select("_id");
-      const dirIds = myDirs.map((d) => d._id);
-      deptQuery = { directorateId: { $in: dirIds } };
-      secQuery = { directorateId: { $in: dirIds } };
-      tchQuery = { role: "teacher", directorateId: { $in: dirIds } };
-    } else if (userRole === "hod") {
-      deptQuery = { hodId: userId };
-      const myDepts = await Department.find(deptQuery).select("_id");
-      const deptIds = myDepts.map((d) => d._id);
-      secQuery = { departmentId: { $in: deptIds } };
-      tchQuery = { role: "teacher", departmentId: { $in: deptIds } };
-      roomQuery = { $or: [{ departmentId: { $in: deptIds } }, { departmentId: null }] };
-    } else if (userRole === "teacher") {
-      const myTeacher = await Admin.findById(userId);
-      secQuery = { _id: { $in: myTeacher?.assignedSections || [] } };
-      tchQuery = { _id: userId };
-      deptQuery = { _id: myTeacher?.departmentId };
-    }
-
     const [
+      tposCount,
       directorsCount,
       hodsCount,
       teachersCount,
+      studentsCount,
+      directoratesCount,
+      departmentsCount,
       sectionsCount,
-      classroomsCount,
-      allTeachers,
-      allSections,
-      allClassrooms,
-      allAssignments,
-      recentLogs
+      auditLogsCount,
+      recentLogs,
+      directorates
     ] = await Promise.all([
+      Admin.countDocuments({ role: "tpo", status: "active" }),
       Admin.countDocuments({ role: "director", status: "active" }),
       Admin.countDocuments({ role: "hod", status: "active" }),
-      Admin.countDocuments(tchQuery),
-      Section.countDocuments(secQuery),
-      Classroom.countDocuments(roomQuery),
-      Admin.find(tchQuery).populate("departmentId", "name code"),
-      Section.find(secQuery).populate("departmentId", "name code").populate("classTeacherId", "name"),
-      Classroom.find(roomQuery).populate("departmentId", "name code"),
-      TimetableAssignment.find(),
-      AuditLog.find().sort({ createdAt: -1 }).limit(8)
+      Admin.countDocuments({ role: "teacher", status: "active" }),
+      Student.countDocuments({ isActive: { $ne: false } }),
+      Directorate.countDocuments({ status: "active" }),
+      Department.countDocuments({ status: "active" }),
+      Section.countDocuments({ status: "active" }),
+      AuditLog.countDocuments(),
+      AuditLog.find().sort({ createdAt: -1 }).limit(10),
+      Directorate.find().populate("directorId", "name email employeeId designation status").sort({ name: 1 })
     ]);
-
-    // Compute Unassigned Teachers (no section cohort assigned)
-    const unassignedTeachers = allTeachers.filter((t) => {
-      return !t.assignedSections || t.assignedSections.length === 0;
-    });
-
-    // Compute Vacant Sections (0 students or no class teacher appointed)
-    const vacantSections = allSections.filter((s) => s.totalStudents === 0 || s.status === "vacant" || !s.classTeacherId);
-
-    // Compute Classroom Allocation Status (rooms assigned as primary classroom or assigned to a department)
-    const allocatedRoomIds = new Set(allSections.map((s) => String(s.primaryClassroomId?._id || s.primaryClassroomId)).filter(Boolean));
-    const allocatedClassroomsCount = allClassrooms.filter((c) => allocatedRoomIds.has(String(c._id)) || c.departmentId).length;
-    const allocationRate = classroomsCount > 0 ? Math.round((allocatedClassroomsCount / classroomsCount) * 100) : 0;
-
-    const totalStudents = allSections.reduce((sum, s) => sum + (s.totalStudents || 0), 0);
 
     return res.json({
       metrics: {
-        totalDirectors: directorsCount,
-        totalHODs: hodsCount,
-        totalTeachers: teachersCount,
-        totalSections: sectionsCount,
-        totalClassrooms: classroomsCount,
-        totalStudents,
-        allocatedClassroomsCount,
-        allocationRate,
-        unassignedTeachersCount: unassignedTeachers.length,
-        vacantSectionsCount: vacantSections.length
+        tpos: tposCount,
+        directors: directorsCount,
+        hods: hodsCount,
+        teachers: teachersCount,
+        students: studentsCount,
+        directorates: directoratesCount,
+        departments: departmentsCount,
+        sections: sectionsCount,
+        auditLogs: auditLogsCount
       },
-      unassignedTeachers: unassignedTeachers.map((t) => ({
-        id: t._id,
-        name: t.name,
-        email: t.email,
-        phone: t.phone,
-        department: t.departmentId?.name || "Unassigned",
-        designation: t.designation || "Assistant Professor"
-      })),
-      vacantSections: vacantSections.map((s) => ({
-        id: s._id,
-        name: s.name,
-        department: s.departmentId?.name,
-        year: s.year,
-        semester: s.semester,
-        reason: s.totalStudents === 0 ? "Zero Enrolled Students" : "No Class Teacher Appointed"
-      })),
-      recentLogs
+      recentLogs,
+      directorates
     });
   } catch (error) {
     return next(error);
@@ -479,16 +90,203 @@ export async function getHierarchyOverview(req, res, next) {
 }
 
 /**
- * 3. GET /api/hierarchy/users
- * Returns users filtered by role/department (Super Admin, TPO, Director, HOD, Teacher)
+ * GET /api/hierarchy/tpos
+ * List all TPOs (Super Admin and TPO authorized)
  */
-export async function getUsers(req, res, next) {
+export async function getTpos(req, res, next) {
   try {
-    const { role, departmentId, directorateId, search } = req.query;
+    const tpos = await Admin.find({ role: "tpo" })
+      .select("-password")
+      .sort({ createdAt: -1 });
+    return res.json({ tpos });
+  } catch (error) {
+    return next(error);
+  }
+}
+
+/**
+ * POST /api/hierarchy/tpos
+ * Super Admin creates a new official TPO account
+ */
+export async function createTpo(req, res, next) {
+  try {
+    const { name, email, employeeId, phone, designation, temporaryPassword, password, mustChangePassword } = req.body;
+
+    if (!name || !email) {
+      return res.status(400).json({ message: "Official name and email address are required." });
+    }
+
+    const cleanEmail = email.trim().toLowerCase();
+    const existing = await Admin.findOne({ email: cleanEmail });
+    if (existing) {
+      return res.status(409).json({ message: "An account with this email address already exists." });
+    }
+
+    const resolvedPass = (password || temporaryPassword || crypto.randomBytes(4).toString("hex") + "Rungta!1").trim();
+    const passwordHash = await bcrypt.hash(resolvedPass, 10);
+    const resolvedMustChange = mustChangePassword !== undefined ? Boolean(mustChangePassword) : false;
+
+    const newTpo = await Admin.create({
+      name: name.trim(),
+      email: cleanEmail,
+      password: passwordHash,
+      role: "tpo",
+      employeeId: employeeId?.trim() || undefined,
+      phone: phone?.trim(),
+      designation: designation?.trim() || "Head - Training & Placement Office (TPO)",
+      status: "active",
+      createdBy: req.user.id,
+      mustChangePassword: resolvedMustChange,
+      tokenVersion: 0
+    });
+
+    await logAudit(
+      req.user,
+      "CREATE_TPO",
+      "Admin",
+      newTpo._id,
+      `Created TPO account for ${name} (${cleanEmail}) with direct password setup`,
+      req
+    );
+
+    return res.status(201).json({
+      message: "TPO account created successfully.",
+      tpo: {
+        id: newTpo._id,
+        name: newTpo.name,
+        email: newTpo.email,
+        employeeId: newTpo.employeeId,
+        phone: newTpo.phone,
+        designation: newTpo.designation,
+        status: newTpo.status,
+        createdAt: newTpo.createdAt
+      },
+      credentials: {
+        email: cleanEmail,
+        password: resolvedPass,
+        mustChangePassword: resolvedMustChange
+      },
+      temporaryCredentials: {
+        email: cleanEmail,
+        temporaryPassword: resolvedPass,
+        mustChangePassword: resolvedMustChange
+      }
+    });
+  } catch (error) {
+    return next(error);
+  }
+}
+
+/**
+ * GET /api/hierarchy/directors
+ * List all Directors with their assigned directorates
+ */
+export async function getDirectors(req, res, next) {
+  try {
+    const directors = await Admin.find({ role: "director" })
+      .populate("directorateId", "name code building")
+      .select("-password")
+      .sort({ createdAt: -1 });
+    return res.json({ directors });
+  } catch (error) {
+    return next(error);
+  }
+}
+
+/**
+ * POST /api/hierarchy/directors
+ * Super Admin creates a new Director account
+ */
+export async function createDirector(req, res, next) {
+  try {
+    const { name, email, employeeId, phone, designation, qualification, directorateId, temporaryPassword, password, mustChangePassword } = req.body;
+
+    if (!name || !email) {
+      return res.status(400).json({ message: "Director name and official email address are required." });
+    }
+
+    const cleanEmail = email.trim().toLowerCase();
+    const existing = await Admin.findOne({ email: cleanEmail });
+    if (existing) {
+      return res.status(409).json({ message: "An account with this email address already exists." });
+    }
+
+    const resolvedPass = (password || temporaryPassword || crypto.randomBytes(4).toString("hex") + "Rungta!1").trim();
+    const passwordHash = await bcrypt.hash(resolvedPass, 10);
+    const resolvedMustChange = mustChangePassword !== undefined ? Boolean(mustChangePassword) : false;
+
+    const newDirector = await Admin.create({
+      name: name.trim(),
+      email: cleanEmail,
+      password: passwordHash,
+      role: "director",
+      employeeId: employeeId?.trim() || undefined,
+      phone: phone?.trim(),
+      designation: designation?.trim() || "Director of Faculty / Institute",
+      qualification: qualification?.trim(),
+      directorateId: directorateId || undefined,
+      status: "active",
+      createdBy: req.user.id,
+      mustChangePassword: resolvedMustChange,
+      tokenVersion: 0
+    });
+
+    if (directorateId) {
+      await Directorate.findByIdAndUpdate(directorateId, { directorId: newDirector._id });
+    }
+
+    await logAudit(
+      req.user,
+      "CREATE_DIRECTOR",
+      "Admin",
+      newDirector._id,
+      `Created Director account for ${name} (${cleanEmail}) with direct password setup`,
+      req
+    );
+
+    return res.status(201).json({
+      message: "Director account created successfully.",
+      director: {
+        id: newDirector._id,
+        name: newDirector.name,
+        email: newDirector.email,
+        employeeId: newDirector.employeeId,
+        phone: newDirector.phone,
+        designation: newDirector.designation,
+        directorateId: newDirector.directorateId,
+        status: newDirector.status,
+        createdAt: newDirector.createdAt
+      },
+      credentials: {
+        email: cleanEmail,
+        password: resolvedPass,
+        mustChangePassword: resolvedMustChange
+      },
+      temporaryCredentials: {
+        email: cleanEmail,
+        temporaryPassword: resolvedPass,
+        mustChangePassword: resolvedMustChange
+      }
+    });
+  } catch (error) {
+    return next(error);
+  }
+}
+
+/**
+ * GET /api/hierarchy/accounts
+ * Unified account management: list all authorized staff accounts with filters
+ */
+export async function getAccounts(req, res, next) {
+  try {
+    const { role, status, search, directorateId, departmentId } = req.query;
     const filter = {};
+
     if (role) filter.role = role;
-    if (departmentId) filter.departmentId = departmentId;
+    if (status) filter.status = status;
     if (directorateId) filter.directorateId = directorateId;
+    if (departmentId) filter.departmentId = departmentId;
+
     if (search) {
       filter.$or = [
         { name: { $regex: search, $options: "i" } },
@@ -497,88 +295,79 @@ export async function getUsers(req, res, next) {
       ];
     }
 
-    const users = await Admin.find(filter)
+    const accounts = await Admin.find(filter)
       .populate("directorateId", "name code")
       .populate("departmentId", "name code")
-      .populate("assignedSections", "name year")
+      .populate("createdBy", "name email role")
       .select("-password")
       .sort({ createdAt: -1 });
 
-    return res.json({ users });
+    return res.json({ accounts });
   } catch (error) {
     return next(error);
   }
 }
 
 /**
- * 4. POST /api/hierarchy/users
- * Super Admin creates a new user with specific role & assignments
+ * PATCH /api/hierarchy/accounts/:id/status
+ * Activate, deactivate, or suspend any authorized account.
+ * Safety: protects the last active Super Admin.
  */
-export async function createUser(req, res, next) {
+export async function updateAccountStatus(req, res, next) {
   try {
-    const {
-      name,
-      email,
-      password = "rungta@123",
-      role,
-      employeeId,
-      phone,
-      designation,
-      qualification,
-      directorateId,
-      departmentId,
-      assignedSections,
-      assignedSubjects
-    } = req.body;
+    const { id } = req.params;
+    const { status } = req.body;
 
-    if (!name || !email || !role) {
-      return res.status(400).json({ message: "Name, email, and role are required." });
+    if (!["active", "inactive", "suspended"].includes(status)) {
+      return res.status(400).json({ message: "Status must be 'active', 'inactive', or 'suspended'." });
     }
 
-    const cleanEmail = email.trim().toLowerCase();
-    const existing = await Admin.findOne({ email: cleanEmail });
-    if (existing) {
-      return res.status(409).json({ message: "An account with this email already exists." });
+    const targetAccount = await Admin.findById(id);
+    if (!targetAccount) {
+      return res.status(404).json({ message: "Account not found." });
     }
 
-    const passwordHash = await bcrypt.hash(password, 10);
-    const newUser = await Admin.create({
-      name: name.trim(),
-      email: cleanEmail,
-      password: passwordHash,
-      role,
-      employeeId: employeeId?.trim() || undefined,
-      phone: phone?.trim(),
-      designation: designation?.trim(),
-      qualification: qualification?.trim(),
-      directorateId: directorateId || undefined,
-      departmentId: departmentId || undefined,
-      assignedSections: assignedSections || [],
-      assignedSubjects: assignedSubjects || []
-    });
-
-    // If appointing Director, link back to Directorate
-    if (role === "director" && directorateId) {
-      await Directorate.findByIdAndUpdate(directorateId, { directorId: newUser._id });
+    // Safety rule 1: Super Admin cannot deactivate themselves
+    if (String(req.user.id) === String(id) && status !== "active") {
+      return res.status(400).json({ message: "You cannot deactivate or suspend your own administrative session." });
     }
 
-    // If appointing HOD, link back to Department
-    if (role === "hod" && departmentId) {
-      await Department.findByIdAndUpdate(departmentId, { hodId: newUser._id });
+    // Safety rule 2: Protect the last active Super Admin
+    if (targetAccount.role === "super_admin" && status !== "active") {
+      const activeSuperAdmins = await Admin.countDocuments({ role: "super_admin", status: "active" });
+      if (activeSuperAdmins <= 1) {
+        return res.status(400).json({
+          message: "Action prohibited: Cannot deactivate or suspend the final active Super Administrator."
+        });
+      }
     }
+
+    const oldStatus = targetAccount.status;
+    targetAccount.status = status;
+    if (status !== "active") {
+      // Invalidate current sessions if deactivated or suspended
+      targetAccount.tokenVersion = (targetAccount.tokenVersion || 0) + 1;
+    }
+    await targetAccount.save();
 
     await logAudit(
       req.user,
-      "CREATE_USER",
+      "UPDATE_ACCOUNT_STATUS",
       "Admin",
-      newUser._id,
-      `Created ${role.toUpperCase()} account for ${name} (${cleanEmail})`,
+      targetAccount._id,
+      `Changed account status of ${targetAccount.name} (${targetAccount.email}, ${targetAccount.role}) from '${oldStatus}' to '${status}'`,
       req
     );
 
-    return res.status(201).json({
-      message: `User created successfully as ${role}.`,
-      user: newUser
+    return res.json({
+      message: `Account status updated to ${status}.`,
+      account: {
+        id: targetAccount._id,
+        name: targetAccount.name,
+        email: targetAccount.email,
+        role: targetAccount.role,
+        status: targetAccount.status
+      }
     });
   } catch (error) {
     return next(error);
@@ -586,10 +375,52 @@ export async function createUser(req, res, next) {
 }
 
 /**
- * 5. PUT /api/hierarchy/users/:id
- * Super Admin updates user details, role, or assignments
+ * POST /api/hierarchy/accounts/:id/reset-password
+ * Super Admin resets an account's password with a secure temporary password
  */
-export async function updateUser(req, res, next) {
+export async function resetAccountPassword(req, res, next) {
+  try {
+    const { id } = req.params;
+    const { temporaryPassword } = req.body;
+
+    const target = await Admin.findById(id);
+    if (!target) return res.status(404).json({ message: "Account not found." });
+
+    const newTempPassword = (temporaryPassword || crypto.randomBytes(4).toString("hex") + "Rungta!1").trim();
+    const passwordHash = await bcrypt.hash(newTempPassword, 10);
+
+    target.password = passwordHash;
+    target.mustChangePassword = true;
+    target.tokenVersion = (target.tokenVersion || 0) + 1; // Invalidate all existing tokens
+    await target.save();
+
+    await logAudit(
+      req.user,
+      "RESET_PASSWORD",
+      "Admin",
+      target._id,
+      `Super Admin initiated password reset for ${target.name} (${target.email}). Account flagged for mandatory change at next login.`,
+      req
+    );
+
+    return res.json({
+      message: `Password reset successfully for ${target.name}.`,
+      temporaryCredentials: {
+        email: target.email,
+        temporaryPassword: newTempPassword,
+        mustChangePassword: true
+      }
+    });
+  } catch (error) {
+    return next(error);
+  }
+}
+
+/**
+ * PUT /api/hierarchy/accounts/:id
+ * Super Admin updates account profile, role, and organizational links
+ */
+export async function updateAccount(req, res, next) {
   try {
     const { id } = req.params;
     const {
@@ -607,10 +438,19 @@ export async function updateUser(req, res, next) {
     } = req.body;
 
     const user = await Admin.findById(id);
-    if (!user) return res.status(404).json({ message: "User not found." });
+    if (!user) return res.status(404).json({ message: "Account not found." });
 
     if (name) user.name = name.trim();
-    if (role) user.role = role;
+    if (role) {
+      // Safety: Cannot demote the last Super Admin
+      if (user.role === "super_admin" && role !== "super_admin") {
+        const activeSuperAdmins = await Admin.countDocuments({ role: "super_admin", status: "active" });
+        if (activeSuperAdmins <= 1) {
+          return res.status(400).json({ message: "Cannot change role of the last active Super Administrator." });
+        }
+      }
+      user.role = role;
+    }
     if (employeeId !== undefined) user.employeeId = employeeId?.trim() || undefined;
     if (phone !== undefined) user.phone = phone?.trim();
     if (designation !== undefined) user.designation = designation?.trim();
@@ -623,63 +463,84 @@ export async function updateUser(req, res, next) {
 
     await user.save();
 
+    // Re-link references if needed
+    if (user.role === "director" && directorateId) {
+      await Directorate.findByIdAndUpdate(directorateId, { directorId: user._id });
+    }
+    if (user.role === "hod" && departmentId) {
+      await Department.findByIdAndUpdate(departmentId, { hodId: user._id });
+    }
+
     await logAudit(
       req.user,
-      "UPDATE_USER",
+      "UPDATE_ACCOUNT",
       "Admin",
       user._id,
       `Updated profile and assignments for ${user.name} (${user.email})`,
       req
     );
 
-    return res.json({ message: "User updated successfully.", user });
+    return res.json({ message: "Account updated successfully.", account: user });
   } catch (error) {
     return next(error);
   }
 }
 
 /**
- * 6. DELETE /api/hierarchy/users/:id
- * Super Admin deletes user
+ * DELETE /api/hierarchy/accounts/:id
+ * Delete account with safety guards and dependent cleanup
  */
-export async function deleteUser(req, res, next) {
+export async function deleteAccount(req, res, next) {
   try {
     const { id } = req.params;
+
     if (String(req.user.id) === String(id)) {
       return res.status(400).json({ message: "You cannot delete your own administrative account." });
     }
 
-    const user = await Admin.findByIdAndDelete(id);
-    if (!user) return res.status(404).json({ message: "User not found." });
+    const user = await Admin.findById(id);
+    if (!user) return res.status(404).json({ message: "Account not found." });
 
-    // Clean up references
+    // Safety: Protect the last active Super Admin
+    if (user.role === "super_admin") {
+      const activeSuperAdmins = await Admin.countDocuments({ role: "super_admin", status: "active" });
+      if (activeSuperAdmins <= 1) {
+        return res.status(400).json({ message: "Action prohibited: Cannot delete the last active Super Administrator." });
+      }
+    }
+
+    await Admin.findByIdAndDelete(id);
+
+    // Safely clear references in organizational models
     await Directorate.updateMany({ directorId: id }, { $unset: { directorId: "" } });
+    await Directorate.updateMany({ tpoId: id }, { $unset: { tpoId: "" } });
     await Department.updateMany({ hodId: id }, { $unset: { hodId: "" } });
     await Section.updateMany({ classTeacherId: id }, { $unset: { classTeacherId: "" } });
     await TimetableAssignment.deleteMany({ teacherId: id });
 
     await logAudit(
       req.user,
-      "DELETE_USER",
+      "DELETE_ACCOUNT",
       "Admin",
       id,
-      `Deleted ${user.role} user ${user.name} (${user.email}) and cleared associated references`,
+      `Permanently deleted ${user.role} account ${user.name} (${user.email}) and cleared associated references`,
       req
     );
 
-    return res.json({ message: "User and related assignments removed successfully." });
+    return res.json({ message: `Account for ${user.name} deleted successfully.` });
   } catch (error) {
     return next(error);
   }
 }
 
-/**
- * 7. Directorates CRUD
- */
+// =========================================================================
+// 2. DIRECTORATE CRUD (Super Admin / TPO)
+// =========================================================================
+
 export async function getDirectorates(req, res, next) {
   try {
     const directorates = await Directorate.find()
-      .populate("directorId", "name email phone designation employeeId")
+      .populate("directorId", "name email phone designation employeeId status")
       .populate("tpoId", "name email phone designation")
       .sort({ name: 1 });
     return res.json({ directorates });
@@ -690,35 +551,661 @@ export async function getDirectorates(req, res, next) {
 
 export async function createDirectorate(req, res, next) {
   try {
-    const { name, code, description, directorId, building } = req.body;
+    const { name, code, description, directorId, tpoId, building } = req.body;
     if (!name || !code) {
-      return res.status(400).json({ message: "Name and code are required." });
+      return res.status(400).json({ message: "Directorate name and code are required." });
     }
+
+    const cleanCode = code.trim().toUpperCase();
+    const existing = await Directorate.findOne({ code: cleanCode });
+    if (existing) {
+      return res.status(409).json({ message: `Directorate with code ${cleanCode} already exists.` });
+    }
+
     const created = await Directorate.create({
       name: name.trim(),
-      code: code.trim().toUpperCase(),
-      description,
+      code: cleanCode,
+      description: description?.trim(),
       directorId: directorId || null,
-      building
+      tpoId: tpoId || null,
+      building: building?.trim(),
+      createdBy: req.user.id
     });
+
     if (directorId) {
       await Admin.findByIdAndUpdate(directorId, { directorateId: created._id, role: "director" });
     }
-    await logAudit(req.user, "CREATE_DIRECTORATE", "Directorate", created._id, `Created Directorate ${created.name}`, req);
+
+    await logAudit(req.user, "CREATE_DIRECTORATE", "Directorate", created._id, `Created Directorate ${created.name} (${cleanCode})`, req);
     return res.status(201).json({ directorate: created });
   } catch (error) {
     return next(error);
   }
 }
 
+export async function updateDirectorate(req, res, next) {
+  try {
+    const { id } = req.params;
+    const { name, code, description, directorId, tpoId, building, status } = req.body;
+
+    const dir = await Directorate.findById(id);
+    if (!dir) return res.status(404).json({ message: "Directorate not found." });
+
+    if (name) dir.name = name.trim();
+    if (code) dir.code = code.trim().toUpperCase();
+    if (description !== undefined) dir.description = description?.trim();
+    if (building !== undefined) dir.building = building?.trim();
+    if (status) dir.status = status;
+    if (directorId !== undefined) {
+      dir.directorId = directorId || null;
+      if (directorId) {
+        await Admin.findByIdAndUpdate(directorId, { directorateId: dir._id, role: "director" });
+      }
+    }
+    if (tpoId !== undefined) dir.tpoId = tpoId || null;
+
+    await dir.save();
+    await logAudit(req.user, "UPDATE_DIRECTORATE", "Directorate", dir._id, `Updated Directorate ${dir.name}`, req);
+    return res.json({ message: "Directorate updated successfully.", directorate: dir });
+  } catch (error) {
+    return next(error);
+  }
+}
+
+export async function deleteDirectorate(req, res, next) {
+  try {
+    const { id } = req.params;
+    // Check if departments exist under this directorate
+    const deptCount = await Department.countDocuments({ directorateId: id });
+    if (deptCount > 0) {
+      return res.status(400).json({
+        message: `Cannot delete directorate: ${deptCount} departments are linked to it. Please reassign or delete them first.`
+      });
+    }
+
+    const dir = await Directorate.findByIdAndDelete(id);
+    if (!dir) return res.status(404).json({ message: "Directorate not found." });
+
+    // Unset directorateId on director
+    await Admin.updateMany({ directorateId: id }, { $unset: { directorateId: "" } });
+
+    await logAudit(req.user, "DELETE_DIRECTORATE", "Directorate", id, `Deleted Directorate ${dir.name}`, req);
+    return res.json({ message: "Directorate deleted successfully." });
+  } catch (error) {
+    return next(error);
+  }
+}
+
+// =========================================================================
+// 3. TPO SCOPED MODULES
+// =========================================================================
+
 /**
- * 8. Departments CRUD
+ * GET /api/hierarchy/tpo/overview
+ * Real TPO overview: Directorate oversight, placement eligibility, director assignments
  */
+export async function getTpoOverview(req, res, next) {
+  try {
+    const [directorates, departments, totalStudents, unassignedDirectorates] = await Promise.all([
+      Directorate.find().populate("directorId", "name email phone designation employeeId status").sort({ name: 1 }),
+      Department.find().populate("directorateId", "name code").populate("hodId", "name email").sort({ name: 1 }),
+      Student.countDocuments({ isActive: { $ne: false } }),
+      Directorate.find({ directorId: { $exists: false } })
+    ]);
+
+    return res.json({
+      metrics: {
+        totalDirectorates: directorates.length,
+        totalDepartments: departments.length,
+        totalStudents,
+        vacantDirectorates: unassignedDirectorates.length
+      },
+      directorates,
+      departments
+    });
+  } catch (error) {
+    return next(error);
+  }
+}
+
+// =========================================================================
+// 4. DIRECTOR SCOPED MODULES
+// =========================================================================
+
+/**
+ * GET /api/hierarchy/director/overview
+ * Director views stats strictly for their assigned Directorate
+ */
+export async function getDirectorOverview(req, res, next) {
+  try {
+    const directorId = req.user.id;
+    // Find directorate assigned to this Director
+    let directorate = await Directorate.findOne({ directorId }).populate("directorId", "name email");
+    if (!directorate && req.user.directorateId) {
+      directorate = await Directorate.findById(req.user.directorateId).populate("directorId", "name email");
+    }
+
+    if (!directorate) {
+      return res.json({
+        directorate: null,
+        message: "No Directorate has been assigned to your Director account yet. Contact Super Admin.",
+        departments: [],
+        hods: [],
+        metrics: { departmentsCount: 0, hodsCount: 0, teachersCount: 0, studentsCount: 0 }
+      });
+    }
+
+    const departments = await Department.find({ directorateId: directorate._id })
+      .populate("hodId", "name email phone employeeId status")
+      .sort({ name: 1 });
+
+    const deptIds = departments.map((d) => d._id);
+    const [teachersCount, sections, hods] = await Promise.all([
+      Admin.countDocuments({ departmentId: { $in: deptIds }, role: "teacher", status: "active" }),
+      Section.find({ departmentId: { $in: deptIds } }),
+      Admin.find({ departmentId: { $in: deptIds }, role: "hod" }).select("-password")
+    ]);
+
+    const totalStudents = sections.reduce((sum, s) => sum + (s.totalStudents || 0), 0);
+
+    return res.json({
+      directorate,
+      departments,
+      hods,
+      metrics: {
+        departmentsCount: departments.length,
+        hodsCount: hods.length,
+        teachersCount,
+        sectionsCount: sections.length,
+        studentsCount: totalStudents
+      }
+    });
+  } catch (error) {
+    return next(error);
+  }
+}
+
+/**
+ * POST /api/hierarchy/director/hods
+ * Director creates an HOD account strictly for a department within their assigned Directorate
+ */
+export async function createDirectorHod(req, res, next) {
+  try {
+    const { name, email, departmentId, employeeId, phone, designation, qualification, temporaryPassword, password, mustChangePassword } = req.body;
+
+    if (!name || !email || !departmentId) {
+      return res.status(400).json({ message: "Name, email, and department are required." });
+    }
+
+    // Verify department belongs to this director's directorate
+    const dept = await Department.findById(departmentId);
+    if (!dept) {
+      return res.status(404).json({ message: "Department not found." });
+    }
+
+    const directorId = req.user.id;
+    const isSuperAdmin = req.user.role === "super_admin" || req.user.role === "admin";
+
+    if (!isSuperAdmin) {
+      const myDirectorate = await Directorate.findOne({ directorId });
+      const myDirectorateId = myDirectorate?._id || req.user.directorateId;
+
+      if (!myDirectorateId || String(dept.directorateId) !== String(myDirectorateId)) {
+        return res.status(403).json({
+          message: "Forbidden: You can only appoint HODs for departments within your assigned Directorate."
+        });
+      }
+    }
+
+    const cleanEmail = email.trim().toLowerCase();
+    const existing = await Admin.findOne({ email: cleanEmail });
+    if (existing) {
+      return res.status(409).json({ message: "An account with this email already exists." });
+    }
+
+    const resolvedPass = (password || temporaryPassword || crypto.randomBytes(4).toString("hex") + "Rungta!1").trim();
+    const passwordHash = await bcrypt.hash(resolvedPass, 10);
+    const resolvedMustChange = mustChangePassword !== undefined ? Boolean(mustChangePassword) : false;
+
+    const newHod = await Admin.create({
+      name: name.trim(),
+      email: cleanEmail,
+      password: passwordHash,
+      role: "hod",
+      employeeId: employeeId?.trim() || undefined,
+      phone: phone?.trim(),
+      designation: designation?.trim() || "Head of Department (HOD)",
+      qualification: qualification?.trim(),
+      directorateId: dept.directorateId,
+      departmentId: dept._id,
+      reportsTo: req.user.id,
+      createdBy: req.user.id,
+      status: "active",
+      mustChangePassword: resolvedMustChange,
+      tokenVersion: 0
+    });
+
+    // Link HOD to Department
+    dept.hodId = newHod._id;
+    await dept.save();
+
+    await logAudit(
+      req.user,
+      "CREATE_HOD",
+      "Admin",
+      newHod._id,
+      `Appointed ${name} (${cleanEmail}) as HOD of ${dept.name} with direct password setup`,
+      req
+    );
+
+    return res.status(201).json({
+      message: `HOD account created successfully for ${dept.name}.`,
+      hod: newHod,
+      credentials: {
+        email: cleanEmail,
+        password: resolvedPass,
+        mustChangePassword: resolvedMustChange
+      },
+      temporaryCredentials: {
+        email: cleanEmail,
+        temporaryPassword: resolvedPass,
+        mustChangePassword: resolvedMustChange
+      }
+    });
+  } catch (error) {
+    return next(error);
+  }
+}
+
+// =========================================================================
+// 5. HOD SCOPED MODULES
+// =========================================================================
+
+/**
+ * GET /api/hierarchy/hod/overview
+ * HOD views stats and entities strictly for their department
+ */
+export async function getHodOverview(req, res, next) {
+  try {
+    const hodId = req.user.id;
+    let dept = await Department.findOne({ hodId }).populate("directorateId", "name code");
+    if (!dept && req.user.departmentId) {
+      dept = await Department.findById(req.user.departmentId).populate("directorateId", "name code");
+    }
+
+    if (!dept) {
+      return res.json({
+        department: null,
+        message: "No Department assigned to your HOD account yet. Contact Director or Super Admin.",
+        teachers: [],
+        sections: [],
+        subjects: [],
+        metrics: { teachersCount: 0, sectionsCount: 0, subjectsCount: 0, studentsCount: 0 }
+      });
+    }
+
+    const [teachers, sections, subjects] = await Promise.all([
+      Admin.find({ departmentId: dept._id, role: "teacher" })
+        .populate("assignedSections", "name year semester")
+        .select("-password")
+        .sort({ name: 1 }),
+      Section.find({ departmentId: dept._id })
+        .populate("classTeacherId", "name email phone")
+        .populate("primaryClassroomId", "roomNumber name")
+        .sort({ name: 1 }),
+      Subject.find({ departmentId: dept._id }).sort({ code: 1 })
+    ]);
+
+    const totalStudents = sections.reduce((sum, s) => sum + (s.totalStudents || 0), 0);
+
+    return res.json({
+      department: dept,
+      teachers,
+      sections,
+      subjects,
+      metrics: {
+        teachersCount: teachers.length,
+        sectionsCount: sections.length,
+        subjectsCount: subjects.length,
+        studentsCount: totalStudents
+      }
+    });
+  } catch (error) {
+    return next(error);
+  }
+}
+
+/**
+ * POST /api/hierarchy/hod/teachers
+ * HOD creates a Teacher account strictly in their own department
+ */
+export async function createHodTeacher(req, res, next) {
+  try {
+    const { name, email, employeeId, phone, designation, qualification, assignedSections, assignedSubjects, temporaryPassword, password, mustChangePassword } = req.body;
+
+    if (!name || !email) {
+      return res.status(400).json({ message: "Teacher name and official email address are required." });
+    }
+
+    const isSuperAdmin = req.user.role === "super_admin" || req.user.role === "admin";
+    let departmentId = req.body.departmentId || req.user.departmentId;
+
+    if (!isSuperAdmin) {
+      const myDept = await Department.findOne({ hodId: req.user.id });
+      departmentId = myDept?._id || req.user.departmentId;
+      if (!departmentId) {
+        return res.status(403).json({ message: "You are not assigned as HOD of any department." });
+      }
+    }
+
+    const dept = await Department.findById(departmentId);
+    if (!dept) {
+      return res.status(404).json({ message: "Department not found." });
+    }
+
+    const cleanEmail = email.trim().toLowerCase();
+    const existing = await Admin.findOne({ email: cleanEmail });
+    if (existing) {
+      return res.status(409).json({ message: "An account with this email address already exists." });
+    }
+
+    const resolvedPass = (password || temporaryPassword || crypto.randomBytes(4).toString("hex") + "Rungta!1").trim();
+    const passwordHash = await bcrypt.hash(resolvedPass, 10);
+    const resolvedMustChange = mustChangePassword !== undefined ? Boolean(mustChangePassword) : false;
+
+    const newTeacher = await Admin.create({
+      name: name.trim(),
+      email: cleanEmail,
+      password: passwordHash,
+      role: "teacher",
+      employeeId: employeeId?.trim() || undefined,
+      phone: phone?.trim(),
+      designation: designation?.trim() || "Assistant Professor",
+      qualification: qualification?.trim(),
+      departmentId: dept._id,
+      directorateId: dept.directorateId,
+      assignedSections: assignedSections || [],
+      assignedSubjects: assignedSubjects || [],
+      reportsTo: req.user.id,
+      createdBy: req.user.id,
+      status: "active",
+      mustChangePassword: resolvedMustChange,
+      tokenVersion: 0
+    });
+
+    await logAudit(
+      req.user,
+      "CREATE_TEACHER",
+      "Admin",
+      newTeacher._id,
+      `Appointed teacher ${name} (${cleanEmail}) to Department ${dept.name} with direct password setup`,
+      req
+    );
+
+    return res.status(201).json({
+      message: `Teacher ${name} created successfully.`,
+      teacher: newTeacher,
+      credentials: {
+        email: cleanEmail,
+        password: resolvedPass,
+        mustChangePassword: resolvedMustChange
+      },
+      temporaryCredentials: {
+        email: cleanEmail,
+        temporaryPassword: resolvedPass,
+        mustChangePassword: resolvedMustChange
+      }
+    });
+  } catch (error) {
+    return next(error);
+  }
+}
+
+/**
+ * POST /api/hierarchy/hod/assign-teacher
+ * HOD assigns teacher to section and subject, or designates Class Teacher
+ */
+export async function assignHodTeacher(req, res, next) {
+  try {
+    const { teacherId, sectionId, subject, isClassTeacher } = req.body;
+
+    if (!teacherId || !sectionId) {
+      return res.status(400).json({ message: "Teacher and Section are required." });
+    }
+
+    const isSuperAdmin = req.user.role === "super_admin" || req.user.role === "admin";
+    const [teacher, section] = await Promise.all([
+      Admin.findById(teacherId),
+      Section.findById(sectionId)
+    ]);
+
+    if (!teacher) return res.status(404).json({ message: "Teacher not found." });
+    if (!section) return res.status(404).json({ message: "Section not found." });
+
+    // Validate departmental scope for HOD
+    if (!isSuperAdmin) {
+      const myDept = await Department.findOne({ hodId: req.user.id });
+      const myDeptId = String(myDept?._id || req.user.departmentId);
+
+      if (String(section.departmentId) !== myDeptId || String(teacher.departmentId) !== myDeptId) {
+        return res.status(403).json({
+          message: "Forbidden: You can only assign teachers and sections belonging to your department."
+        });
+      }
+    }
+
+    // Add section to teacher's assignedSections
+    await Admin.findByIdAndUpdate(teacherId, {
+      $addToSet: {
+        assignedSections: section._id,
+        ...(subject ? { assignedSubjects: subject.trim() } : {})
+      }
+    });
+
+    // If designated as Class Teacher
+    if (isClassTeacher) {
+      section.classTeacherId = teacher._id;
+      await section.save();
+    }
+
+    await logAudit(
+      req.user,
+      "ASSIGN_TEACHER",
+      "Section",
+      section._id,
+      `Assigned teacher ${teacher.name} to section ${section.name}${isClassTeacher ? " as Class Teacher" : ""}${subject ? ` for ${subject}` : ""}`,
+      req
+    );
+
+    return res.json({
+      message: `Teacher ${teacher.name} assigned to section ${section.name} successfully.`
+    });
+  } catch (error) {
+    return next(error);
+  }
+}
+
+// =========================================================================
+// 6. TEACHER SCOPED MODULES
+// =========================================================================
+
+/**
+ * GET /api/hierarchy/teacher/my-schedule
+ * Teacher views strictly their own assigned sections, subjects, and department
+ */
+export async function getTeacherSchedule(req, res, next) {
+  try {
+    const teacherId = req.user.id;
+    const teacher = await Admin.findById(teacherId)
+      .populate("departmentId", "name code buildingBlock floor contactEmail")
+      .populate("directorateId", "name code building")
+      .populate("assignedSections", "name year semester academicYear totalStudents capacity primaryClassroomId");
+
+    if (!teacher) {
+      return res.status(404).json({ message: "Teacher record not found." });
+    }
+
+    // Fetch HOD of this department
+    const hod = teacher.departmentId
+      ? await Admin.findOne({ departmentId: teacher.departmentId._id, role: "hod" }).select("name email phone designation")
+      : null;
+
+    // Fetch class teacher responsibilities
+    const classTeacherSections = await Section.find({ classTeacherId: teacherId });
+
+    // Fetch timetable slots if any
+    const timetable = await TimetableAssignment.find({ teacherId })
+      .populate("sectionId", "name year semester")
+      .populate("classroomId", "roomNumber building type")
+      .sort({ dayOfWeek: 1, timeSlot: 1 });
+
+    return res.json({
+      teacher: {
+        id: teacher._id,
+        name: teacher.name,
+        email: teacher.email,
+        employeeId: teacher.employeeId,
+        phone: teacher.phone,
+        designation: teacher.designation,
+        qualification: teacher.qualification,
+        assignedSubjects: teacher.assignedSubjects || [],
+        assignedSections: teacher.assignedSections || []
+      },
+      department: teacher.departmentId,
+      directorate: teacher.directorateId,
+      hod,
+      classTeacherOf: classTeacherSections,
+      timetable
+    });
+  } catch (error) {
+    return next(error);
+  }
+}
+
+// =========================================================================
+// 7. GENERIC HIERARCHY TREE & MASTER ENTITY ENDPOINTS
+// =========================================================================
+
+/**
+ * GET /api/hierarchy/tree
+ * Dynamic tree construction using ONLY real database records.
+ * Returns clean empty states when collections are empty.
+ */
+export async function getHierarchyTree(req, res, next) {
+  try {
+    const [superAdmins, tpos, directorates, departments, sections, teachers] = await Promise.all([
+      Admin.find({ role: "super_admin", status: "active" }).select("name email designation employeeId"),
+      Admin.find({ role: "tpo", status: "active" }).select("name email designation employeeId"),
+      Directorate.find({ status: "active" }).populate("directorId", "name email designation employeeId"),
+      Department.find({ status: "active" }).populate("hodId", "name email designation employeeId"),
+      Section.find({ status: "active" }).populate("classTeacherId", "name email designation"),
+      Admin.find({ role: "teacher", status: "active" }).select("name email designation assignedSections assignedSubjects departmentId")
+    ]);
+
+    const rootAdmin = superAdmins[0] || {
+      _id: "super-admin",
+      name: "Super Administrator",
+      email: process.env.ADMIN_EMAIL || "admin@rungta.ac.in",
+      designation: "Chief Campus Administrator"
+    };
+
+    const tree = {
+      id: "root-admin",
+      name: rootAdmin.name,
+      role: "Super Admin",
+      level: "super_admin",
+      badge: "Institutional Authority",
+      details: {
+        email: rootAdmin.email,
+        designation: rootAdmin.designation
+      },
+      children: tpos.map((tpo) => ({
+        id: `tpo-${tpo._id}`,
+        name: tpo.name,
+        role: "TPO",
+        level: "tpo",
+        badge: "Placement & Training",
+        details: {
+          email: tpo.email,
+          designation: tpo.designation
+        },
+        children: directorates.map((dir) => {
+          const dirDepartments = departments.filter((dept) => String(dept.directorateId) === String(dir._id));
+          return {
+            id: `dir-${dir._id}`,
+            name: dir.name,
+            role: "Directorate",
+            level: "director",
+            badge: dir.code,
+            details: {
+              directorName: dir.directorId?.name || "Unassigned",
+              directorEmail: dir.directorId?.email || "N/A",
+              building: dir.building
+            },
+            children: dirDepartments.map((dept) => {
+              const deptSections = sections.filter((sec) => String(sec.departmentId) === String(dept._id));
+              const deptTeachers = teachers.filter((tch) => String(tch.departmentId) === String(dept._id));
+              return {
+                id: `dept-${dept._id}`,
+                name: dept.name,
+                role: "Department",
+                level: "hod",
+                badge: dept.code || "DEPT",
+                details: {
+                  hodName: dept.hodId?.name || "Unassigned",
+                  hodEmail: dept.hodId?.email || "N/A"
+                },
+                children: deptSections.map((sec) => {
+                  const secTeachers = deptTeachers.filter((t) =>
+                    (t.assignedSections || []).some((sId) => String(sId) === String(sec._id))
+                  );
+                  return {
+                    id: `sec-${sec._id}`,
+                    name: `${sec.name} (Year ${sec.year})`,
+                    role: "Section",
+                    level: "section",
+                    badge: `${sec.totalStudents} Students`,
+                    details: {
+                      year: sec.year,
+                      semester: sec.semester,
+                      classTeacher: sec.classTeacherId?.name || "Unassigned"
+                    },
+                    children: secTeachers.map((tch) => ({
+                      id: `tch-${sec._id}-${tch._id}`,
+                      name: tch.name,
+                      role: "Teacher",
+                      level: "teacher",
+                      badge: "Faculty",
+                      details: {
+                        email: tch.email,
+                        subjects: tch.assignedSubjects || []
+                      }
+                    }))
+                  };
+                })
+              };
+            })
+          };
+        })
+      }))
+    };
+
+    return res.json({ tree });
+  } catch (error) {
+    return next(error);
+  }
+}
+
+// 8. General Department CRUD
 export async function getDepartments(req, res, next) {
   try {
-    const departments = await Department.find()
+    const { directorateId } = req.query;
+    const filter = {};
+    if (directorateId) filter.directorateId = directorateId;
+
+    const departments = await Department.find(filter)
       .populate("directorateId", "name code")
-      .populate("hodId", "name email phone designation employeeId")
+      .populate("hodId", "name email phone designation employeeId status")
       .sort({ name: 1 });
     return res.json({ departments });
   } catch (error) {
@@ -731,14 +1218,16 @@ export async function createDepartment(req, res, next) {
     const { name, code, directorateId, hodId, buildingBlock, floor, contactEmail } = req.body;
     if (!name) return res.status(400).json({ message: "Department name is required." });
 
+    const cleanCode = code ? code.trim().toUpperCase() : undefined;
     const created = await Department.create({
       name: name.trim(),
-      code: code?.trim().toUpperCase(),
+      code: cleanCode,
       directorateId: directorateId || null,
       hodId: hodId || null,
-      buildingBlock,
-      floor,
-      contactEmail
+      buildingBlock: buildingBlock?.trim(),
+      floor: floor?.trim(),
+      contactEmail: contactEmail?.trim().toLowerCase(),
+      createdBy: req.user.id
     });
 
     if (hodId) {
@@ -752,9 +1241,7 @@ export async function createDepartment(req, res, next) {
   }
 }
 
-/**
- * 9. Sections / Classes CRUD
- */
+// 9. Sections CRUD
 export async function getSections(req, res, next) {
   try {
     const { departmentId, year } = req.query;
@@ -764,9 +1251,7 @@ export async function getSections(req, res, next) {
 
     const sections = await Section.find(filter)
       .populate("departmentId", "name code")
-      .populate("directorateId", "name code")
       .populate("classTeacherId", "name email phone employeeId")
-      .populate("primaryClassroomId", "roomNumber name type capacity")
       .sort({ name: 1 });
 
     return res.json({ sections });
@@ -777,7 +1262,7 @@ export async function getSections(req, res, next) {
 
 export async function createSection(req, res, next) {
   try {
-    const { name, departmentId, directorateId, year, semester, academicYear, capacity, classTeacherId, primaryClassroomId } = req.body;
+    const { name, departmentId, year, semester, academicYear, capacity, classTeacherId } = req.body;
     if (!name || !departmentId || !year || !semester) {
       return res.status(400).json({ message: "Name, department, year, and semester are required." });
     }
@@ -785,20 +1270,19 @@ export async function createSection(req, res, next) {
     const created = await Section.create({
       name: name.trim(),
       departmentId,
-      directorateId: directorateId || null,
       year: Number(year),
       semester: Number(semester),
       academicYear: academicYear || "2026-2027",
       capacity: capacity ? Number(capacity) : 60,
       classTeacherId: classTeacherId || null,
-      primaryClassroomId: primaryClassroomId || null
+      createdBy: req.user.id
     });
 
     if (classTeacherId) {
       await Admin.findByIdAndUpdate(classTeacherId, { $addToSet: { assignedSections: created._id } });
     }
 
-    await logAudit(req.user, "CREATE_SECTION", "Section", created._id, `Created section/class ${created.name}`, req);
+    await logAudit(req.user, "CREATE_SECTION", "Section", created._id, `Created section ${created.name}`, req);
     return res.status(201).json({ section: created });
   } catch (error) {
     return next(error);
@@ -808,7 +1292,7 @@ export async function createSection(req, res, next) {
 export async function updateSection(req, res, next) {
   try {
     const { id } = req.params;
-    const { name, year, semester, capacity, totalStudents, status, classTeacherId, primaryClassroomId } = req.body;
+    const { name, year, semester, capacity, totalStudents, status, classTeacherId } = req.body;
     const sec = await Section.findById(id);
     if (!sec) return res.status(404).json({ message: "Section not found." });
 
@@ -818,7 +1302,6 @@ export async function updateSection(req, res, next) {
     if (capacity !== undefined) sec.capacity = Number(capacity);
     if (totalStudents !== undefined) sec.totalStudents = Number(totalStudents);
     if (status) sec.status = status;
-    if (primaryClassroomId !== undefined) sec.primaryClassroomId = primaryClassroomId || null;
     if (classTeacherId !== undefined) {
       sec.classTeacherId = classTeacherId || null;
       if (classTeacherId) {
@@ -834,202 +1317,69 @@ export async function updateSection(req, res, next) {
   }
 }
 
-export async function assignClassroom(req, res, next) {
+// 10. Subjects CRUD
+export async function getSubjects(req, res, next) {
   try {
-    const { classroomId, sectionId } = req.body;
-    if (!classroomId || !sectionId) {
-      return res.status(400).json({ message: "Classroom and Section are required." });
-    }
-    const section = await Section.findById(sectionId);
-    if (!section) return res.status(404).json({ message: "Section not found." });
-
-    const room = await Classroom.findById(classroomId);
-    if (!room) return res.status(404).json({ message: "Classroom not found." });
-
-    section.primaryClassroomId = classroomId;
-    await section.save();
-
-    await logAudit(
-      req.user,
-      "ALLOCATE_CLASSROOM",
-      "Classroom",
-      classroomId,
-      `Allocated ${room.roomNumber} (${room.type}) as primary room for Section ${section.name}`,
-      req
-    );
-
-    return res.json({ message: `Classroom ${room.roomNumber} allocated to ${section.name} successfully.` });
-  } catch (error) {
-    return next(error);
-  }
-}
-
-/**
- * 10. Classrooms CRUD
- */
-export async function getClassrooms(req, res, next) {
-  try {
-    const { type, building, isAvailable } = req.query;
+    const { departmentId, semester } = req.query;
     const filter = {};
-    if (type) filter.type = type;
-    if (building) filter.building = building;
-    if (isAvailable !== undefined) filter.isAvailable = isAvailable === "true";
-
-    const classrooms = await Classroom.find(filter)
-      .populate("departmentId", "name code")
-      .sort({ roomNumber: 1 });
-
-    return res.json({ classrooms });
-  } catch (error) {
-    return next(error);
-  }
-}
-
-export async function createClassroom(req, res, next) {
-  try {
-    const { roomNumber, name, building, floor, type, capacity, departmentId, workstationsCount, hasProjector, hasSmartBoard, hasAirConditioning } = req.body;
-    if (!roomNumber || !building || !capacity) {
-      return res.status(400).json({ message: "Room number, building, and capacity are required." });
-    }
-
-    const cleanRoom = roomNumber.trim().toUpperCase();
-    const existing = await Classroom.findOne({ roomNumber: cleanRoom });
-    if (existing) {
-      return res.status(409).json({ message: `Classroom ${cleanRoom} already exists.` });
-    }
-
-    const created = await Classroom.create({
-      roomNumber: cleanRoom,
-      name,
-      building,
-      floor: floor || "1st Floor",
-      type: type || "Classroom",
-      capacity: Number(capacity),
-      departmentId: departmentId || null,
-      workstationsCount: workstationsCount ? Number(workstationsCount) : 0,
-      hasProjector: hasProjector !== false,
-      hasSmartBoard: Boolean(hasSmartBoard),
-      hasAirConditioning: Boolean(hasAirConditioning)
-    });
-
-    await logAudit(req.user, "CREATE_CLASSROOM", "Classroom", created._id, `Added classroom/lab ${created.roomNumber} (${created.type})`, req);
-    return res.status(201).json({ classroom: created });
-  } catch (error) {
-    return next(error);
-  }
-}
-
-/**
- * 11. Timetable Assignments CRUD with conflict detection
- */
-export async function getAssignments(req, res, next) {
-  try {
-    const { teacherId, sectionId, departmentId, classroomId, dayOfWeek } = req.query;
-    const filter = {};
-    if (teacherId) filter.teacherId = teacherId;
-    if (sectionId) filter.sectionId = sectionId;
     if (departmentId) filter.departmentId = departmentId;
-    if (classroomId) filter.classroomId = classroomId;
-    if (dayOfWeek) filter.dayOfWeek = dayOfWeek;
+    if (semester) filter.semester = Number(semester);
 
-    const assignments = await TimetableAssignment.find(filter)
-      .populate("teacherId", "name email employeeId designation")
-      .populate("sectionId", "name year semester")
-      .populate("classroomId", "roomNumber name type capacity building")
+    const subjects = await Subject.find(filter)
       .populate("departmentId", "name code")
-      .sort({ dayOfWeek: 1, timeSlot: 1 });
+      .sort({ code: 1 });
 
-    return res.json({ assignments });
+    return res.json({ subjects });
   } catch (error) {
     return next(error);
   }
 }
 
-export async function createAssignment(req, res, next) {
+export async function createSubject(req, res, next) {
   try {
-    const { teacherId, sectionId, departmentId, subjectName, classroomId, dayOfWeek, timeSlot, slotType } = req.body;
-
-    if (!teacherId || !sectionId || !classroomId || !dayOfWeek || !timeSlot || !subjectName) {
-      return res.status(400).json({ message: "Teacher, Section, Classroom, Subject, Day, and Time Slot are required." });
+    const { name, code, departmentId, credits, type, semester } = req.body;
+    if (!name || !code || !departmentId) {
+      return res.status(400).json({ message: "Subject name, code, and department are required." });
     }
 
-    // 1. Conflict Check: Classroom double booking
-    const roomConflict = await TimetableAssignment.findOne({
-      classroomId,
-      dayOfWeek,
-      timeSlot
-    }).populate("teacherId", "name").populate("sectionId", "name");
-
-    if (roomConflict) {
-      return res.status(409).json({
-        message: `Classroom conflict: Room is already booked on ${dayOfWeek} at ${timeSlot} for ${roomConflict.sectionId?.name} by ${roomConflict.teacherId?.name}.`
-      });
+    const cleanCode = code.trim().toUpperCase();
+    const existing = await Subject.findOne({ code: cleanCode });
+    if (existing) {
+      return res.status(409).json({ message: `Subject code ${cleanCode} already exists.` });
     }
 
-    // 2. Conflict Check: Teacher double booking
-    const teacherConflict = await TimetableAssignment.findOne({
-      teacherId,
-      dayOfWeek,
-      timeSlot
-    }).populate("sectionId", "name").populate("classroomId", "roomNumber");
-
-    if (teacherConflict) {
-      return res.status(409).json({
-        message: `Teacher schedule conflict: Teacher is already taking class with ${teacherConflict.sectionId?.name} in room ${teacherConflict.classroomId?.roomNumber} at this time.`
-      });
-    }
-
-    const created = await TimetableAssignment.create({
-      teacherId,
-      sectionId,
-      departmentId: departmentId || (await Section.findById(sectionId))?.departmentId,
-      classroomId,
-      subjectName,
-      dayOfWeek,
-      timeSlot,
-      slotType: slotType || "Lecture"
+    const created = await Subject.create({
+      name: name.trim(),
+      code: cleanCode,
+      departmentId,
+      credits: credits ? Number(credits) : 4,
+      type: type || "Theory",
+      semester: semester ? Number(semester) : 5,
+      createdBy: req.user.id
     });
 
-    // Ensure teacher has section in assignedSections
-    await Admin.findByIdAndUpdate(teacherId, { $addToSet: { assignedSections: sectionId } });
-
-    await logAudit(
-      req.user,
-      "ALLOCATE_TIMETABLE",
-      "TimetableAssignment",
-      created._id,
-      `Allocated ${subjectName} to section in room ${classroomId} on ${dayOfWeek} (${timeSlot})`,
-      req
-    );
-
-    return res.status(201).json({ assignment: created, message: "Timetable slot allocated successfully." });
+    await logAudit(req.user, "CREATE_SUBJECT", "Subject", created._id, `Created subject ${created.name} (${cleanCode})`, req);
+    return res.status(201).json({ subject: created });
   } catch (error) {
     return next(error);
   }
 }
 
-export async function deleteAssignment(req, res, next) {
-  try {
-    const { id } = req.params;
-    const deleted = await TimetableAssignment.findByIdAndDelete(id);
-    if (!deleted) return res.status(404).json({ message: "Assignment not found." });
-
-    await logAudit(req.user, "DELETE_TIMETABLE", "TimetableAssignment", id, `De-allocated slot for ${deleted.subjectName}`, req);
-    return res.json({ message: "Timetable slot removed successfully." });
-  } catch (error) {
-    return next(error);
-  }
-}
-
-/**
- * 12. GET /api/hierarchy/audit-logs
- */
+// 11. Audit Logs
 export async function getAuditLogs(req, res, next) {
   try {
-    const { action, role, limit = 50 } = req.query;
+    const { action, role, search, limit = 100 } = req.query;
     const filter = {};
     if (action) filter.action = action;
     if (role) filter.role = role;
+    if (search) {
+      filter.$or = [
+        { userName: { $regex: search, $options: "i" } },
+        { userEmail: { $regex: search, $options: "i" } },
+        { details: { $regex: search, $options: "i" } },
+        { action: { $regex: search, $options: "i" } }
+      ];
+    }
 
     const logs = await AuditLog.find(filter)
       .sort({ createdAt: -1 })
@@ -1041,43 +1391,96 @@ export async function getAuditLogs(req, res, next) {
   }
 }
 
-/**
- * 13. GET /api/hierarchy/reports
- * Comprehensive department-wise breakdown & vacancy reports
- */
-export async function getReports(req, res, next) {
+// 12. Universal User Management Endpoints (for UserManagementTable)
+export async function getUsers(req, res, next) {
   try {
-    const [departments, sections, teachers, classrooms, assignments] = await Promise.all([
-      Department.find().populate("directorateId", "name code").populate("hodId", "name email"),
-      Section.find().populate("departmentId", "name code"),
-      Admin.find({ role: "teacher" }).populate("departmentId", "name code"),
-      Classroom.find().populate("departmentId", "name code"),
-      TimetableAssignment.find()
-    ]);
+    const users = await Admin.find()
+      .populate("directorateId", "name code")
+      .populate("departmentId", "name code")
+      .populate("assignedSections", "name year")
+      .select("-password")
+      .sort({ createdAt: -1 });
 
-    const departmentReports = departments.map((dept) => {
-      const deptSecs = sections.filter((s) => String(s.departmentId?._id) === String(dept._id));
-      const deptTchs = teachers.filter((t) => String(t.departmentId?._id) === String(dept._id));
-      const deptRooms = classrooms.filter((c) => String(c.departmentId?._id) === String(dept._id));
-      const totalStudents = deptSecs.reduce((sum, s) => sum + (s.totalStudents || 0), 0);
-      const studentTeacherRatio = deptTchs.length > 0 ? (totalStudents / deptTchs.length).toFixed(1) : "N/A";
-
-      return {
-        id: dept._id,
-        name: dept.name,
-        code: dept.code,
-        directorate: dept.directorateId?.name || "General",
-        hod: dept.hodId?.name || "Vacant",
-        totalSections: deptSecs.length,
-        totalTeachers: deptTchs.length,
-        totalClassrooms: deptRooms.length,
-        totalStudents,
-        studentTeacherRatio: `${studentTeacherRatio} : 1`
-      };
-    });
-
-    return res.json({ departmentReports });
+    return res.json({ users });
   } catch (error) {
     return next(error);
   }
 }
+
+export async function createUser(req, res, next) {
+  try {
+    const {
+      name,
+      email,
+      password,
+      role = "teacher",
+      employeeId,
+      phone,
+      designation,
+      qualification,
+      directorateId,
+      departmentId,
+      assignedSections
+    } = req.body;
+
+    if (!name || !email) {
+      return res.status(400).json({ message: "Name and email are required." });
+    }
+
+    const cleanEmail = email.trim().toLowerCase();
+    const existing = await Admin.findOne({ email: cleanEmail });
+    if (existing) {
+      return res.status(409).json({ message: `An account with email "${cleanEmail}" already exists.` });
+    }
+
+    const resolvedPass = (password || crypto.randomBytes(4).toString("hex") + "Rungta!1").trim();
+    const passwordHash = await bcrypt.hash(resolvedPass, 10);
+
+    const newUser = await Admin.create({
+      name: name.trim(),
+      email: cleanEmail,
+      password: passwordHash,
+      role,
+      employeeId: employeeId?.trim() || undefined,
+      phone: phone?.trim(),
+      designation: designation?.trim() || undefined,
+      qualification: qualification?.trim() || undefined,
+      directorateId: directorateId || undefined,
+      departmentId: departmentId || undefined,
+      assignedSections: assignedSections || [],
+      status: "active",
+      mustChangePassword: false,
+      createdBy: req.user.id,
+      tokenVersion: 0
+    });
+
+    await logAudit(
+      req.user,
+      "CREATE_USER",
+      "Admin",
+      newUser._id,
+      `Super Admin created ${role.toUpperCase()} account for ${name} (${cleanEmail})`,
+      req
+    );
+
+    return res.status(201).json({
+      message: `${role.toUpperCase()} user created successfully.`,
+      user: newUser,
+      credentials: {
+        email: cleanEmail,
+        password: resolvedPass
+      }
+    });
+  } catch (error) {
+    return next(error);
+  }
+}
+
+export async function updateUser(req, res, next) {
+  return updateAccount(req, res, next);
+}
+
+export async function deleteUser(req, res, next) {
+  return deleteAccount(req, res, next);
+}
+

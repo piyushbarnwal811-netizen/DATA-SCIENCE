@@ -14,8 +14,8 @@ import leaderboardRoutes from "./routes/leaderboardRoutes.js";
 import realtimeRoutes from "./routes/realtimeRoutes.js";
 import studentRoutes from "./routes/studentRoutes.js";
 import webhookRoutes from "./routes/webhookRoutes.js";
+import invitationRoutes from "./routes/invitationRoutes.js";
 import { startStatsScheduler } from "./utils/cronScheduler.js";
-import { seedHierarchy } from "./utils/hierarchySeeder.js";
 
 const app = express();
 const port = Number(process.env.PORT) || 5000;
@@ -49,6 +49,7 @@ app.use(morgan("dev"));
 
 app.use("/api/auth", rateLimit({ windowMs: 15 * 60 * 1000, limit: 60 }), authRoutes);
 app.use("/api/hierarchy", hierarchyRoutes);
+app.use("/api/invitations", invitationRoutes);
 app.use("/api/students", studentRoutes);
 app.use("/api/leaderboard", leaderboardRoutes);
 app.use("/api/admin", adminRoutes);
@@ -58,8 +59,17 @@ app.get("/api/health", (req, res) => res.json({ status: "ok" }));
 app.use(notFound);
 app.use(errorHandler);
 
+process.on("unhandledRejection", (reason) => {
+  console.error("[Server] Unhandled Rejection:", reason);
+});
+
+process.on("uncaughtException", (error) => {
+  console.error("[Server] Uncaught Exception:", error);
+});
+
 await connectDatabase();
 await seedAdmin();
-await seedHierarchy();
 startStatsScheduler();
-app.listen(port, () => console.log(`College CodeRank API listening on port ${port}.`));
+const server = app.listen(port, () => console.log(`College CodeRank API listening on port ${port}.`));
+
+export default server;

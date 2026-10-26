@@ -5,7 +5,6 @@ import { ArrowRight, ArrowUpRight, Award, Flame, Github, GraduationCap, Medal, S
 import Link from "next/link";
 import api, { errorMessage } from "../services/api.js";
 import { formatNumber, getInitials } from "../utils/helpers.js";
-import { SAMPLE_STUDENTS } from "../utils/dashboardData.js";
 import RankBadge from "../components/RankBadge.jsx";
 import StatCard from "../components/StatCard.jsx";
 import Loader from "../components/Loader.jsx";
@@ -21,13 +20,12 @@ export default function Home() {
         setError("");
       })
       .catch((requestError) => {
-        console.warn("Backend leaderboard API offline, using interactive campus dataset on Home:", requestError.message);
         setError(errorMessage(requestError));
       });
   }, []);
 
   if (!data && !error) return <Loader />;
-  const students = data?.students ?? (SAMPLE_STUDENTS || []);
+  const students = data?.students || [];
   const topStudents = students.slice(0, 5);
   const totalStudents = data?.summary?.totalStudents ?? students.length;
   const totalPoints = data?.summary?.totalPoints ?? students.reduce((sum, s) => sum + (s.score || 0), 0);

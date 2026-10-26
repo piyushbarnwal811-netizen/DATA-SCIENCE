@@ -1,11 +1,30 @@
 import axios from "axios";
 
-// Dynamically determine the backend root URL (Next.js, Vite, or CRA compatible) with localhost fallback
-const RAW_API_URL =
-  (typeof process !== "undefined" && process.env?.NEXT_PUBLIC_API_URL) ||
-  (typeof import.meta !== "undefined" && import.meta.env?.VITE_API_URL) ||
-  (typeof process !== "undefined" && process.env?.REACT_APP_API_URL) ||
-  "http://localhost:5000";
+// Dynamically determine the backend root URL (Next.js, Vite, or CRA compatible) with smart environment detection
+const getRawApiUrl = () => {
+  if (typeof window !== "undefined") {
+    const isLocalhost =
+      window.location.hostname === "localhost" ||
+      window.location.hostname === "127.0.0.1" ||
+      window.location.hostname === "::1";
+
+    if (isLocalhost) {
+      const explicitLocal =
+        (typeof process !== "undefined" && process.env?.NEXT_PUBLIC_LOCAL_API_URL) ||
+        "http://localhost:5000";
+      return explicitLocal;
+    }
+  }
+
+  return (
+    (typeof process !== "undefined" && process.env?.NEXT_PUBLIC_API_URL) ||
+    (typeof import.meta !== "undefined" && import.meta.env?.VITE_API_URL) ||
+    (typeof process !== "undefined" && process.env?.REACT_APP_API_URL) ||
+    "http://localhost:5000"
+  );
+};
+
+const RAW_API_URL = getRawApiUrl();
 
 // Base server origin without trailing slashes
 export const API_URL = RAW_API_URL.replace(/\/+$/, "");

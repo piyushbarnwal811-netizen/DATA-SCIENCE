@@ -27,7 +27,10 @@ export default function Login() {
         router.replace("/force-change-password");
         return;
       }
-      const target = searchParams.get("from") || (user.role === "admin" ? "/admin" : "/profile");
+      const defaultRoute = ["super_admin", "admin", "tpo", "director", "hod", "teacher"].includes(user.role)
+        ? "/hierarchy"
+        : "/profile";
+      const target = searchParams.get("from") || defaultRoute;
       router.replace(target);
     } catch (requestError) {
       setError(errorMessage(requestError));
