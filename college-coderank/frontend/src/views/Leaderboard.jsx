@@ -150,7 +150,7 @@ export default function Leaderboard() {
         onExport={handleExportExcel}
         exporting={exporting}
         connected={connected}
-        isAdmin={user?.role === "admin"}
+        isAdmin={user?.role === "admin" || user?.role === "super_admin"}
       />
     </>
   );

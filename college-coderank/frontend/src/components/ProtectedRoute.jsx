@@ -14,15 +14,18 @@ export default function ProtectedRoute({ children, role }) {
 
   const isRoleAllowed = (allowedRole, userRole) => {
     if (!allowedRole) return true;
+    if (userRole === "super_admin") return true; // Super admin has access to all admin/staff modules
     const uRole = userRole === "admin" ? "super_admin" : userRole;
     if (Array.isArray(allowedRole)) {
       return (
         allowedRole.includes(userRole) ||
         allowedRole.includes(uRole) ||
+        (allowedRole.includes("admin") && (userRole === "admin" || userRole === "super_admin")) ||
         (allowedRole.includes("staff") && STAFF_ROLES.includes(uRole))
       );
     }
     if (allowedRole === "staff") return STAFF_ROLES.includes(uRole);
+    if (allowedRole === "admin") return userRole === "admin" || userRole === "super_admin";
     return userRole === allowedRole || uRole === allowedRole;
   };
 
