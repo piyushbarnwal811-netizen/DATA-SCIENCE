@@ -8,7 +8,9 @@ const nextConfig = {
     const rawBackendUrl =
       process.env.NEXT_PUBLIC_API_URL ||
       process.env.VITE_API_URL ||
-      "http://localhost:5000";
+      (process.env.NODE_ENV === "production"
+        ? "https://data-science-px6q.onrender.com"
+        : "http://localhost:5000");
     const backendUrl = rawBackendUrl.replace(/\/+$/, "");
     return [
       {

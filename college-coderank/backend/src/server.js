@@ -36,6 +36,7 @@ if (!process.env.JWT_SECRET || process.env.JWT_SECRET.length < 32) {
 const allowedOrigins = [
   "http://localhost:3000",
   "http://localhost:5173",
+  "https://data-science-rho-ten.vercel.app",
   process.env.CLIENT_URL
 ].filter(Boolean);
 
@@ -44,7 +45,12 @@ app.use(
   cors({
     origin: (origin, callback) => {
       // Allow requests with no origin (like mobile apps, curl, or server-to-server)
-      if (!origin || allowedOrigins.includes(origin) || origin.startsWith("http://localhost:")) {
+      if (
+        !origin ||
+        allowedOrigins.includes(origin) ||
+        origin.startsWith("http://localhost:") ||
+        origin.endsWith(".vercel.app")
+      ) {
         return callback(null, true);
       }
       return callback(null, true); // Dev-friendly fallback

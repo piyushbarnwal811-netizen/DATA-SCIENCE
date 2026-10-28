@@ -1,7 +1,18 @@
 import axios from "axios";
 
-// Dynamically determine the backend root URL (Next.js, Vite, or CRA compatible) with smart environment detection
+// Dynamically determine backend root URL with production Render fallback
 const getRawApiUrl = () => {
+  // 1. Explicit environment variable takes precedence in any runtime (Next.js, Vite, CRA)
+  const envUrl =
+    (typeof process !== "undefined" && process.env?.NEXT_PUBLIC_API_URL) ||
+    (typeof import.meta !== "undefined" && import.meta.env?.VITE_API_URL) ||
+    (typeof process !== "undefined" && process.env?.REACT_APP_API_URL);
+
+  if (envUrl) {
+    return envUrl;
+  }
+
+  // 2. Local development detection (in browser)
   if (typeof window !== "undefined") {
     const isLocalhost =
       window.location.hostname === "localhost" ||
@@ -9,19 +20,15 @@ const getRawApiUrl = () => {
       window.location.hostname === "::1";
 
     if (isLocalhost) {
-      const explicitLocal =
+      return (
         (typeof process !== "undefined" && process.env?.NEXT_PUBLIC_LOCAL_API_URL) ||
-        "http://localhost:5000";
-      return explicitLocal;
+        "http://localhost:5000"
+      );
     }
   }
 
-  return (
-    (typeof process !== "undefined" && process.env?.NEXT_PUBLIC_API_URL) ||
-    (typeof import.meta !== "undefined" && import.meta.env?.VITE_API_URL) ||
-    (typeof process !== "undefined" && process.env?.REACT_APP_API_URL) ||
-    "http://localhost:5000"
-  );
+  // 3. Production Vercel / Cloud fallback to live Render backend
+  return "https://data-science-px6q.onrender.com";
 };
 
 const RAW_API_URL = getRawApiUrl();
@@ -83,10 +90,22 @@ api.interceptors.response.use(
 export const checkHealth = () => api.get("/health");
 
 export const errorMessage = (error, fallback = "Something went wrong. Please try again.") => {
-  if (error.response?.data?.message) return error.response.data.message;
-  if (!error.response || error.response.status >= 500) {
-    return "The API is unavailable. Please check the backend service and try again.";
+  // Extract custom backend message or detail
+  const backendMsg =
+    error.response?.data?.message ||
+    error.response?.data?.error ||
+    error.response?.data?.detail;
+
+  if (backendMsg) return backendMsg;
+
+  if (error.response?.status === 409) {
+    return "This invitation or record already exists. You can resend or revoke it from the list.";
   }
+
+  if (!error.response || error.response.status >= 500) {
+    return "The server is temporarily unavailable or taking time to wake up. Please retry in a few moments.";
+  }
+
   return error.message || fallback;
 };
 

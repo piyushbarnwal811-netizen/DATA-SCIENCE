@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import {
   GraduationCap,
   Users,
@@ -24,7 +24,8 @@ import {
   KeyRound,
   Eye,
   EyeOff,
-  Sparkles
+  Sparkles,
+  Loader2
 } from "lucide-react";
 import api, { errorMessage } from "../../services/api.js";
 
@@ -34,7 +35,9 @@ export default function HodDashboardView() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState("");
+  const [modalError, setModalError] = useState("");
   const [successMsg, setSuccessMsg] = useState("");
+  const lastSubmitRef = useRef(0);
 
   const [activeTab, setActiveTab] = useState("teachers"); // "teachers" | "sections" | "subjects"
   const [showTeacherModal, setShowTeacherModal] = useState(false);
@@ -103,7 +106,12 @@ export default function HodDashboardView() {
 
   const handleSendTeacherInvitation = async (e) => {
     e.preventDefault();
+    const now = Date.now();
+    if (submitting || now - lastSubmitRef.current < 2000) return;
+    lastSubmitRef.current = now;
+
     setSubmitting(true);
+    setModalError("");
     setError("");
     try {
       const { data: res } = await api.post("/invitations", {
@@ -111,6 +119,7 @@ export default function HodDashboardView() {
         email: teacherInviteForm.email,
         role: "teacher"
       });
+      setShowTeacherModal(false);
       setShowTeacherInviteModal(false);
       setTeacherInviteForm({ name: "", email: "" });
       setInviteSuccessModal({
@@ -122,13 +131,23 @@ export default function HodDashboardView() {
       showSuccess(`Official teacher setup invitation emailed to ${res.invitation.email}.`);
       refreshAll();
     } catch (err) {
-      setError(errorMessage(err));
+      const msg = err.response?.data?.message || err.response?.data?.error || errorMessage(err);
+      setModalError(msg);
+      setError(msg);
+      if (err.response?.status === 409) {
+        refreshAll();
+      }
     } finally {
       setSubmitting(false);
     }
   };
 
   const handleResendInvitation = async (invitation) => {
+    const now = Date.now();
+    if (submitting || now - lastSubmitRef.current < 2000) return;
+    lastSubmitRef.current = now;
+
+    setSubmitting(true);
     try {
       const { data: res } = await api.post(`/invitations/${invitation._id || invitation.id}/resend`);
       showSuccess(`Invitation email resent to ${invitation.email}.`);
@@ -142,7 +161,10 @@ export default function HodDashboardView() {
       }
       refreshAll();
     } catch (err) {
-      setError(errorMessage(err));
+      const msg = err.response?.data?.message || errorMessage(err);
+      setError(msg);
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -828,7 +850,7 @@ export default function HodDashboardView() {
       )}
 
       {/* Modal: Appoint / Onboard Teacher */}
-      {showTeacherModal && (
+      {(showTeacherModal || showTeacherInviteModal) && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-200 space-y-4">
             <div className="flex items-center justify-between pb-3 border-b border-slate-100">
@@ -838,15 +860,25 @@ export default function HodDashboardView() {
               </h3>
               <button
                 type="button"
+                disabled={submitting}
                 onClick={() => {
                   setShowTeacherModal(false);
                   setShowTeacherInviteModal(false);
+                  setModalError("");
                 }}
-                className="text-slate-400 hover:text-slate-600 cursor-pointer"
+                className="text-slate-400 hover:text-slate-600 cursor-pointer disabled:opacity-50"
               >
                 <X size={16} />
               </button>
             </div>
+
+            {/* Error Notification Inside Modal */}
+            {modalError && (
+              <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-xs font-semibold text-red-700 flex items-start gap-2">
+                <AlertCircle size={15} className="text-red-500 shrink-0 mt-0.5" />
+                <span>{modalError}</span>
+              </div>
+            )}
 
             {/* Mode Switcher Tabs */}
             <div className="flex bg-slate-100 p-1 rounded-xl">
@@ -920,11 +952,13 @@ export default function HodDashboardView() {
                 <div className="flex justify-end gap-2 pt-3 border-t border-slate-100">
                   <button
                     type="button"
+                    disabled={submitting}
                     onClick={() => {
                       setShowTeacherModal(false);
                       setShowTeacherInviteModal(false);
+                      setModalError("");
                     }}
-                    className="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-lg cursor-pointer"
+                    className="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-lg cursor-pointer disabled:opacity-50"
                   >
                     Cancel
                   </button>
@@ -933,8 +967,17 @@ export default function HodDashboardView() {
                     disabled={submitting}
                     className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg shadow-sm cursor-pointer disabled:opacity-50"
                   >
-                    <Send size={13} />
-                    {submitting ? "Sending..." : "Send Invitation Link"}
+                    {submitting ? (
+                      <>
+                        <Loader2 size={13} className="animate-spin" />
+                        <span>Sending Invitation...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Send size={13} />
+                        <span>Send Invitation Link</span>
+                      </>
+                    )}
                   </button>
                 </div>
               </form>

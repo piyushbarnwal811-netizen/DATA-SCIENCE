@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import {
   Building,
   GraduationCap,
@@ -23,7 +23,8 @@ import {
   KeyRound,
   Eye,
   EyeOff,
-  Sparkles
+  Sparkles,
+  Loader2
 } from "lucide-react";
 import api, { errorMessage } from "../../services/api.js";
 
@@ -33,7 +34,9 @@ export default function DirectorDashboardView() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState("");
+  const [modalError, setModalError] = useState("");
   const [successMsg, setSuccessMsg] = useState("");
+  const lastSubmitRef = useRef(0);
 
   const [activeTab, setActiveTab] = useState("hods"); // "hods" | "departments"
   const [showHodModal, setShowHodModal] = useState(false);
@@ -89,36 +92,52 @@ export default function DirectorDashboardView() {
   const handleSendHodInvitation = async (e) => {
     e.preventDefault();
     if (!hodInviteForm.departmentId) {
-      setError("Please select a department for the HOD.");
+      setModalError("Please select an academic department for the HOD.");
       return;
     }
+    const now = Date.now();
+    if (submitting || now - lastSubmitRef.current < 2000) return;
+    lastSubmitRef.current = now;
+
     setSubmitting(true);
+    setModalError("");
     setError("");
     try {
       const { data: res } = await api.post("/invitations", {
-        name: hodInviteForm.name,
-        email: hodInviteForm.email,
+        name: hodInviteForm.name?.trim(),
+        email: hodInviteForm.email?.trim().toLowerCase(),
         role: "hod",
         departmentId: hodInviteForm.departmentId
       });
       setShowHodInviteModal(false);
+      setShowHodModal(false);
       setHodInviteForm({ name: "", email: "", departmentId: "" });
       setInviteSuccessModal({
-        name: res.invitation.name,
-        email: res.invitation.email,
+        name: res.invitation?.name || hodInviteForm.name,
+        email: res.invitation?.email || hodInviteForm.email,
         role: "Head of Department (HOD)",
         setupLink: res.setupLink
       });
-      showSuccess(`Official HOD setup invitation emailed to ${res.invitation.email}.`);
+      showSuccess(`Official HOD setup invitation emailed to ${res.invitation?.email || hodInviteForm.email}.`);
       refreshAll();
     } catch (err) {
-      setError(errorMessage(err));
+      const msg = err.response?.data?.message || err.response?.data?.error || errorMessage(err);
+      setModalError(msg);
+      setError(msg);
+      if (err.response?.status === 409) {
+        refreshAll();
+      }
     } finally {
       setSubmitting(false);
     }
   };
 
   const handleResendInvitation = async (invitation) => {
+    const now = Date.now();
+    if (submitting || now - lastSubmitRef.current < 2000) return;
+    lastSubmitRef.current = now;
+
+    setSubmitting(true);
     try {
       const { data: res } = await api.post(`/invitations/${invitation._id || invitation.id}/resend`);
       showSuccess(`Invitation email resent to ${invitation.email}.`);
@@ -132,7 +151,10 @@ export default function DirectorDashboardView() {
       }
       refreshAll();
     } catch (err) {
-      setError(errorMessage(err));
+      const msg = err.response?.data?.message || errorMessage(err);
+      setError(msg);
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -747,15 +769,25 @@ export default function DirectorDashboardView() {
               </h3>
               <button
                 type="button"
+                disabled={submitting}
                 onClick={() => {
                   setShowHodModal(false);
                   setShowHodInviteModal(false);
+                  setModalError("");
                 }}
-                className="text-slate-400 hover:text-slate-600 cursor-pointer"
+                className="text-slate-400 hover:text-slate-600 cursor-pointer disabled:opacity-50"
               >
                 <X size={16} />
               </button>
             </div>
+
+            {/* Error Notification Inside Modal */}
+            {modalError && (
+              <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-xs font-semibold text-red-700 flex items-start gap-2">
+                <AlertCircle size={15} className="text-red-500 shrink-0 mt-0.5" />
+                <span>{modalError}</span>
+              </div>
+            )}
 
             {/* Mode Switcher Tabs */}
             <div className="flex bg-slate-100 p-1 rounded-xl gap-1">
@@ -846,11 +878,13 @@ export default function DirectorDashboardView() {
                 <div className="flex justify-end gap-2 pt-3 border-t border-slate-100">
                   <button
                     type="button"
+                    disabled={submitting}
                     onClick={() => {
                       setShowHodModal(false);
                       setShowHodInviteModal(false);
+                      setModalError("");
                     }}
-                    className="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-lg cursor-pointer"
+                    className="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-lg cursor-pointer disabled:opacity-50"
                   >
                     Cancel
                   </button>
@@ -859,8 +893,17 @@ export default function DirectorDashboardView() {
                     disabled={submitting}
                     className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold bg-amber-600 hover:bg-amber-700 text-white rounded-lg shadow-sm cursor-pointer disabled:opacity-50"
                   >
-                    <Send size={13} />
-                    {submitting ? "Sending..." : "Send Invitation Link"}
+                    {submitting ? (
+                      <>
+                        <Loader2 size={13} className="animate-spin" />
+                        <span>Sending Invitation...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Send size={13} />
+                        <span>Send Invitation Link</span>
+                      </>
+                    )}
                   </button>
                 </div>
               </form>

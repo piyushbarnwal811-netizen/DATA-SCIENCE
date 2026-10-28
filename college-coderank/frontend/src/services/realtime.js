@@ -10,6 +10,21 @@ const listeners = {
   "leaderboard:refresh": new Set()
 };
 
+function getRealtimeUrl() {
+  // If running on a public domain (like Vercel), never allow connecting to localhost loopback
+  if (typeof window !== "undefined") {
+    const isLocalhost =
+      window.location.hostname === "localhost" ||
+      window.location.hostname === "127.0.0.1" ||
+      window.location.hostname === "::1";
+
+    if (!isLocalhost && API_BASE_URL.includes("localhost")) {
+      return "https://data-science-px6q.onrender.com/api/realtime/events";
+    }
+  }
+  return `${API_BASE_URL}/realtime/events`;
+}
+
 function initEventSource() {
   if (typeof window === "undefined" || typeof EventSource === "undefined") {
     return;
@@ -20,7 +35,8 @@ function initEventSource() {
   }
 
   try {
-    eventSource = new EventSource(`${API_BASE_URL}/realtime/events`);
+    const sseUrl = getRealtimeUrl();
+    eventSource = new EventSource(sseUrl);
 
     eventSource.onopen = () => {
       window.dispatchEvent(new CustomEvent("ccr:realtime-connected"));

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import {
   ShieldCheck,
   Briefcase,
@@ -39,7 +39,9 @@ export default function SuperAdminDashboardView({ onInspectTree }) {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState("");
+  const [modalError, setModalError] = useState("");
   const [successMsg, setSuccessMsg] = useState("");
+  const lastSubmitRef = useRef(0);
 
   // Modals state
   const [showTpoModal, setShowTpoModal] = useState(false);
@@ -156,26 +158,36 @@ export default function SuperAdminDashboardView({ onInspectTree }) {
   // Invitation Action Handlers
   const handleSendTpoInvitation = async (e) => {
     e.preventDefault();
+    const now = Date.now();
+    if (submitting || now - lastSubmitRef.current < 2000) return;
+    lastSubmitRef.current = now;
+
     setSubmitting(true);
+    setModalError("");
     setError("");
     try {
       const { data } = await api.post("/invitations", {
-        name: tpoInviteForm.name,
-        email: tpoInviteForm.email,
+        name: tpoInviteForm.name?.trim(),
+        email: tpoInviteForm.email?.trim().toLowerCase(),
         role: "tpo"
       });
       setShowTpoInviteModal(false);
       setTpoInviteForm({ name: "", email: "" });
       setInviteSuccessModal({
-        name: data.invitation.name,
-        email: data.invitation.email,
+        name: data.invitation?.name || tpoInviteForm.name,
+        email: data.invitation?.email || tpoInviteForm.email,
         role: "Training & Placement Officer (TPO)",
         setupLink: data.setupLink
       });
-      showSuccess(`Official invitation emailed to ${data.invitation.email}.`);
+      showSuccess(`Official invitation emailed to ${data.invitation?.email || tpoInviteForm.email}.`);
       refreshAll();
     } catch (err) {
-      setError(errorMessage(err));
+      const msg = err.response?.data?.message || err.response?.data?.error || errorMessage(err);
+      setModalError(msg);
+      setError(msg);
+      if (err.response?.status === 409) {
+        refreshAll();
+      }
     } finally {
       setSubmitting(false);
     }
@@ -183,33 +195,48 @@ export default function SuperAdminDashboardView({ onInspectTree }) {
 
   const handleSendDirectorInvitation = async (e) => {
     e.preventDefault();
+    const now = Date.now();
+    if (submitting || now - lastSubmitRef.current < 2000) return;
+    lastSubmitRef.current = now;
+
     setSubmitting(true);
+    setModalError("");
     setError("");
     try {
       const { data } = await api.post("/invitations", {
-        name: dirInviteForm.name,
-        email: dirInviteForm.email,
+        name: dirInviteForm.name?.trim(),
+        email: dirInviteForm.email?.trim().toLowerCase(),
         role: "director",
         directorateId: dirInviteForm.directorateId || undefined
       });
       setShowDirInviteModal(false);
       setDirInviteForm({ name: "", email: "", directorateId: "" });
       setInviteSuccessModal({
-        name: data.invitation.name,
-        email: data.invitation.email,
+        name: data.invitation?.name || dirInviteForm.name,
+        email: data.invitation?.email || dirInviteForm.email,
         role: "Director of Institute / Faculty",
         setupLink: data.setupLink
       });
-      showSuccess(`Official invitation emailed to ${data.invitation.email}.`);
+      showSuccess(`Official invitation emailed to ${data.invitation?.email || dirInviteForm.email}.`);
       refreshAll();
     } catch (err) {
-      setError(errorMessage(err));
+      const msg = err.response?.data?.message || err.response?.data?.error || errorMessage(err);
+      setModalError(msg);
+      setError(msg);
+      if (err.response?.status === 409) {
+        refreshAll();
+      }
     } finally {
       setSubmitting(false);
     }
   };
 
   const handleResendInvitation = async (invitation) => {
+    const now = Date.now();
+    if (submitting || now - lastSubmitRef.current < 2000) return;
+    lastSubmitRef.current = now;
+
+    setSubmitting(true);
     try {
       const { data } = await api.post(`/invitations/${invitation._id || invitation.id}/resend`);
       showSuccess(`Invitation email resent to ${invitation.email}.`);
@@ -223,7 +250,10 @@ export default function SuperAdminDashboardView({ onInspectTree }) {
       }
       refreshAll();
     } catch (err) {
-      setError(errorMessage(err));
+      const msg = err.response?.data?.message || errorMessage(err);
+      setError(msg);
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -1846,6 +1876,13 @@ export default function SuperAdminDashboardView({ onInspectTree }) {
                 />
               </div>
 
+              {modalError && (
+                <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-xs font-semibold text-red-700 flex items-start gap-2">
+                  <AlertCircle size={15} className="text-red-500 shrink-0 mt-0.5" />
+                  <span>{modalError}</span>
+                </div>
+              )}
+
               <div className="p-3 bg-amber-50/80 border border-amber-200/80 rounded-lg text-[11px] text-amber-900 leading-relaxed">
                 ⏳ <strong>Secure Single-Use Link:</strong> A cryptographic invitation token valid for 24 hours will be emailed. The officer will set and verify their own secure password upon activation.
               </div>
@@ -1853,18 +1890,31 @@ export default function SuperAdminDashboardView({ onInspectTree }) {
               <div className="flex justify-end gap-2 pt-3 border-t border-slate-100">
                 <button
                   type="button"
-                  onClick={() => setShowTpoInviteModal(false)}
-                  className="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-lg cursor-pointer"
+                  disabled={submitting}
+                  onClick={() => {
+                    setShowTpoInviteModal(false);
+                    setModalError("");
+                  }}
+                  className="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-lg cursor-pointer disabled:opacity-50"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold bg-red-600 hover:bg-red-700 text-white rounded-lg shadow-sm cursor-pointer disabled:opacity-50"
+                  className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold bg-red-600 hover:bg-red-700 text-white rounded-lg shadow-sm cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  <Send size={13} />
-                  {submitting ? "Sending..." : "Send Invitation Link"}
+                  {submitting ? (
+                    <>
+                      <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                      <span>Sending...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Send size={13} />
+                      <span>Send Invitation Link</span>
+                    </>
+                  )}
                 </button>
               </div>
             </form>
@@ -1941,6 +1991,13 @@ export default function SuperAdminDashboardView({ onInspectTree }) {
                 </select>
               </div>
 
+              {modalError && (
+                <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-xs font-semibold text-red-700 flex items-start gap-2">
+                  <AlertCircle size={15} className="text-red-500 shrink-0 mt-0.5" />
+                  <span>{modalError}</span>
+                </div>
+              )}
+
               <div className="p-3 bg-amber-50/80 border border-amber-200/80 rounded-lg text-[11px] text-amber-900 leading-relaxed">
                 ⏳ <strong>Secure Single-Use Link:</strong> A cryptographic invitation token valid for 24 hours will be delivered. The Director will choose and confirm their password upon opening the setup link.
               </div>
@@ -1948,18 +2005,31 @@ export default function SuperAdminDashboardView({ onInspectTree }) {
               <div className="flex justify-end gap-2 pt-3 border-t border-slate-100">
                 <button
                   type="button"
-                  onClick={() => setShowDirInviteModal(false)}
-                  className="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-lg cursor-pointer"
+                  disabled={submitting}
+                  onClick={() => {
+                    setShowDirInviteModal(false);
+                    setModalError("");
+                  }}
+                  className="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-lg cursor-pointer disabled:opacity-50"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold bg-red-600 hover:bg-red-700 text-white rounded-lg shadow-sm cursor-pointer disabled:opacity-50"
+                  className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold bg-red-600 hover:bg-red-700 text-white rounded-lg shadow-sm cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  <Send size={13} />
-                  {submitting ? "Sending..." : "Send Invitation Link"}
+                  {submitting ? (
+                    <>
+                      <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                      <span>Sending...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Send size={13} />
+                      <span>Send Invitation Link</span>
+                    </>
+                  )}
                 </button>
               </div>
             </form>
