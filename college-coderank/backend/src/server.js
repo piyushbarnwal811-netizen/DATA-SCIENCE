@@ -32,6 +32,7 @@ import studentRoutes from "./routes/studentRoutes.js";
 import webhookRoutes from "./routes/webhookRoutes.js";
 import invitationRoutes from "./routes/invitationRoutes.js";
 import { startStatsScheduler } from "./utils/cronScheduler.js";
+import { getEmailProviderInfo } from "./services/emailService.js";
 
 const app = express();
 const port = Number(process.env.PORT) || 5000;
@@ -93,8 +94,11 @@ app.get("/", (req, res) => {
   });
 });
 app.get("/api/health", (req, res) => {
+  const providerInfo = getEmailProviderInfo();
   res.json({
     status: "ok",
+    emailConfigured: providerInfo.configured,
+    emailProvider: providerInfo.provider,
     smtpConfigured: Boolean(process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS),
     smtpUser: process.env.SMTP_USER || null,
     clientUrl: process.env.CLIENT_URL || null

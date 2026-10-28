@@ -8,9 +8,57 @@ dotenv.config({ path: path.resolve(__dirname, "../../.env") });
 dotenv.config();
 
 /**
+ * Detects the active email delivery mechanism:
+ * 1. "brevo": Brevo HTTP API (Port 443 - works on Render Free Tier!)
+ * 2. "resend": Resend HTTP API (Port 443 - works on Render Free Tier!)
+ * 3. "smtp": Direct SMTP (e.g. Gmail - works locally or on paid cloud hosting)
+ * 4. "none": Unconfigured
+ */
+export function getEmailProviderInfo() {
+  const brevoKey = process.env.BREVO_API_KEY || process.env.SENDINBLUE_API_KEY;
+  if (brevoKey) {
+    return {
+      provider: "brevo",
+      configured: true,
+      protocol: "https",
+      sender: getFromAddress()
+    };
+  }
+
+  const resendKey = process.env.RESEND_API_KEY;
+  if (resendKey) {
+    return {
+      provider: "resend",
+      configured: true,
+      protocol: "https",
+      sender: process.env.EMAIL_FROM || "onboarding@resend.dev"
+    };
+  }
+
+  const { SMTP_HOST, SMTP_USER, SMTP_PASS } = process.env;
+  if (SMTP_HOST && SMTP_USER && SMTP_PASS) {
+    return {
+      provider: "smtp",
+      configured: true,
+      protocol: "smtp",
+      host: SMTP_HOST,
+      sender: getFromAddress()
+    };
+  }
+
+  return {
+    provider: "none",
+    configured: false
+  };
+}
+
+export function isEmailConfigured() {
+  return getEmailProviderInfo().configured;
+}
+
+/**
  * Creates and configures the email transporter based on environment variables.
- * Requires a configured SMTP provider so successful responses always mean mail
- * was handed to a real email transport.
+ * Used when direct SMTP is selected.
  */
 let cachedTransporter = null;
 
@@ -33,13 +81,16 @@ function getTransporter() {
       auth: {
         user: SMTP_USER,
         pass: SMTP_PASS
-      }
+      },
+      connectionTimeout: 8000,
+      greetingTimeout: 8000,
+      socketTimeout: 10000
     });
     return cachedTransporter;
   }
 
   const error = new Error(
-    "Email delivery is not configured. Set SMTP_HOST, SMTP_USER, and SMTP_PASS in the backend environment."
+    "Email delivery is not configured. For free cloud hosting (like Render Free Tier), configure BREVO_API_KEY (from brevo.com) or RESEND_API_KEY (from resend.com). For local development, set SMTP_HOST, SMTP_USER, and SMTP_PASS."
   );
   error.statusCode = 503;
   error.expose = true;
@@ -51,6 +102,167 @@ function getFromAddress() {
     (process.env.SMTP_USER
       ? `College CodeRank <${process.env.SMTP_USER}>`
       : "College CodeRank");
+}
+
+/**
+ * Unified transactional email dispatcher.
+ * Automatically routes through:
+ * 1. Brevo HTTP REST API (port 443 HTTPS - works on Render Free Tier)
+ * 2. Resend HTTP REST API (port 443 HTTPS - works on Render Free Tier)
+ * 3. Direct SMTP via Nodemailer with fail-fast timeouts
+ */
+export async function dispatchEmail({ to, subject, html, text, replyTo, headers = {} }) {
+  const providerInfo = getEmailProviderInfo();
+
+  if (!providerInfo.configured) {
+    const error = new Error(
+      "Email delivery is not configured. On Render Free Tier, please configure BREVO_API_KEY (from brevo.com) or RESEND_API_KEY (from resend.com). For local development, configure SMTP_HOST, SMTP_USER, and SMTP_PASS."
+    );
+    error.statusCode = 503;
+    error.expose = true;
+    throw error;
+  }
+
+  // 1. Brevo HTTP REST API (Port 443 HTTPS - Works reliably on Render Free Tier)
+  if (providerInfo.provider === "brevo") {
+    const apiKey = process.env.BREVO_API_KEY || process.env.SENDINBLUE_API_KEY;
+    const fromAddress = getFromAddress();
+
+    let senderName = "College CodeRank";
+    let senderEmail = process.env.SMTP_USER || "noreply@rungta.org";
+
+    const match = fromAddress.match(/^(?:(.*?)<)?([^<>]+)>?$/);
+    if (match) {
+      if (match[1]?.trim()) senderName = match[1].trim();
+      if (match[2]?.trim()) senderEmail = match[2].trim();
+    }
+
+    const payload = {
+      sender: { name: senderName, email: senderEmail },
+      to: [{ email: to }],
+      subject,
+      htmlContent: html,
+      textContent: text
+    };
+    if (replyTo) {
+      payload.replyTo = { email: replyTo.replace(/.*<([^>]+)>.*/, "$1").trim() };
+    }
+
+    try {
+      const response = await fetch("https://api.brevo.com/v3/smtp/email", {
+        method: "POST",
+        headers: {
+          "accept": "application/json",
+          "api-key": apiKey,
+          "content-type": "application/json"
+        },
+        body: JSON.stringify(payload)
+      });
+
+      const body = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        console.error("[EmailService/Brevo] API Error:", body);
+        const err = new Error(body.message || `Brevo API returned status ${response.status}`);
+        err.statusCode = 502;
+        throw err;
+      }
+
+      console.log(`[EmailService/Brevo] Dispatched email to ${to} (Message ID: ${body.messageId || "ok"})`);
+      return { messageId: body.messageId || "ok", provider: "brevo" };
+    } catch (err) {
+      console.error("[EmailService/Brevo] Request failed:", err.message);
+      const deliveryErr = new Error(`Brevo HTTP delivery failed: ${err.message}`);
+      deliveryErr.statusCode = 502;
+      deliveryErr.expose = true;
+      throw deliveryErr;
+    }
+  }
+
+  // 2. Resend HTTP REST API (Port 443 HTTPS - Works reliably on Render Free Tier)
+  if (providerInfo.provider === "resend") {
+    const apiKey = process.env.RESEND_API_KEY;
+    const from = process.env.EMAIL_FROM || "College CodeRank <onboarding@resend.dev>";
+
+    try {
+      const response = await fetch("https://api.resend.com/emails", {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${apiKey}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          from,
+          to: [to],
+          subject,
+          html,
+          text,
+          reply_to: replyTo
+        })
+      });
+
+      const body = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        console.error("[EmailService/Resend] API Error:", body);
+        const err = new Error(body.message || `Resend API returned status ${response.status}`);
+        err.statusCode = 502;
+        throw err;
+      }
+
+      console.log(`[EmailService/Resend] Dispatched email to ${to} (ID: ${body.id || "ok"})`);
+      return { messageId: body.id || "ok", provider: "resend" };
+    } catch (err) {
+      console.error("[EmailService/Resend] Request failed:", err.message);
+      const deliveryErr = new Error(`Resend HTTP delivery failed: ${err.message}`);
+      deliveryErr.statusCode = 502;
+      deliveryErr.expose = true;
+      throw deliveryErr;
+    }
+  }
+
+  // 3. Direct SMTP via Nodemailer (Port 587 / 465)
+  const transporter = getTransporter();
+  const from = getFromAddress();
+
+  const mailOptions = {
+    from,
+    to,
+    replyTo: replyTo || process.env.SMTP_USER || from,
+    subject,
+    text,
+    html,
+    headers: {
+      "X-Mailer": "College CodeRank Notification System",
+      "X-Priority": "1 (Highest)",
+      "Importance": "High",
+      ...headers
+    }
+  };
+
+  try {
+    const info = await transporter.sendMail(mailOptions);
+    console.log(`[EmailService/SMTP] Email successfully dispatched to ${to} (Message ID: ${info.messageId || "ok"})`);
+    return info;
+  } catch (err) {
+    console.error(`[EmailService/SMTP] Delivery failed to ${to}:`, err.message);
+
+    const isTimeoutOrRefused =
+      err.code === "ETIMEDOUT" ||
+      err.code === "ECONNREFUSED" ||
+      err.code === "EHOSTUNREACH" ||
+      err.code === "ESOCKETTIMEDOUT" ||
+      err.message?.includes("timeout");
+
+    let message = `SMTP delivery failed: ${err.message}`;
+    if (isTimeoutOrRefused) {
+      message =
+        "SMTP connection timed out. Free cloud hosting (such as Render Free Tier) blocks outbound SMTP ports (25, 465, 587) to prevent spam. To send emails from Render Free Tier, please add a free BREVO_API_KEY (from brevo.com) or RESEND_API_KEY (from resend.com) to your Render Dashboard Environment Variables.";
+    }
+
+    const deliveryError = new Error(message);
+    deliveryError.statusCode = 502;
+    deliveryError.expose = true;
+    throw deliveryError;
+  }
 }
 
 /**
@@ -244,48 +456,24 @@ export function buildPasswordChangedConfirmationEmailHtml({ studentName, timesta
  * Sends the Password Reset Link email.
  */
 export async function sendPasswordResetEmail({ to, studentName, resetLink, expiresInMinutes = 15, clientIp }) {
-  const transporter = getTransporter();
-  const from = getFromAddress();
-
-  const mailOptions = {
-    from,
+  return dispatchEmail({
     to,
-    replyTo: process.env.SMTP_USER || from,
     subject: "Reset Your College CodeRank Password",
     text: `Hello ${studentName},\n\nYou requested to reset your College CodeRank password. Click the link below to set a new password:\n\n${resetLink}\n\nThis link is valid for ${expiresInMinutes} minutes.\nIf you did not request this, please ignore this email.\n`,
-    html: buildPasswordResetEmailHtml({ studentName, resetLink, expiresInMinutes, clientIp }),
-    headers: {
-      "X-Mailer": "College CodeRank Notification System",
-      "X-Priority": "1 (Highest)",
-      "Importance": "High"
-    }
-  };
-
-  return transporter.sendMail(mailOptions);
+    html: buildPasswordResetEmailHtml({ studentName, resetLink, expiresInMinutes, clientIp })
+  });
 }
 
 /**
  * Sends the Password Changed Confirmation alert email.
  */
 export async function sendPasswordChangedConfirmationEmail({ to, studentName, timestamp, clientIp }) {
-  const transporter = getTransporter();
-  const from = getFromAddress();
-
-  const mailOptions = {
-    from,
+  return dispatchEmail({
     to,
-    replyTo: process.env.SMTP_USER || from,
     subject: "Security Alert: Your College CodeRank Password Was Changed",
     text: `Hello ${studentName},\n\nYour College CodeRank student portal password was successfully updated on ${timestamp}.\nAll other active sessions have been invalidated.\n\nIf you did not make this change, please contact campus IT immediately.\n`,
-    html: buildPasswordChangedConfirmationEmailHtml({ studentName, timestamp, clientIp }),
-    headers: {
-      "X-Mailer": "College CodeRank Notification System",
-      "X-Priority": "1 (Highest)",
-      "Importance": "High"
-    }
-  };
-
-  return transporter.sendMail(mailOptions);
+    html: buildPasswordChangedConfirmationEmailHtml({ studentName, timestamp, clientIp })
+  });
 }
 
 /**
@@ -471,14 +659,10 @@ export async function sendInvitationEmail({
   departmentName,
   directorateName
 }) {
-  const transporter = getTransporter();
-  const from = getFromAddress();
   const roleLabel = getRoleLabel(role);
 
-  const mailOptions = {
-    from,
+  return dispatchEmail({
     to,
-    replyTo: process.env.SMTP_USER || from,
     subject: `Official Invitation: Set Up Your ${roleLabel} Account`,
     text: `Hello ${recipientName},\n\nYou have been invited to join the College CodeRank system as ${roleLabel}.\n\nClick the link below to set up your account and choose your password:\n${setupLink}\n\nThis single-use link is valid for ${expiresInHours} hours.\n\nIf you did not expect this invitation, please contact your campus administrator.\n`,
     html: buildInvitationEmailHtml({
@@ -490,25 +674,6 @@ export async function sendInvitationEmail({
       invitedByName,
       departmentName,
       directorateName
-    }),
-    headers: {
-      "X-Mailer": "College CodeRank Notification System",
-      "X-Priority": "1 (Highest)",
-      "Importance": "High"
-    }
-  };
-
-  try {
-    const info = await transporter.sendMail(mailOptions);
-    console.log(`[EmailService] Invitation email successfully dispatched to ${to} (Message ID: ${info.messageId || "ok"})`);
-    return info;
-  } catch (error) {
-    console.error(`[EmailService] Failed to send invitation email to ${to}:`, error.message);
-    const deliveryError = new Error(
-      "The invitation email could not be delivered. Check SMTP credentials and try again."
-    );
-    deliveryError.statusCode = 502;
-    deliveryError.expose = true;
-    throw deliveryError;
-  }
+    })
+  });
 }
