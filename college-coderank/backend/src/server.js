@@ -92,7 +92,14 @@ app.get("/", (req, res) => {
     }
   });
 });
-app.get("/api/health", (req, res) => res.json({ status: "ok" }));
+app.get("/api/health", (req, res) => {
+  res.json({
+    status: "ok",
+    smtpConfigured: Boolean(process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS),
+    smtpUser: process.env.SMTP_USER || null,
+    clientUrl: process.env.CLIENT_URL || null
+  });
+});
 app.use(notFound);
 app.use(errorHandler);
 

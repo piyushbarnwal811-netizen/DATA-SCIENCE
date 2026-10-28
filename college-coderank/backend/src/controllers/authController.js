@@ -451,6 +451,9 @@ export async function forgotPassword(req, res, next) {
       });
     } catch (emailErr) {
       console.error(`[ForgotPassword] Failed to send email to ${account.email}:`, emailErr.message);
+      return res.status(502).json({
+        message: `Email delivery failed on the server: ${emailErr.message}. Ensure SMTP credentials (SMTP_HOST, SMTP_USER, SMTP_PASS) are configured on your hosting provider (Render dashboard).`
+      });
     }
 
     return res.status(200).json(genericResponse);
