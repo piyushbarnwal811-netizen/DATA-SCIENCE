@@ -64,6 +64,21 @@ app.use("/api/leaderboard", leaderboardRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/realtime", realtimeRoutes);
 app.use("/api/webhooks", webhookRoutes);
+app.get("/", (req, res) => {
+  res.json({
+    name: "College CodeRank API",
+    status: "online",
+    message: "Server is running properly",
+    endpoints: {
+      health: "/api/health",
+      auth: "/api/auth",
+      invitations: "/api/invitations",
+      students: "/api/students",
+      leaderboard: "/api/leaderboard",
+      hierarchy: "/api/hierarchy"
+    }
+  });
+});
 app.get("/api/health", (req, res) => res.json({ status: "ok" }));
 app.use(notFound);
 app.use(errorHandler);
