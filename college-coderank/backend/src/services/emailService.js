@@ -15,7 +15,8 @@ dotenv.config();
  * 4. "none": Unconfigured
  */
 export function getEmailProviderInfo() {
-  const brevoKey = process.env.BREVO_API_KEY || process.env.SENDINBLUE_API_KEY;
+  const rawBrevoKey = process.env.BREVO_API_KEY || process.env.SENDINBLUE_API_KEY || "";
+  const brevoKey = rawBrevoKey.trim().replace(/^['"]|['"]$/g, "").trim();
   if (brevoKey) {
     return {
       provider: "brevo",
@@ -25,7 +26,8 @@ export function getEmailProviderInfo() {
     };
   }
 
-  const resendKey = process.env.RESEND_API_KEY;
+  const rawResendKey = process.env.RESEND_API_KEY || "";
+  const resendKey = rawResendKey.trim().replace(/^['"]|['"]$/g, "").trim();
   if (resendKey) {
     return {
       provider: "resend",
@@ -125,16 +127,17 @@ export async function dispatchEmail({ to, subject, html, text, replyTo, headers 
 
   // 1. Brevo HTTP REST API (Port 443 HTTPS - Works reliably on Render Free Tier)
   if (providerInfo.provider === "brevo") {
-    const apiKey = process.env.BREVO_API_KEY || process.env.SENDINBLUE_API_KEY;
+    const rawBrevoKey = process.env.BREVO_API_KEY || process.env.SENDINBLUE_API_KEY || "";
+    const apiKey = rawBrevoKey.trim().replace(/^['"]|['"]$/g, "").trim();
     const fromAddress = getFromAddress();
 
     let senderName = "College CodeRank";
-    let senderEmail = process.env.SMTP_USER || "noreply@rungta.org";
+    let senderEmail = process.env.BREVO_SENDER_EMAIL || process.env.SMTP_USER || "noreply@rungta.org";
 
     const match = fromAddress.match(/^(?:(.*?)<)?([^<>]+)>?$/);
     if (match) {
       if (match[1]?.trim()) senderName = match[1].trim();
-      if (match[2]?.trim()) senderEmail = match[2].trim();
+      if (!process.env.BREVO_SENDER_EMAIL && match[2]?.trim()) senderEmail = match[2].trim();
     }
 
     const payload = {
@@ -162,7 +165,16 @@ export async function dispatchEmail({ to, subject, html, text, replyTo, headers 
       const body = await response.json().catch(() => ({}));
       if (!response.ok) {
         console.error("[EmailService/Brevo] API Error:", body);
-        const err = new Error(body.message || `Brevo API returned status ${response.status}`);
+
+        let errorMsg = body.message || `Brevo API returned status ${response.status}`;
+        if (errorMsg.toLowerCase().includes("key not found") || response.status === 401) {
+          errorMsg =
+            "Brevo returned 'Key not found' (401 Unauthorized). Please check your Brevo account: under 'SMTP & API', click on the 'API Keys' tab (DO NOT copy from the SMTP tab). Click 'Generate a new API key' (starts with 'xkeysib-') and paste it into Render Dashboard Environment Variables as BREVO_API_KEY without quotes or extra spaces.";
+        } else if (errorMsg.toLowerCase().includes("sender") || errorMsg.toLowerCase().includes("unauthorized")) {
+          errorMsg = `${errorMsg}. In Brevo, the sender email (${senderEmail}) must be a verified sender. Add BREVO_SENDER_EMAIL in Render with your Brevo login email or verify it in Brevo -> Senders & IP -> Senders.`;
+        }
+
+        const err = new Error(errorMsg);
         err.statusCode = 502;
         throw err;
       }
@@ -180,7 +192,8 @@ export async function dispatchEmail({ to, subject, html, text, replyTo, headers 
 
   // 2. Resend HTTP REST API (Port 443 HTTPS - Works reliably on Render Free Tier)
   if (providerInfo.provider === "resend") {
-    const apiKey = process.env.RESEND_API_KEY;
+    const rawResendKey = process.env.RESEND_API_KEY || "";
+    const apiKey = rawResendKey.trim().replace(/^['"]|['"]$/g, "").trim();
     const from = process.env.EMAIL_FROM || "College CodeRank <onboarding@resend.dev>";
 
     try {
