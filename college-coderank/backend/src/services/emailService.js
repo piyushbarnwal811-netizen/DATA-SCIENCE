@@ -497,7 +497,7 @@ function getRoleLabel(role) {
     case "tpo":
       return "Training & Placement Officer (TPO)";
     case "director":
-      return "Director of Faculty / Institute";
+      return "Director of School / Faculty";
     case "hod":
       return "Head of Department (HOD)";
     case "teacher":
@@ -583,7 +583,7 @@ export function buildInvitationEmailHtml({
                       </tr>
                       ${directorateName ? `
                       <tr>
-                        <td style="font-size: 13px; color: #64748b; font-weight: 500;">Directorate:</td>
+                        <td style="font-size: 13px; color: #64748b; font-weight: 500;">School / Faculty:</td>
                         <td style="font-size: 13px; color: #1e293b; font-weight: 600;">${directorateName}</td>
                       </tr>` : ""}
                       ${departmentName ? `

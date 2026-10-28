@@ -1546,16 +1546,19 @@ export default function SuperAdminDashboardView({ onInspectTree }) {
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">Assign Directorate</label>
+                <label className="block text-xs font-bold text-slate-700 mb-1">
+                  Assign School / Directorate (e.g. SOCSE, SOIT) <span className="text-red-500">*</span>
+                </label>
                 <select
+                  required
                   value={dirForm.directorateId}
                   onChange={(e) => setDirForm({ ...dirForm, directorateId: e.target.value })}
                   className="w-full text-xs px-3 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-1 focus:ring-red-500"
                 >
-                  <option value="">-- Assign Later --</option>
+                  <option value="">-- Choose School (e.g. SOCSE, SOIT) --</option>
                   {directorates.map((d) => (
                     <option key={d._id} value={d._id}>
-                      {d.name} ({d.code})
+                      {d.code} · {d.name} {d.directorId ? `(Current Director: ${d.directorId.name})` : "(Vacant)"}
                     </option>
                   ))}
                 </select>
@@ -1976,16 +1979,19 @@ export default function SuperAdminDashboardView({ onInspectTree }) {
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">Assign Directorate (Optional)</label>
+                <label className="block text-xs font-bold text-slate-700 mb-1">
+                  Assign School / Directorate (e.g. SOCSE, SOIT) <span className="text-red-500">*</span>
+                </label>
                 <select
+                  required
                   value={dirInviteForm.directorateId}
                   onChange={(e) => setDirInviteForm({ ...dirInviteForm, directorateId: e.target.value })}
                   className="w-full text-xs px-3 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-1 focus:ring-red-500"
                 >
-                  <option value="">-- Assign Later --</option>
+                  <option value="">-- Choose School (e.g. SOCSE, SOIT) --</option>
                   {directorates.map((d) => (
                     <option key={d._id} value={d._id}>
-                      {d.name} ({d.code})
+                      {d.code} · {d.name} {d.directorId ? `(Current Director: ${d.directorId.name})` : "(Vacant)"}
                     </option>
                   ))}
                 </select>

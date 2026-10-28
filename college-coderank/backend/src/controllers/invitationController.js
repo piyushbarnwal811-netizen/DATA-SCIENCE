@@ -83,14 +83,38 @@ export async function createInvitation(req, res, next) {
       targetRole = role;
 
       if (targetRole === "director") {
-        if (directorateId) {
-          directorateObj = await Directorate.findById(directorateId);
-          if (!directorateObj) {
-            return res.status(404).json({ message: "Selected Directorate does not exist." });
-          }
-          targetDirectorateId = directorateObj._id;
+        if (!directorateId) {
+          return res.status(400).json({
+            message: "School / Directorate selection is required. Please specify which School (e.g. SOCSE, SOIT) this Director will lead."
+          });
         }
+        directorateObj = await Directorate.findById(directorateId);
+        if (!directorateObj) {
+          return res.status(404).json({ message: "Selected School / Directorate does not exist." });
+        }
+        targetDirectorateId = directorateObj._id;
       }
+    } else if (creatorRole === "tpo") {
+      // TPO is senior to Directors and reports directly to Super Admin
+      // TPO can invite Director accounts for university Schools / Directorates (e.g. SOCSE, SOIT)
+      if (role && role !== "director") {
+        return res.status(403).json({
+          message: "TPO can invite Director accounts for university Schools / Directorates (e.g. SOCSE, SOIT)."
+        });
+      }
+      targetRole = "director";
+
+      if (!directorateId) {
+        return res.status(400).json({
+          message: "School / Directorate selection is required. Please specify which School (e.g. SOCSE, SOIT) this Director is being appointed to."
+        });
+      }
+
+      directorateObj = await Directorate.findById(directorateId);
+      if (!directorateObj) {
+        return res.status(404).json({ message: "Selected School / Directorate does not exist." });
+      }
+      targetDirectorateId = directorateObj._id;
     } else if (creatorRole === "director") {
       if (role && role !== "hod") {
         return res.status(403).json({
@@ -256,6 +280,9 @@ export async function getInvitations(req, res, next) {
       if (req.query.role) {
         query.role = req.query.role;
       }
+    } else if (creatorRole === "tpo") {
+      // TPO manages Director invitations college-wide
+      query = { role: "director" };
     } else if (creatorRole === "director") {
       const directorAdmin = await Admin.findById(req.user.id);
       query = {
@@ -337,6 +364,9 @@ export async function resendInvitation(req, res, next) {
     // Verify creator authority
     const creatorRole = req.user.role;
     if (creatorRole !== "super_admin") {
+      if (creatorRole === "tpo" && invitation.role !== "director") {
+        return res.status(403).json({ message: "Unauthorized: TPO can only manage Director invitations." });
+      }
       if (creatorRole === "director" && invitation.role !== "hod") {
         return res.status(403).json({ message: "Unauthorized: You can only resend HOD invitations." });
       }
@@ -421,6 +451,9 @@ export async function revokeInvitation(req, res, next) {
     // Verify creator authority
     const creatorRole = req.user.role;
     if (creatorRole !== "super_admin") {
+      if (creatorRole === "tpo" && invitation.role !== "director") {
+        return res.status(403).json({ message: "Unauthorized: TPO can only revoke Director invitations." });
+      }
       if (creatorRole === "director" && invitation.role !== "hod") {
         return res.status(403).json({ message: "Unauthorized: You can only revoke HOD invitations." });
       }

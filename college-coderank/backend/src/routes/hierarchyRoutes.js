@@ -5,6 +5,7 @@ import {
   createTpo,
   getDirectors,
   createDirector,
+  deleteDirector,
   getAccounts,
   updateAccountStatus,
   resetAccountPassword,
@@ -50,7 +51,8 @@ router.get("/super-admin/overview", requireRole("super_admin"), getSuperAdminOve
 router.get("/tpos", requireRole("super_admin", "tpo"), getTpos);
 router.post("/tpos", requireRole("super_admin"), createTpo);
 router.get("/directors", requireRole("super_admin", "tpo", "director"), getDirectors);
-router.post("/directors", requireRole("super_admin"), createDirector);
+router.post("/directors", requireRole("super_admin", "tpo"), createDirector);
+router.delete("/directors/:id", requireRole("super_admin", "tpo"), deleteDirector);
 router.get("/accounts", requireRole("super_admin"), getAccounts);
 router.patch("/accounts/:id/status", requireRole("super_admin"), updateAccountStatus);
 router.post("/accounts/:id/reset-password", requireRole("super_admin"), resetAccountPassword);
@@ -66,9 +68,9 @@ router.delete("/users/:id", requireRole("super_admin"), deleteUser);
 
 // Directorates Management
 router.get("/directorates", getDirectorates);
-router.post("/directorates", requireRole("super_admin"), createDirectorate);
+router.post("/directorates", requireRole("super_admin", "tpo"), createDirectorate);
 router.put("/directorates/:id", requireRole("super_admin", "tpo"), updateDirectorate);
-router.delete("/directorates/:id", requireRole("super_admin"), deleteDirectorate);
+router.delete("/directorates/:id", requireRole("super_admin", "tpo"), deleteDirectorate);
 
 // ---------------------------------------------------------
 // 2. TPO Endpoints

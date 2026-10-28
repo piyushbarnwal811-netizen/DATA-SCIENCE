@@ -22,10 +22,10 @@ router.post("/accept", acceptInvitation);
 // =========================================================
 router.use(requireAuth);
 
-router.post("/", requireRole("super_admin", "director", "hod"), createInvitation);
-router.get("/", requireRole("super_admin", "director", "hod"), getInvitations);
-router.post("/:id/resend", requireRole("super_admin", "director", "hod"), resendInvitation);
-router.delete("/:id", requireRole("super_admin", "director", "hod"), revokeInvitation);
-router.post("/:id/revoke", requireRole("super_admin", "director", "hod"), revokeInvitation);
+router.post("/", requireRole("super_admin", "tpo", "director", "hod"), createInvitation);
+router.get("/", requireRole("super_admin", "tpo", "director", "hod"), getInvitations);
+router.post("/:id/resend", requireRole("super_admin", "tpo", "director", "hod"), resendInvitation);
+router.delete("/:id", requireRole("super_admin", "tpo", "director", "hod"), revokeInvitation);
+router.post("/:id/revoke", requireRole("super_admin", "tpo", "director", "hod"), revokeInvitation);
 
 export default router;

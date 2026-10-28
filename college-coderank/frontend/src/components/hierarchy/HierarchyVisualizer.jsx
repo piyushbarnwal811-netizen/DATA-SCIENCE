@@ -41,7 +41,7 @@ const LEVEL_CONFIG = {
     icon: Briefcase
   },
   director: {
-    title: "Level 3: Director",
+    title: "Level 3: Director (School / Faculty)",
     badgeBg: "bg-amber-100 text-amber-800 border-amber-200",
     border: "border-amber-300 hover:border-amber-500",
     iconBg: "bg-amber-600 text-white",

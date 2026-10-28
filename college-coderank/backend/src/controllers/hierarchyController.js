@@ -205,6 +205,12 @@ export async function createDirector(req, res, next) {
       return res.status(400).json({ message: "Director name and official email address are required." });
     }
 
+    if (!directorateId) {
+      return res.status(400).json({
+        message: "School / Directorate selection is required. Please specify which School (e.g. SOCSE, SOIT) this Director is assigned to."
+      });
+    }
+
     const cleanEmail = email.trim().toLowerCase();
     const existing = await Admin.findOne({ email: cleanEmail });
     if (existing) {
@@ -267,6 +273,46 @@ export async function createDirector(req, res, next) {
         temporaryPassword: resolvedPass,
         mustChangePassword: resolvedMustChange
       }
+    });
+  } catch (error) {
+    return next(error);
+  }
+}
+
+/**
+ * DELETE /api/hierarchy/directors/:id
+ * Super Admin or TPO removes a Director account and vacates their school leadership position.
+ */
+export async function deleteDirector(req, res, next) {
+  try {
+    const { id } = req.params;
+    const director = await Admin.findOne({ _id: id, role: "director" });
+    if (!director) {
+      return res.status(404).json({ message: "Director record not found." });
+    }
+
+    // Vacate Director leadership on their assigned School(s)
+    await Directorate.updateMany({ directorId: id }, { $unset: { directorId: "" } });
+
+    // Revoke any pending invitations for this director's email
+    await Invitation.updateMany(
+      { role: "director", email: director.email, status: "pending" },
+      { $set: { status: "revoked", revokedAt: new Date(), revokedBy: req.user.id } }
+    );
+
+    await Admin.findByIdAndDelete(id);
+
+    await logAudit(
+      req.user,
+      "DELETE_DIRECTOR",
+      "Admin",
+      id,
+      `Removed Director ${director.name} (${director.email}) and vacated School leadership`,
+      req
+    );
+
+    return res.json({
+      message: `Director ${director.name} was successfully removed. Their School leadership is now vacant.`
     });
   } catch (error) {
     return next(error);
@@ -646,22 +692,53 @@ export async function deleteDirectorate(req, res, next) {
  */
 export async function getTpoOverview(req, res, next) {
   try {
-    const [directorates, departments, totalStudents, unassignedDirectorates] = await Promise.all([
+    // 1. Ensure primary university schools (SOCSE, SOIT) exist so TPO sees them immediately
+    try {
+      const existingDirs = await Directorate.find({});
+      const existingCodes = new Set(existingDirs.map((d) => (d.code || "").toUpperCase()));
+
+      if (!existingCodes.has("SOCSE")) {
+        await Directorate.create({
+          code: "SOCSE",
+          name: "School of Computer Science & Engineering",
+          description: "Core Computing, Software Systems, Artificial Intelligence & Data Science",
+          building: "Academic Block A - Tech Complex"
+        });
+      }
+      if (!existingCodes.has("SOIT")) {
+        await Directorate.create({
+          code: "SOIT",
+          name: "School of Information Technology",
+          description: "Information Technology, Cloud Systems & Cyber Security",
+          building: "Academic Block B - Computing Hub"
+        });
+      }
+    } catch (seedErr) {
+      console.warn("[TPO] Note on verifying default schools:", seedErr.message);
+    }
+
+    const [directorates, departments, totalStudents, unassignedDirectorates, directors, directorInvitations] = await Promise.all([
       Directorate.find().populate("directorId", "name email phone designation employeeId status").sort({ name: 1 }),
       Department.find().populate("directorateId", "name code").populate("hodId", "name email").sort({ name: 1 }),
       Student.countDocuments({ isActive: { $ne: false } }),
-      Directorate.find({ directorId: { $exists: false } })
+      Directorate.find({ directorId: { $exists: false } }),
+      Admin.find({ role: "director" }).populate("directorateId", "name code building").select("-password").sort({ name: 1 }),
+      Invitation.find({ role: "director" }).populate("directorateId", "name code").sort({ createdAt: -1 })
     ]);
 
     return res.json({
       metrics: {
+        totalSchools: directorates.length,
         totalDirectorates: directorates.length,
+        totalDirectors: directors.length,
         totalDepartments: departments.length,
         totalStudents,
         vacantDirectorates: unassignedDirectorates.length
       },
       directorates,
-      departments
+      directors,
+      departments,
+      directorInvitations
     });
   } catch (error) {
     return next(error);
@@ -1134,7 +1211,7 @@ export async function getHierarchyTree(req, res, next) {
           return {
             id: `dir-${dir._id}`,
             name: dir.name,
-            role: "Directorate",
+            role: "School / Directorate",
             level: "director",
             badge: dir.code,
             details: {
