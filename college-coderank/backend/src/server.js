@@ -1,3 +1,12 @@
+// Ensure unhandled errors do not crash the node process unexpectedly
+process.on("unhandledRejection", (reason) => {
+  console.error("[Server] Unhandled Rejection:", reason);
+});
+
+process.on("uncaughtException", (error) => {
+  console.error("[Server] Uncaught Exception:", error);
+});
+
 import "dotenv/config";
 import cors from "cors";
 import express from "express";
@@ -59,17 +68,24 @@ app.get("/api/health", (req, res) => res.json({ status: "ok" }));
 app.use(notFound);
 app.use(errorHandler);
 
-process.on("unhandledRejection", (reason) => {
-  console.error("[Server] Unhandled Rejection:", reason);
+try {
+  await connectDatabase();
+  await seedAdmin();
+  startStatsScheduler();
+} catch (startupErr) {
+  console.error("[Server] Critical startup error:", startupErr.message);
+}
+
+const server = app.listen(port, () => {
+  console.log(`🚀 College CodeRank API running stably on http://localhost:${port}`);
 });
 
-process.on("uncaughtException", (error) => {
-  console.error("[Server] Uncaught Exception:", error);
+server.on("error", (err) => {
+  if (err.code === "EADDRINUSE") {
+    console.error(`[Server] Port ${port} is already in use by another process. Please free port ${port}.`);
+  } else {
+    console.error("[Server] HTTP server error:", err);
+  }
 });
-
-await connectDatabase();
-await seedAdmin();
-startStatsScheduler();
-const server = app.listen(port, () => console.log(`College CodeRank API listening on port ${port}.`));
 
 export default server;

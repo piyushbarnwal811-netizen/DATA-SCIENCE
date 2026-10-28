@@ -455,7 +455,11 @@ export async function sendInvitationEmail({
   directorateName
 }) {
   const transporter = getTransporter();
-  const from = process.env.EMAIL_FROM || "CodeRank Administration <admin@rungta.ac.in>";
+  const from =
+    process.env.EMAIL_FROM ||
+    (process.env.SMTP_USER
+      ? `College CodeRank <${process.env.SMTP_USER}>`
+      : "CodeRank Administration <admin@rungta.ac.in>");
   const roleLabel = getRoleLabel(role);
 
   const mailOptions = {
@@ -475,6 +479,13 @@ export async function sendInvitationEmail({
     })
   };
 
-  return transporter.sendMail(mailOptions);
+  try {
+    const info = await transporter.sendMail(mailOptions);
+    console.log(`[EmailService] Invitation email successfully dispatched to ${to} (Message ID: ${info.messageId || "ok"})`);
+    return info;
+  } catch (error) {
+    console.error(`[EmailService] Failed to send invitation email to ${to}:`, error.message);
+    throw error;
+  }
 }
 

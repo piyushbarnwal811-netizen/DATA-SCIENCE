@@ -221,8 +221,7 @@ export async function createInvitation(req, res, next) {
         directorateId: invitation.directorateId,
         departmentId: invitation.departmentId
       },
-      // In development mode, also provide the setupLink for convenience
-      ...(process.env.NODE_ENV !== "production" ? { setupLink } : {})
+      setupLink
     });
   } catch (error) {
     return next(error);
@@ -381,7 +380,7 @@ export async function resendInvitation(req, res, next) {
         resendCount: invitation.resendCount,
         lastSentAt: invitation.lastSentAt
       },
-      ...(process.env.NODE_ENV !== "production" ? { setupLink } : {})
+      setupLink
     });
   } catch (error) {
     return next(error);
