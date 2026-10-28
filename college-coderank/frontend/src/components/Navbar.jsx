@@ -68,11 +68,7 @@ export default function Navbar({ onMenuClick }) {
           {user ? (
             <div className="account-menu">
               <Link
-                href={
-                  ["super_admin", "admin", "tpo", "director", "hod", "teacher"].includes(user.role)
-                    ? "/hierarchy"
-                    : "/profile"
-                }
+                href="/profile"
                 className={`avatar ${(pathname === "/admin" || pathname === "/profile" || pathname === "/hierarchy") ? "is-active" : ""}`}
                 aria-label="Open profile"
               >

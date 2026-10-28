@@ -5,7 +5,7 @@ import Profile from "../../../views/Profile.jsx";
 
 export default function ProfilePage() {
   return (
-    <ProtectedRoute role="student">
+    <ProtectedRoute>
       <Profile />
     </ProtectedRoute>
   );

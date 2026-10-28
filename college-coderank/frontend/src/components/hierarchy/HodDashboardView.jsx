@@ -1548,6 +1548,16 @@ export default function HodDashboardView() {
               An official setup invitation was sent to <strong>{inviteSuccessModal.name}</strong> ({inviteSuccessModal.email}) for the role of <strong>{inviteSuccessModal.role}</strong>.
             </p>
 
+            <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 text-[11px] text-amber-900 space-y-1">
+              <div className="font-bold flex items-center gap-1.5 text-amber-800">
+                <AlertCircle size={14} className="text-amber-600 shrink-0" />
+                <span>Email Delivery &amp; Spam Notice:</span>
+              </div>
+              <p className="text-amber-800 leading-normal">
+                If the email is not visible in the recipient&apos;s primary Inbox, please have them check their <strong>Spam / Junk</strong> folder. You can also copy and share the single-use link directly with them below.
+              </p>
+            </div>
+
             {inviteSuccessModal.setupLink && (
               <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-200 space-y-2 text-xs">
                 <span className="text-[11px] font-bold text-slate-500 block">Single-Use Setup Link:</span>

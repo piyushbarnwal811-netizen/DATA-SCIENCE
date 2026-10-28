@@ -17,6 +17,6 @@ export function errorHandler(error, req, res, next) {
   }
   const status = error.statusCode ?? 500;
   return res.status(status).json({
-    message: status >= 500 ? "Something went wrong. Please try again." : error.message
+    message: error.expose ? error.message : status >= 500 ? "Something went wrong. Please try again." : error.message
   });
 }

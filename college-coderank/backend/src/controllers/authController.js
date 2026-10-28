@@ -392,19 +392,25 @@ export async function forgotPassword(req, res, next) {
     }
 
     const normalizedEmail = target.toLowerCase();
-    const student = await Student.findOne({
+    let account = await Student.findOne({
       $or: [
         { email: normalizedEmail },
         { studentId: target }
       ]
     });
+    let isStudent = true;
+
+    if (!account) {
+      account = await Admin.findOne({ email: normalizedEmail });
+      isStudent = false;
+    }
 
     // Security Measure: Generic success message to prevent user enumeration
     const genericResponse = {
       message: "If an account exists with this email or student ID, a password reset link has been sent to the registered email."
     };
 
-    if (!student || !student.email) {
+    if (!account || !account.email) {
       return res.status(200).json(genericResponse);
     }
 
@@ -415,24 +421,26 @@ export async function forgotPassword(req, res, next) {
     // Expiration window: exactly 15 minutes
     const expiresAt = new Date(Date.now() + 15 * 60 * 1000);
 
-    student.resetPasswordTokenHash = tokenHash;
-    student.resetPasswordExpiresAt = expiresAt;
-    student.resetPasswordUsed = false;
-    await student.save();
+    account.resetPasswordTokenHash = tokenHash;
+    account.resetPasswordExpiresAt = expiresAt;
+    account.resetPasswordUsed = false;
+    await account.save();
 
-    const clientBaseUrl = process.env.CLIENT_URL || "http://localhost:5173";
-    const resetLink = `${clientBaseUrl}/reset-password?token=${rawToken}&email=${encodeURIComponent(student.email)}`;
+    const clientBaseUrl = process.env.CLIENT_URL || "http://localhost:3000";
+    const resetLink = `${clientBaseUrl}/reset-password?token=${rawToken}&email=${encodeURIComponent(account.email)}`;
     const clientIp = req.ip || req.headers["x-forwarded-for"] || "Unknown";
 
-    sendPasswordResetEmail({
-      to: student.email,
-      studentName: student.name,
-      resetLink,
-      expiresInMinutes: 15,
-      clientIp
-    }).catch((emailErr) => {
-      console.error(`[ForgotPassword] Failed to send email to ${student.email}:`, emailErr.message);
-    });
+    try {
+      await sendPasswordResetEmail({
+        to: account.email,
+        studentName: account.name,
+        resetLink,
+        expiresInMinutes: 15,
+        clientIp
+      });
+    } catch (emailErr) {
+      console.error(`[ForgotPassword] Failed to send email to ${account.email}:`, emailErr.message);
+    }
 
     return res.status(200).json(genericResponse);
   } catch (error) {
@@ -470,17 +478,23 @@ export async function resetPassword(req, res, next) {
 
     const incomingTokenHash = crypto.createHash("sha256").update(token).digest("hex");
 
-    const student = await Student.findOne({ email }).select(
+    let account = await Student.findOne({ email }).select(
       "+password +resetPasswordTokenHash +resetPasswordExpiresAt +resetPasswordUsed"
     );
 
+    if (!account) {
+      account = await Admin.findOne({ email }).select(
+        "+password +resetPasswordTokenHash +resetPasswordExpiresAt +resetPasswordUsed"
+      );
+    }
+
     // Look up record, verify token has not expired and used == false
     if (
-      !student ||
-      !student.resetPasswordTokenHash ||
-      student.resetPasswordUsed === true ||
-      !student.resetPasswordExpiresAt ||
-      student.resetPasswordExpiresAt < new Date()
+      !account ||
+      !account.resetPasswordTokenHash ||
+      account.resetPasswordUsed === true ||
+      !account.resetPasswordExpiresAt ||
+      account.resetPasswordExpiresAt < new Date()
     ) {
       return res.status(400).json({
         message: "The password reset link is invalid, expired, or has already been used. Please request a new link."
@@ -488,7 +502,7 @@ export async function resetPassword(req, res, next) {
     }
 
     // Constant-time comparison to prevent timing side-channel attacks
-    const storedHashBuffer = Buffer.from(student.resetPasswordTokenHash, "hex");
+    const storedHashBuffer = Buffer.from(account.resetPasswordTokenHash, "hex");
     const incomingHashBuffer = Buffer.from(incomingTokenHash, "hex");
 
     if (
@@ -501,7 +515,7 @@ export async function resetPassword(req, res, next) {
     }
 
     // Ensure new_password is not identical to existing password
-    if (student.password && (await bcrypt.compare(newPassword, student.password))) {
+    if (account.password && (await bcrypt.compare(newPassword, account.password))) {
       return res.status(400).json({
         message: "New password cannot be identical to your current password."
       });
@@ -510,26 +524,28 @@ export async function resetPassword(req, res, next) {
     // Hash new password with bcrypt (10 rounds)
     const hashedPassword = await bcrypt.hash(newPassword, 10);
 
-    student.password = hashedPassword;
-    student.resetPasswordUsed = true;
-    student.resetPasswordTokenHash = null;
-    student.resetPasswordExpiresAt = null;
-    student.mustChangePassword = false;
-    // Invalidate all existing active sessions/refresh tokens for that student
-    student.tokenVersion = (student.tokenVersion || 0) + 1;
-    await student.save();
+    account.password = hashedPassword;
+    account.resetPasswordUsed = true;
+    account.resetPasswordTokenHash = null;
+    account.resetPasswordExpiresAt = null;
+    account.mustChangePassword = false;
+    // Invalidate all existing active sessions/refresh tokens
+    account.tokenVersion = (account.tokenVersion || 0) + 1;
+    await account.save();
 
     const clientIp = req.ip || req.headers["x-forwarded-for"] || "Unknown";
 
     // Send transactional confirmation email
-    sendPasswordChangedConfirmationEmail({
-      to: student.email,
-      studentName: student.name,
-      timestamp: new Date().toUTCString(),
-      clientIp
-    }).catch((emailErr) => {
-      console.error(`[ResetPassword] Failed to send confirmation email to ${student.email}:`, emailErr.message);
-    });
+    try {
+      await sendPasswordChangedConfirmationEmail({
+        to: account.email,
+        studentName: account.name,
+        timestamp: new Date().toUTCString(),
+        clientIp
+      });
+    } catch (emailErr) {
+      console.error(`[ResetPassword] Failed to send confirmation email to ${account.email}:`, emailErr.message);
+    }
 
     return res.status(200).json({
       status: "SUCCESS",
@@ -603,6 +619,56 @@ export async function getCurrentUser(req, res, next) {
         .populate("departmentId", "name code");
     }
     if (!user) return res.status(404).json({ message: "Account not found." });
+    return res.json({ user: publicUser(user, req.user.role) });
+  } catch (error) {
+    return next(error);
+  }
+}
+
+export async function updateCurrentUserProfile(req, res, next) {
+  try {
+    if (req.user.role === "student") {
+      return res.status(403).json({
+        message: "Student profiles must be updated through the student profile endpoint."
+      });
+    }
+
+    const user = await Admin.findById(req.user.id);
+    if (!user) return res.status(404).json({ message: "Account not found." });
+
+    if (req.body.name !== undefined) {
+      if (typeof req.body.name !== "string" || !req.body.name.trim()) {
+        return res.status(400).json({ message: "Name cannot be empty." });
+      }
+      if (req.body.name.trim().length > 120) {
+        return res.status(400).json({ message: "Name must be 120 characters or fewer." });
+      }
+      user.name = req.body.name.trim();
+    }
+
+    if (req.body.phone !== undefined) {
+      if (typeof req.body.phone !== "string" || req.body.phone.length > 30) {
+        return res.status(400).json({ message: "Enter a valid phone number (30 characters or fewer)." });
+      }
+      user.phone = req.body.phone.trim() || null;
+    }
+
+    if (req.body.qualification !== undefined) {
+      if (typeof req.body.qualification !== "string" || req.body.qualification.length > 120) {
+        return res.status(400).json({ message: "Qualification must be 120 characters or fewer." });
+      }
+      user.qualification = req.body.qualification.trim() || null;
+    }
+
+    if (
+      req.body.name === undefined &&
+      req.body.phone === undefined &&
+      req.body.qualification === undefined
+    ) {
+      return res.status(400).json({ message: "Provide at least one profile field to update." });
+    }
+
+    await user.save();
     return res.json({ user: publicUser(user, req.user.role) });
   } catch (error) {
     return next(error);

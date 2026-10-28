@@ -188,16 +188,21 @@ export async function createInvitation(req, res, next) {
     const clientBaseUrl = getClientBaseUrl();
     const setupLink = `${clientBaseUrl}/setup-account?token=${rawToken}`;
 
-    await sendInvitationEmail({
-      to: cleanEmail,
-      recipientName: name.trim(),
-      role: targetRole,
-      setupLink,
-      expiresInHours: expiryHours,
-      invitedByName: req.user.name || "University Administration",
-      departmentName: departmentObj?.name || "",
-      directorateName: directorateObj?.name || ""
-    });
+    try {
+      await sendInvitationEmail({
+        to: cleanEmail,
+        recipientName: name.trim(),
+        role: targetRole,
+        setupLink,
+        expiresInHours: expiryHours,
+        invitedByName: req.user.name || "University Administration",
+        departmentName: departmentObj?.name || "",
+        directorateName: directorateObj?.name || ""
+      });
+    } catch (emailError) {
+      await Invitation.findByIdAndDelete(invitation._id);
+      throw emailError;
+    }
 
     // 6. Record Audit Log
     await logAudit(
@@ -336,13 +341,6 @@ export async function resendInvitation(req, res, next) {
     const tokenHash = crypto.createHash("sha256").update(rawToken).digest("hex");
     const expiryHours = Number(process.env.INVITATION_EXPIRY_HOURS) || 24;
 
-    invitation.tokenHash = tokenHash;
-    invitation.status = "pending";
-    invitation.expiresAt = new Date(Date.now() + expiryHours * 60 * 60 * 1000);
-    invitation.lastSentAt = new Date();
-    invitation.resendCount = (invitation.resendCount || 0) + 1;
-    await invitation.save();
-
     // Send email
     const clientBaseUrl = getClientBaseUrl();
     const setupLink = `${clientBaseUrl}/setup-account?token=${rawToken}`;
@@ -357,6 +355,13 @@ export async function resendInvitation(req, res, next) {
       departmentName: invitation.departmentId?.name || "",
       directorateName: invitation.directorateId?.name || ""
     });
+
+    invitation.tokenHash = tokenHash;
+    invitation.status = "pending";
+    invitation.expiresAt = new Date(Date.now() + expiryHours * 60 * 60 * 1000);
+    invitation.lastSentAt = new Date();
+    invitation.resendCount = (invitation.resendCount || 0) + 1;
+    await invitation.save();
 
     // Audit log
     await logAudit(

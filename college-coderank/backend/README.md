@@ -10,6 +10,10 @@ Copy `.env.example` to `.env`, then set:
 - `JWT_SECRET`: random secret of at least 32 characters.
 - `ADMIN_EMAIL` and `ADMIN_PASSWORD`: credentials for the first admin account.
 - `CLIENT_URL`: frontend origin (defaults to `http://localhost:5173`).
+- `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`: SMTP provider settings
+  required for invitation and password emails. For Gmail, use an App Password
+  with 2-Step Verification; never use your regular Gmail password.
+- `EMAIL_FROM`: optional sender address authorized by your SMTP provider.
 - `GITHUB_TOKEN`: optional token to increase GitHub API rate limits.
 - `SYNC_CRON`: optional cron expression; defaults to midnight server time.
 - `LEETCODE_SYNC_CRON`: optional cron expression; defaults to every five minutes
@@ -27,7 +31,7 @@ npm run dev
 
 ## API
 
-- `POST /api/auth/register`, `POST /api/auth/login`, `GET /api/auth/me`
+- `POST /api/auth/register`, `POST /api/auth/login`, `GET/PATCH /api/auth/me`
 - `GET /api/leaderboard?branch=&section=&year=&search=`
 - `GET /api/students/me`, `PATCH /api/students/me`, `POST /api/students/me/sync`
 - `GET /api/admin/overview`, `GET /api/admin/departments`

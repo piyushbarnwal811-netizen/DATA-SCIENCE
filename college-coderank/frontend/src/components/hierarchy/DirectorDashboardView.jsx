@@ -24,7 +24,9 @@ import {
   Eye,
   EyeOff,
   Sparkles,
-  Loader2
+  Loader2,
+  Trash2,
+  AlertTriangle
 } from "lucide-react";
 import api, { errorMessage } from "../../services/api.js";
 
@@ -44,6 +46,8 @@ export default function DirectorDashboardView() {
   const [hodAddMode, setHodAddMode] = useState("invite"); // "invite" | "manual"
   const [showPassword, setShowPassword] = useState(false);
   const [showDeptModal, setShowDeptModal] = useState(false);
+  const [deptToDelete, setDeptToDelete] = useState(null);
+  const [deletingDept, setDeletingDept] = useState(false);
   const [tempCredsModal, setTempCredsModal] = useState(null);
   const [inviteSuccessModal, setInviteSuccessModal] = useState(null);
   const [copied, setCopied] = useState(false);
@@ -188,22 +192,49 @@ export default function DirectorDashboardView() {
 
   const handleCreateDept = async (e) => {
     e.preventDefault();
-    if (!data?.directorate?._id) return;
+    const dirId = data?.directorate?._id || data?.directorate?.id;
+    if (!dirId) {
+      setModalError("No assigned Directorate found.");
+      return;
+    }
     setSubmitting(true);
     setError("");
+    setModalError("");
     try {
-      await api.post("/hierarchy/departments", {
+      const { data: res } = await api.post("/hierarchy/departments", {
         ...deptForm,
-        directorateId: data.directorate._id
+        name: deptForm.name?.trim(),
+        code: deptForm.code?.trim().toUpperCase(),
+        directorateId: dirId
       });
       setShowDeptModal(false);
       setDeptForm({ name: "", code: "", buildingBlock: "", floor: "", contactEmail: "" });
-      showSuccess("Department added to your Directorate.");
+      showSuccess(res.message || "Department added to your Directorate.");
       refreshAll();
     } catch (err) {
-      setError(errorMessage(err));
+      const msg = err.response?.data?.message || err.response?.data?.error || errorMessage(err);
+      setModalError(msg);
+      setError(msg);
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const handleDeleteDept = async () => {
+    if (!deptToDelete) return;
+    setDeletingDept(true);
+    setError("");
+    try {
+      const deptId = deptToDelete._id || deptToDelete.id;
+      const { data: res } = await api.delete(`/hierarchy/departments/${deptId}`);
+      showSuccess(res.message || `Department "${deptToDelete.name}" deleted successfully.`);
+      setDeptToDelete(null);
+      refreshAll();
+    } catch (err) {
+      const msg = err.response?.data?.message || err.response?.data?.error || errorMessage(err);
+      setError(msg);
+    } finally {
+      setDeletingDept(false);
     }
   };
 
@@ -632,12 +663,15 @@ export default function DirectorDashboardView() {
                   <div>
                     <h2 className="text-lg font-extrabold text-slate-800">Departments in {directorate.name}</h2>
                     <p className="text-xs text-slate-500">
-                      Academic departments under your faculty leadership.
+                      Manage, add, and delete academic departments under your faculty leadership.
                     </p>
                   </div>
                   <button
                     type="button"
-                    onClick={() => setShowDeptModal(true)}
+                    onClick={() => {
+                      setModalError("");
+                      setShowDeptModal(true);
+                    }}
                     className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold bg-amber-600 hover:bg-amber-700 text-white shadow-sm cursor-pointer transition-all"
                   >
                     <Plus size={15} />
@@ -654,7 +688,10 @@ export default function DirectorDashboardView() {
                     </p>
                     <button
                       type="button"
-                      onClick={() => setShowDeptModal(true)}
+                      onClick={() => {
+                        setModalError("");
+                        setShowDeptModal(true);
+                      }}
                       className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold bg-amber-600 text-white hover:bg-amber-700 cursor-pointer"
                     >
                       <Plus size={14} /> Add Department
@@ -663,19 +700,37 @@ export default function DirectorDashboardView() {
                 ) : (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {departments.map((dept) => (
-                      <div key={dept._id} className="p-4 rounded-xl border border-slate-200 bg-slate-50/50 space-y-3">
+                      <div key={dept._id || dept.id} className="p-4 rounded-xl border border-slate-200 bg-white shadow-xs hover:border-slate-300 transition-all space-y-3">
                         <div className="flex items-center justify-between">
-                          <span className="text-[10px] font-black uppercase text-amber-700 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
+                          <span className="text-[10px] font-black uppercase text-amber-700 bg-amber-50 px-2 py-0.5 rounded border border-amber-200 font-mono">
                             {dept.code || "DEPT"}
                           </span>
                           <span className="text-[11px] text-slate-400">
-                            {dept.buildingBlock ? `${dept.buildingBlock} · ${dept.floor || ""}` : "Campus Tower"}
+                            {dept.buildingBlock ? `${dept.buildingBlock}${dept.floor ? ` · ${dept.floor}` : ""}` : "Campus Complex"}
                           </span>
                         </div>
-                        <h3 className="font-extrabold text-slate-800 text-sm">{dept.name}</h3>
-                        <div className="pt-2 border-t border-slate-200 text-xs flex justify-between text-slate-600">
-                          <span>Appointed HOD:</span>
-                          <strong className="text-slate-800">{dept.hodId?.name || "Vacant"}</strong>
+                        <div>
+                          <h3 className="font-extrabold text-slate-800 text-sm">{dept.name}</h3>
+                          {dept.contactEmail && (
+                            <p className="text-[11px] text-slate-500 font-mono mt-0.5">{dept.contactEmail}</p>
+                          )}
+                        </div>
+                        <div className="pt-2 border-t border-slate-100 text-xs flex items-center justify-between">
+                          <div className="text-slate-600">
+                            <span className="text-slate-400 mr-1.5">Appointed HOD:</span>
+                            <strong className={dept.hodId?.name ? "text-slate-800" : "text-amber-600 italic"}>
+                              {dept.hodId?.name || "Vacant"}
+                            </strong>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => setDeptToDelete(dept)}
+                            title={`Delete Department ${dept.name}`}
+                            className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-bold text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200 rounded-lg cursor-pointer transition-colors"
+                          >
+                            <Trash2 size={13} />
+                            <span>Delete</span>
+                          </button>
                         </div>
                       </div>
                     ))}
@@ -696,10 +751,24 @@ export default function DirectorDashboardView() {
                 <Layers size={16} className="text-amber-600" />
                 Add Department to {directorate?.name}
               </h3>
-              <button type="button" onClick={() => setShowDeptModal(false)} className="text-slate-400 hover:text-slate-600 cursor-pointer">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowDeptModal(false);
+                  setModalError("");
+                }}
+                className="text-slate-400 hover:text-slate-600 cursor-pointer"
+              >
                 <X size={16} />
               </button>
             </div>
+
+            {modalError && (
+              <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs flex items-center gap-2">
+                <AlertCircle size={15} className="shrink-0" />
+                <span>{modalError}</span>
+              </div>
+            )}
 
             <form onSubmit={handleCreateDept} className="space-y-3">
               <div>
@@ -707,7 +776,7 @@ export default function DirectorDashboardView() {
                 <input
                   type="text"
                   required
-                  placeholder="e.g. Computer Science & Engineering"
+                  placeholder="e.g. Mechanical Engineering"
                   value={deptForm.name}
                   onChange={(e) => setDeptForm({ ...deptForm, name: e.target.value })}
                   className="w-full text-xs px-3 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-1 focus:ring-amber-500"
@@ -719,7 +788,7 @@ export default function DirectorDashboardView() {
                   <label className="block text-xs font-bold text-slate-700 mb-1">Code</label>
                   <input
                     type="text"
-                    placeholder="CSE"
+                    placeholder="MECH"
                     value={deptForm.code}
                     onChange={(e) => setDeptForm({ ...deptForm, code: e.target.value })}
                     className="w-full text-xs px-3 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-1 focus:ring-amber-500 uppercase font-mono"
@@ -729,7 +798,7 @@ export default function DirectorDashboardView() {
                   <label className="block text-xs font-bold text-slate-700 mb-1">Building Block</label>
                   <input
                     type="text"
-                    placeholder="Block A"
+                    placeholder="Block B"
                     value={deptForm.buildingBlock}
                     onChange={(e) => setDeptForm({ ...deptForm, buildingBlock: e.target.value })}
                     className="w-full text-xs px-3 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-1 focus:ring-amber-500"
@@ -737,10 +806,36 @@ export default function DirectorDashboardView() {
                 </div>
               </div>
 
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">Floor</label>
+                  <input
+                    type="text"
+                    placeholder="2nd Floor"
+                    value={deptForm.floor}
+                    onChange={(e) => setDeptForm({ ...deptForm, floor: e.target.value })}
+                    className="w-full text-xs px-3 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-1 focus:ring-amber-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">Contact Email</label>
+                  <input
+                    type="email"
+                    placeholder="dept.mech@rungta.org"
+                    value={deptForm.contactEmail}
+                    onChange={(e) => setDeptForm({ ...deptForm, contactEmail: e.target.value })}
+                    className="w-full text-xs px-3 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-1 focus:ring-amber-500 font-mono"
+                  />
+                </div>
+              </div>
+
               <div className="flex justify-end gap-2 pt-3 border-t border-slate-100">
                 <button
                   type="button"
-                  onClick={() => setShowDeptModal(false)}
+                  onClick={() => {
+                    setShowDeptModal(false);
+                    setModalError("");
+                  }}
                   className="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-lg cursor-pointer"
                 >
                   Cancel
@@ -748,12 +843,73 @@ export default function DirectorDashboardView() {
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="px-4 py-2 text-xs font-bold bg-amber-600 hover:bg-amber-700 text-white rounded-lg shadow-sm cursor-pointer disabled:opacity-50"
+                  className="px-4 py-2 text-xs font-bold bg-amber-600 hover:bg-amber-700 text-white rounded-lg shadow-sm cursor-pointer disabled:opacity-50 flex items-center gap-1.5"
                 >
-                  {submitting ? "Adding..." : "Add Department"}
+                  {submitting ? (
+                    <>
+                      <Loader2 size={13} className="animate-spin" />
+                      <span>Adding...</span>
+                    </>
+                  ) : (
+                    <span>Add Department</span>
+                  )}
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal: Delete Department Confirmation */}
+      {deptToDelete && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-rose-100 space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center shrink-0">
+                <AlertTriangle size={20} />
+              </div>
+              <div>
+                <h3 className="font-extrabold text-slate-900 text-base">Delete Department</h3>
+                <p className="text-xs text-slate-500">Confirm permanent removal of this department</p>
+              </div>
+            </div>
+
+            <p className="text-xs text-slate-600 leading-relaxed">
+              Are you sure you want to delete department <strong className="text-slate-900 font-bold">"{deptToDelete.name}"</strong> ({deptToDelete.code || "NO_CODE"}) from <strong className="text-slate-900">{directorate.name}</strong>?
+            </p>
+
+            <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-[11px] text-amber-800 leading-normal">
+              <strong>Safety Notice:</strong> Deletion will only proceed if no active students, sections, or staff members are currently assigned to this department.
+            </div>
+
+            <div className="flex justify-end gap-2 pt-2">
+              <button
+                type="button"
+                disabled={deletingDept}
+                onClick={() => setDeptToDelete(null)}
+                className="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-lg cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={deletingDept}
+                onClick={handleDeleteDept}
+                className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold bg-rose-600 hover:bg-rose-700 text-white rounded-lg shadow-sm cursor-pointer disabled:opacity-50"
+              >
+                {deletingDept ? (
+                  <>
+                    <Loader2 size={13} className="animate-spin" />
+                    <span>Deleting...</span>
+                  </>
+                ) : (
+                  <>
+                    <Trash2 size={13} />
+                    <span>Confirm Delete</span>
+                  </>
+                )}
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -1125,6 +1281,16 @@ export default function DirectorDashboardView() {
             <p className="text-xs text-slate-600 leading-relaxed">
               An official setup invitation was sent to <strong>{inviteSuccessModal.name}</strong> ({inviteSuccessModal.email}) for the role of <strong>{inviteSuccessModal.role}</strong>.
             </p>
+
+            <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 text-[11px] text-amber-900 space-y-1">
+              <div className="font-bold flex items-center gap-1.5 text-amber-800">
+                <AlertCircle size={14} className="text-amber-600 shrink-0" />
+                <span>Email Delivery &amp; Spam Notice:</span>
+              </div>
+              <p className="text-amber-800 leading-normal">
+                If the email is not visible in the recipient&apos;s primary Inbox, please have them check their <strong>Spam / Junk</strong> folder. You can also copy and share the single-use link directly with them below.
+              </p>
+            </div>
 
             {inviteSuccessModal.setupLink && (
               <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-200 space-y-2 text-xs">

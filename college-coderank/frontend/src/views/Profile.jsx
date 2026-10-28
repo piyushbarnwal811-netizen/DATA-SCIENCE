@@ -19,9 +19,20 @@ import StudentPlatformStandings from "../components/StudentPlatformStandings.jsx
 import api, { errorMessage } from "../services/api.js";
 import { useRealtimeSync } from "../services/realtime.js";
 import { formatNumber, getInitials } from "../utils/helpers.js";
+import { useAuth } from "../context/AuthContext.jsx";
+import StaffProfile from "./StaffProfile.jsx";
+
+const STAFF_ROLES = ["super_admin", "admin", "tpo", "director", "hod", "teacher"];
 
 export default function Profile() {
+  const { user } = useAuth();
+  return STAFF_ROLES.includes(user?.role) ? <StaffProfile /> : <StudentProfile />;
+}
+
+function StudentProfile() {
+  const { updateUser } = useAuth();
   const [student, setStudent] = useState(null);
+  const [displayName, setDisplayName] = useState("");
   const [positions, setPositions] = useState(null);
   const [handles, setHandles] = useState({ leetcodeUsername: "", githubUsername: "", hackerrankUsername: "", codechefUsername: "", geeksforgeeksUsername: "" });
   const [loading, setLoading] = useState(true);
@@ -33,6 +44,7 @@ export default function Profile() {
   const loadProfile = ({ updateHandles = true } = {}) =>
     api.get("/students/me").then(({ data }) => {
       setStudent(data.student);
+      setDisplayName(data.student.name ?? "");
       if (data.positions) setPositions(data.positions);
       if (updateHandles) {
         setHandles({
@@ -77,8 +89,9 @@ export default function Profile() {
     setError("");
     setNotice("");
     try {
-      const { data } = await api.patch("/students/me", handles);
+      const { data } = await api.patch("/students/me", { ...handles, name: displayName });
       setStudent(data.student);
+      updateUser({ name: data.student.name });
       setNotice(
         data.errors && data.errors.length
           ? `Profile saved. Sync notice: ${data.errors.join("; ")}`
@@ -217,6 +230,18 @@ export default function Profile() {
           </div>
         </div>
         <form className="handles-form" onSubmit={saveHandles}>
+          <label className="handle-input">
+            <span className="handle-input__icon"><UserRound size={16} /></span>
+            <span className="handle-input__body">
+              <small>Your name</small>
+              <input
+                value={displayName}
+                onChange={(event) => setDisplayName(event.target.value)}
+                maxLength={120}
+                required
+              />
+            </span>
+          </label>
           {[
             { name: "leetcodeUsername", label: "LeetCode username", logo: "/leetcode_logo.jpeg", placeholder: "e.g. codewizard", getUrl: (u) => `https://leetcode.com/${encodeURIComponent(u)}` },
             { name: "codechefUsername", label: "CodeChef username", logo: "/codechef_logo.svg", placeholder: "e.g. your_codechef", getUrl: (u) => `https://www.codechef.com/users/${encodeURIComponent(u)}` },

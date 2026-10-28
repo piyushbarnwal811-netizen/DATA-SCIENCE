@@ -141,6 +141,15 @@ export async function syncStudentLeetCode(req, res, next) {
 export async function updateMyProfile(req, res, next) {
   try {
     const changes = {};
+    if (req.body.name !== undefined) {
+      if (typeof req.body.name !== "string" || !req.body.name.trim()) {
+        return res.status(400).json({ message: "Name cannot be empty." });
+      }
+      if (req.body.name.trim().length > 120) {
+        return res.status(400).json({ message: "Name must be 120 characters or fewer." });
+      }
+      changes.name = req.body.name.trim();
+    }
     if (typeof req.body.leetcodeUsername === "string") {
       changes.leetcodeUsername = cleanLeetCodeUsername(req.body.leetcodeUsername);
     }

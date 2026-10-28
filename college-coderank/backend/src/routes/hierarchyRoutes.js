@@ -24,6 +24,7 @@ import {
   getHierarchyTree,
   getDepartments,
   createDepartment,
+  deleteDepartment,
   getSections,
   createSection,
   updateSection,
@@ -97,6 +98,7 @@ router.get("/teacher/my-schedule", requireRole("super_admin", "teacher"), getTea
 // ---------------------------------------------------------
 router.get("/departments", getDepartments);
 router.post("/departments", requireRole("super_admin", "director"), createDepartment);
+router.delete("/departments/:id", requireRole("super_admin", "director"), deleteDepartment);
 
 router.get("/sections", getSections);
 router.post("/sections", requireRole("super_admin", "director", "hod"), createSection);

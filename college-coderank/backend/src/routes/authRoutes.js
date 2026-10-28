@@ -7,6 +7,7 @@ import {
   login,
   registerStudent,
   resetPassword,
+  updateCurrentUserProfile,
   verifyResetToken
 } from "../controllers/authController.js";
 import {
@@ -43,6 +44,7 @@ router.post("/signup", registerStudent);
 router.post("/login", login);
 router.post("/signin", login);
 router.get("/me", requireAuth, getCurrentUser);
+router.patch("/me", requireAuth, updateCurrentUserProfile);
 
 // Workflow 1: First-Time Mandatory Password Change
 router.post("/force-change-password", requirePasswordChangePendingAuth, forceChangePassword);

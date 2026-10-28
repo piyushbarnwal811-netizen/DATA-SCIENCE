@@ -9,6 +9,7 @@ import Classroom from "../models/Classroom.js";
 import TimetableAssignment from "../models/TimetableAssignment.js";
 import AuditLog from "../models/AuditLog.js";
 import Student from "../models/Student.js";
+import Invitation from "../models/Invitation.js";
 
 /**
  * Helper to record actions in the institutional audit log
@@ -1215,17 +1216,58 @@ export async function getDepartments(req, res, next) {
 export async function createDepartment(req, res, next) {
   try {
     const { name, code, directorateId, hodId, buildingBlock, floor, contactEmail } = req.body;
-    if (!name) return res.status(400).json({ message: "Department name is required." });
+    if (!name || !name.trim()) {
+      return res.status(400).json({ message: "Department name is required." });
+    }
 
-    const cleanCode = code ? code.trim().toUpperCase() : undefined;
+    const cleanName = name.trim();
+    let targetDirectorateId = directorateId || null;
+
+    if (req.user.role === "director") {
+      const directorAdmin = await Admin.findById(req.user.id);
+      if (!directorAdmin?.directorateId) {
+        return res.status(403).json({ message: "No Directorate is currently assigned to your Director account." });
+      }
+      targetDirectorateId = directorAdmin.directorateId;
+    } else if (req.user.role === "super_admin" || req.user.role === "admin") {
+      if (directorateId) {
+        const dir = await Directorate.findById(directorateId);
+        if (!dir) return res.status(404).json({ message: "Selected Directorate not found." });
+        targetDirectorateId = dir._id;
+      }
+    } else {
+      return res.status(403).json({ message: "Access denied. Only Directors and Super Admins can add departments." });
+    }
+
+    const cleanCode = code && code.trim() ? code.trim().toUpperCase() : undefined;
+
+    // Check duplicate code
+    if (cleanCode) {
+      const existingCode = await Department.findOne({ code: cleanCode });
+      if (existingCode) {
+        return res.status(409).json({ message: `A department with code "${cleanCode}" already exists.` });
+      }
+    }
+
+    // Check duplicate name within the same directorate
+    if (targetDirectorateId) {
+      const existingName = await Department.findOne({
+        directorateId: targetDirectorateId,
+        name: { $regex: new RegExp(`^${cleanName}$`, "i") }
+      });
+      if (existingName) {
+        return res.status(409).json({ message: `A department with name "${cleanName}" already exists in this Directorate.` });
+      }
+    }
+
     const created = await Department.create({
-      name: name.trim(),
-      code: cleanCode,
-      directorateId: directorateId || null,
+      name: cleanName,
+      code: cleanCode || `DEPT-${Date.now().toString().slice(-4)}`,
+      directorateId: targetDirectorateId,
       hodId: hodId || null,
-      buildingBlock: buildingBlock?.trim(),
-      floor: floor?.trim(),
-      contactEmail: contactEmail?.trim().toLowerCase(),
+      buildingBlock: buildingBlock?.trim() || null,
+      floor: floor?.trim() || null,
+      contactEmail: contactEmail?.trim().toLowerCase() || null,
       createdBy: req.user.id
     });
 
@@ -1233,8 +1275,107 @@ export async function createDepartment(req, res, next) {
       await Admin.findByIdAndUpdate(hodId, { departmentId: created._id, role: "hod" });
     }
 
-    await logAudit(req.user, "CREATE_DEPARTMENT", "Department", created._id, `Created Department ${created.name}`, req);
-    return res.status(201).json({ department: created });
+    await logAudit(
+      req.user,
+      "CREATE_DEPARTMENT",
+      "Department",
+      created._id,
+      `Created Department "${created.name}" (${created.code}) under Directorate ${targetDirectorateId || "N/A"}`,
+      req
+    );
+
+    return res.status(201).json({
+      message: `Department "${created.name}" created successfully.`,
+      department: created
+    });
+  } catch (error) {
+    return next(error);
+  }
+}
+
+export async function deleteDepartment(req, res, next) {
+  try {
+    const { id } = req.params;
+    if (!id) {
+      return res.status(400).json({ message: "Department ID is required." });
+    }
+
+    const dept = await Department.findById(id);
+    if (!dept) {
+      return res.status(404).json({ message: "Department not found." });
+    }
+
+    // Role and Scope Authorization
+    const userRole = req.user.role;
+    if (userRole === "director") {
+      const directorAdmin = await Admin.findById(req.user.id);
+      if (!directorAdmin?.directorateId || String(dept.directorateId) !== String(directorAdmin.directorateId)) {
+        return res.status(403).json({
+          message: "Unauthorized: You can only delete departments within your assigned Directorate."
+        });
+      }
+    } else if (userRole !== "super_admin" && userRole !== "admin") {
+      return res.status(403).json({ message: "Access denied. Insufficient permissions." });
+    }
+
+    // Safety Dependency Checks:
+    // 1. Check active sections
+    const sectionCount = await Section.countDocuments({ departmentId: dept._id });
+    if (sectionCount > 0) {
+      return res.status(400).json({
+        message: `Cannot delete department: ${sectionCount} active class section(s) exist under it. Please delete or reassign them first.`
+      });
+    }
+
+    // 2. Check active faculty or appointed HOD
+    const staffCount = await Admin.countDocuments({
+      departmentId: dept._id,
+      status: "active"
+    });
+    if (staffCount > 0) {
+      return res.status(400).json({
+        message: `Cannot delete department: ${staffCount} faculty/HOD member(s) are currently assigned to it. Please reassign them first.`
+      });
+    }
+
+    // 3. Check active students registered with this department
+    const studentCount = await Student.countDocuments({
+      $or: [
+        { branch: dept.name },
+        { branch: dept.code }
+      ]
+    });
+    if (studentCount > 0) {
+      return res.status(400).json({
+        message: `Cannot delete department: ${studentCount} student(s) are registered with this department branch.`
+      });
+    }
+
+    // 4. Revoke pending invitations for this department
+    await Invitation.updateMany(
+      { departmentId: dept._id, status: "pending" },
+      { $set: { status: "revoked" } }
+    );
+
+    // 5. Clean up subjects
+    await Subject.deleteMany({ departmentId: dept._id });
+
+    // 6. Delete department
+    await Department.findByIdAndDelete(dept._id);
+
+    // 7. Audit log
+    await logAudit(
+      req.user,
+      "DELETE_DEPARTMENT",
+      "Department",
+      dept._id,
+      `Deleted department "${dept.name}" (${dept.code || "NO_CODE"})`,
+      req
+    );
+
+    return res.json({
+      message: `Department "${dept.name}" was successfully deleted.`
+    });
   } catch (error) {
     return next(error);
   }

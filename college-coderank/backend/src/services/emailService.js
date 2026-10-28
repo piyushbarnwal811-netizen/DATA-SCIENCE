@@ -2,7 +2,8 @@ import nodemailer from "nodemailer";
 
 /**
  * Creates and configures the email transporter based on environment variables.
- * Falls back to ethereal/console simulation in development if SMTP is not provided.
+ * Requires a configured SMTP provider so successful responses always mean mail
+ * was handed to a real email transport.
  */
 let cachedTransporter = null;
 
@@ -30,22 +31,19 @@ function getTransporter() {
     return cachedTransporter;
   }
 
-  // Fallback simulator for development/testing without live SMTP credentials
-  cachedTransporter = {
-    sendMail: async (options) => {
-      console.log("\n============================================================");
-      console.log("📨 [SIMULATED TRANSACTIONAL EMAIL via Nodemailer fallback]");
-      console.log(`To:      ${options.to}`);
-      console.log(`From:    ${options.from || process.env.EMAIL_FROM || "CodeRank Security <security@rungta.ac.in>"}`);
-      console.log(`Subject: ${options.subject}`);
-      console.log("------------------------------------------------------------");
-      console.log(options.text || "(HTML Email - Preview in browser)");
-      console.log("============================================================\n");
-      return { messageId: `simulated-${Date.now()}` };
-    }
-  };
+  const error = new Error(
+    "Email delivery is not configured. Set SMTP_HOST, SMTP_USER, and SMTP_PASS in the backend environment."
+  );
+  error.statusCode = 503;
+  error.expose = true;
+  throw error;
+}
 
-  return cachedTransporter;
+function getFromAddress() {
+  return process.env.EMAIL_FROM ||
+    (process.env.SMTP_USER
+      ? `College CodeRank <${process.env.SMTP_USER}>`
+      : "College CodeRank");
 }
 
 /**
@@ -240,14 +238,20 @@ export function buildPasswordChangedConfirmationEmailHtml({ studentName, timesta
  */
 export async function sendPasswordResetEmail({ to, studentName, resetLink, expiresInMinutes = 15, clientIp }) {
   const transporter = getTransporter();
-  const from = process.env.EMAIL_FROM || "CodeRank Security <security@rungta.ac.in>";
+  const from = getFromAddress();
 
   const mailOptions = {
     from,
     to,
+    replyTo: process.env.SMTP_USER || from,
     subject: "Reset Your College CodeRank Password",
     text: `Hello ${studentName},\n\nYou requested to reset your College CodeRank password. Click the link below to set a new password:\n\n${resetLink}\n\nThis link is valid for ${expiresInMinutes} minutes.\nIf you did not request this, please ignore this email.\n`,
-    html: buildPasswordResetEmailHtml({ studentName, resetLink, expiresInMinutes, clientIp })
+    html: buildPasswordResetEmailHtml({ studentName, resetLink, expiresInMinutes, clientIp }),
+    headers: {
+      "X-Mailer": "College CodeRank Notification System",
+      "X-Priority": "1 (Highest)",
+      "Importance": "High"
+    }
   };
 
   return transporter.sendMail(mailOptions);
@@ -258,14 +262,20 @@ export async function sendPasswordResetEmail({ to, studentName, resetLink, expir
  */
 export async function sendPasswordChangedConfirmationEmail({ to, studentName, timestamp, clientIp }) {
   const transporter = getTransporter();
-  const from = process.env.EMAIL_FROM || "CodeRank Security <security@rungta.ac.in>";
+  const from = getFromAddress();
 
   const mailOptions = {
     from,
     to,
+    replyTo: process.env.SMTP_USER || from,
     subject: "Security Alert: Your College CodeRank Password Was Changed",
     text: `Hello ${studentName},\n\nYour College CodeRank student portal password was successfully updated on ${timestamp}.\nAll other active sessions have been invalidated.\n\nIf you did not make this change, please contact campus IT immediately.\n`,
-    html: buildPasswordChangedConfirmationEmailHtml({ studentName, timestamp, clientIp })
+    html: buildPasswordChangedConfirmationEmailHtml({ studentName, timestamp, clientIp }),
+    headers: {
+      "X-Mailer": "College CodeRank Notification System",
+      "X-Priority": "1 (Highest)",
+      "Importance": "High"
+    }
   };
 
   return transporter.sendMail(mailOptions);
@@ -455,16 +465,13 @@ export async function sendInvitationEmail({
   directorateName
 }) {
   const transporter = getTransporter();
-  const from =
-    process.env.EMAIL_FROM ||
-    (process.env.SMTP_USER
-      ? `College CodeRank <${process.env.SMTP_USER}>`
-      : "CodeRank Administration <admin@rungta.ac.in>");
+  const from = getFromAddress();
   const roleLabel = getRoleLabel(role);
 
   const mailOptions = {
     from,
     to,
+    replyTo: process.env.SMTP_USER || from,
     subject: `Official Invitation: Set Up Your ${roleLabel} Account`,
     text: `Hello ${recipientName},\n\nYou have been invited to join the College CodeRank system as ${roleLabel}.\n\nClick the link below to set up your account and choose your password:\n${setupLink}\n\nThis single-use link is valid for ${expiresInHours} hours.\n\nIf you did not expect this invitation, please contact your campus administrator.\n`,
     html: buildInvitationEmailHtml({
@@ -476,7 +483,12 @@ export async function sendInvitationEmail({
       invitedByName,
       departmentName,
       directorateName
-    })
+    }),
+    headers: {
+      "X-Mailer": "College CodeRank Notification System",
+      "X-Priority": "1 (Highest)",
+      "Importance": "High"
+    }
   };
 
   try {
@@ -485,7 +497,11 @@ export async function sendInvitationEmail({
     return info;
   } catch (error) {
     console.error(`[EmailService] Failed to send invitation email to ${to}:`, error.message);
-    throw error;
+    const deliveryError = new Error(
+      "The invitation email could not be delivered. Check SMTP credentials and try again."
+    );
+    deliveryError.statusCode = 502;
+    deliveryError.expose = true;
+    throw deliveryError;
   }
 }
-

@@ -30,6 +30,17 @@ export function AuthProvider({ children }) {
     return data.user;
   }, []);
 
+  const updateUser = useCallback((changes) => {
+    setUser((currentUser) => {
+      if (!currentUser) return currentUser;
+      const updatedUser = { ...currentUser, ...changes };
+      if (typeof window !== "undefined") {
+        localStorage.setItem("ccr_user", JSON.stringify(updatedUser));
+      }
+      return updatedUser;
+    });
+  }, []);
+
   const login = useCallback(async (credentials) => {
     try {
       const { data } = await api.post("/auth/login", credentials);
@@ -122,8 +133,8 @@ export function AuthProvider({ children }) {
   }, []);
 
   const value = useMemo(
-    () => ({ user, loading, login, register, logout, forceChangePassword }),
-    [user, loading, login, register, logout, forceChangePassword]
+    () => ({ user, loading, login, register, logout, forceChangePassword, updateUser }),
+    [user, loading, login, register, logout, forceChangePassword, updateUser]
   );
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
