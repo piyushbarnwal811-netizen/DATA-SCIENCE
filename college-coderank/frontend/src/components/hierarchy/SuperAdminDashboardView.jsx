@@ -68,6 +68,10 @@ export default function SuperAdminDashboardView({ onInspectTree }) {
   // Invitation Forms
   const [tpoInviteForm, setTpoInviteForm] = useState({ name: "", email: "" });
   const [dirInviteForm, setDirInviteForm] = useState({ name: "", email: "", directorateId: "" });
+  const [dirInviteSchoolMode, setDirInviteSchoolMode] = useState("select"); // "select" | "custom"
+  const [dirInviteCustomSchool, setDirInviteCustomSchool] = useState("");
+  const [dirCreateSchoolMode, setDirCreateSchoolMode] = useState("select"); // "select" | "custom"
+  const [dirCreateCustomSchool, setDirCreateCustomSchool] = useState("");
 
   // Filter States
   const [searchQuery, setSearchQuery] = useState("");
@@ -199,18 +203,36 @@ export default function SuperAdminDashboardView({ onInspectTree }) {
     if (submitting || now - lastSubmitRef.current < 2000) return;
     lastSubmitRef.current = now;
 
+    if (dirInviteSchoolMode === "select" && !dirInviteForm.directorateId) {
+      setModalError("Please select which School / Directorate this Director will lead.");
+      return;
+    }
+    if (dirInviteSchoolMode === "custom" && !dirInviteCustomSchool.trim()) {
+      setModalError("Please enter the School name or code (e.g. SOCSE, SOIT, SOB).");
+      return;
+    }
+
     setSubmitting(true);
     setModalError("");
     setError("");
     try {
-      const { data } = await api.post("/invitations", {
+      const payload = {
         name: dirInviteForm.name?.trim(),
         email: dirInviteForm.email?.trim().toLowerCase(),
-        role: "director",
-        directorateId: dirInviteForm.directorateId || undefined
-      });
+        role: "director"
+      };
+
+      if (dirInviteSchoolMode === "custom") {
+        payload.newSchoolName = dirInviteCustomSchool.trim();
+      } else {
+        payload.directorateId = dirInviteForm.directorateId || undefined;
+      }
+
+      const { data } = await api.post("/invitations", payload);
       setShowDirInviteModal(false);
       setDirInviteForm({ name: "", email: "", directorateId: "" });
+      setDirInviteCustomSchool("");
+      setDirInviteSchoolMode("select");
       setInviteSuccessModal({
         name: data.invitation?.name || dirInviteForm.name,
         email: data.invitation?.email || dirInviteForm.email,
@@ -338,15 +360,31 @@ export default function SuperAdminDashboardView({ onInspectTree }) {
   // Handle Director Creation
   const handleCreateDirector = async (e) => {
     e.preventDefault();
+    if (dirCreateSchoolMode === "select" && !dirForm.directorateId) {
+      setError("Please select which School / Directorate this Director will lead.");
+      return;
+    }
+    if (dirCreateSchoolMode === "custom" && !dirCreateCustomSchool.trim()) {
+      setError("Please enter the School name or code (e.g. SOCSE, SOIT, SOB).");
+      return;
+    }
+
     setSubmitting(true);
     setError("");
     try {
-      const { data } = await api.post("/hierarchy/directors", {
+      const payload = {
         ...dirForm,
         password: dirForm.password?.trim() || undefined,
         temporaryPassword: dirForm.password?.trim() || dirForm.temporaryPassword?.trim() || undefined,
         mustChangePassword: Boolean(dirForm.mustChangePassword)
-      });
+      };
+
+      if (dirCreateSchoolMode === "custom") {
+        payload.newSchoolName = dirCreateCustomSchool.trim();
+        delete payload.directorateId;
+      }
+
+      const { data } = await api.post("/hierarchy/directors", payload);
       setShowDirModal(false);
       const chosenPassword = data.credentials?.password || data.temporaryCredentials?.temporaryPassword;
       setTempCredsModal({
@@ -368,6 +406,8 @@ export default function SuperAdminDashboardView({ onInspectTree }) {
         temporaryPassword: "",
         mustChangePassword: false
       });
+      setDirCreateCustomSchool("");
+      setDirCreateSchoolMode("select");
       showSuccess("Director account created successfully!");
       refreshAll();
     } catch (err) {
@@ -1546,22 +1586,82 @@ export default function SuperAdminDashboardView({ onInspectTree }) {
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
-                  Assign School / Directorate (e.g. SOCSE, SOIT) <span className="text-red-500">*</span>
-                </label>
-                <select
-                  required
-                  value={dirForm.directorateId}
-                  onChange={(e) => setDirForm({ ...dirForm, directorateId: e.target.value })}
-                  className="w-full text-xs px-3 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-1 focus:ring-red-500"
-                >
-                  <option value="">-- Choose School (e.g. SOCSE, SOIT) --</option>
-                  {directorates.map((d) => (
-                    <option key={d._id} value={d._id}>
-                      {d.code} · {d.name} {d.directorId ? `(Current Director: ${d.directorId.name})` : "(Vacant)"}
-                    </option>
-                  ))}
-                </select>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="block text-xs font-bold text-slate-700">
+                    Assign School / Directorate (e.g. SOCSE, SOIT) <span className="text-red-500">*</span>
+                  </label>
+                  <div className="inline-flex rounded-lg border border-slate-200 bg-slate-50 p-0.5 text-[10px]">
+                    <button
+                      type="button"
+                      onClick={() => setDirCreateSchoolMode("select")}
+                      className={`px-2 py-0.5 rounded-md font-medium transition-all ${
+                        dirCreateSchoolMode === "select"
+                          ? "bg-white text-red-700 shadow-xs font-bold"
+                          : "text-slate-500 hover:text-slate-700"
+                      }`}
+                    >
+                      Choose from list
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setDirCreateSchoolMode("custom")}
+                      className={`px-2 py-0.5 rounded-md font-medium transition-all ${
+                        dirCreateSchoolMode === "custom"
+                          ? "bg-white text-red-700 shadow-xs font-bold"
+                          : "text-slate-500 hover:text-slate-700"
+                      }`}
+                    >
+                      ✍️ Type new school
+                    </button>
+                  </div>
+                </div>
+
+                {dirCreateSchoolMode === "select" ? (
+                  <>
+                    <select
+                      required={dirCreateSchoolMode === "select"}
+                      value={dirForm.directorateId}
+                      onChange={(e) => {
+                        if (e.target.value === "__NEW__") {
+                          setDirCreateSchoolMode("custom");
+                          setDirForm({ ...dirForm, directorateId: "" });
+                        } else {
+                          setDirForm({ ...dirForm, directorateId: e.target.value });
+                        }
+                      }}
+                      className="w-full text-xs px-3 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-1 focus:ring-red-500"
+                    >
+                      <option value="">-- Choose School (e.g. SOCSE, SOIT) --</option>
+                      {directorates.map((d) => (
+                        <option key={d._id} value={d._id}>
+                          {d.code} · {d.name} {d.directorId ? `(Current Director: ${d.directorId.name})` : "(Vacant)"}
+                        </option>
+                      ))}
+                      <option value="__NEW__">✍️ + Type / write a new school name...</option>
+                    </select>
+                  </>
+                ) : (
+                  <>
+                    <input
+                      type="text"
+                      required={dirCreateSchoolMode === "custom"}
+                      placeholder="e.g. SOB - School of Business, SOET, SOM..."
+                      value={dirCreateCustomSchool}
+                      onChange={(e) => setDirCreateCustomSchool(e.target.value)}
+                      className="w-full text-xs px-3 py-2 rounded-lg border border-red-300 focus:outline-none focus:ring-1 focus:ring-red-500 bg-red-50/20"
+                    />
+                    <div className="flex items-center justify-between text-[10px] text-slate-500 mt-1">
+                      <span>Type code or name. Auto-creates School if new.</span>
+                      <button
+                        type="button"
+                        onClick={() => setDirCreateSchoolMode("select")}
+                        className="text-red-600 font-semibold hover:underline cursor-pointer"
+                      >
+                        ← Choose existing
+                      </button>
+                    </div>
+                  </>
+                )}
               </div>
 
               <div className="grid grid-cols-2 gap-3">
@@ -1979,22 +2079,82 @@ export default function SuperAdminDashboardView({ onInspectTree }) {
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
-                  Assign School / Directorate (e.g. SOCSE, SOIT) <span className="text-red-500">*</span>
-                </label>
-                <select
-                  required
-                  value={dirInviteForm.directorateId}
-                  onChange={(e) => setDirInviteForm({ ...dirInviteForm, directorateId: e.target.value })}
-                  className="w-full text-xs px-3 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-1 focus:ring-red-500"
-                >
-                  <option value="">-- Choose School (e.g. SOCSE, SOIT) --</option>
-                  {directorates.map((d) => (
-                    <option key={d._id} value={d._id}>
-                      {d.code} · {d.name} {d.directorId ? `(Current Director: ${d.directorId.name})` : "(Vacant)"}
-                    </option>
-                  ))}
-                </select>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="block text-xs font-bold text-slate-700">
+                    Assign School / Directorate (e.g. SOCSE, SOIT) <span className="text-red-500">*</span>
+                  </label>
+                  <div className="inline-flex rounded-lg border border-slate-200 bg-slate-50 p-0.5 text-[10px]">
+                    <button
+                      type="button"
+                      onClick={() => setDirInviteSchoolMode("select")}
+                      className={`px-2 py-0.5 rounded-md font-medium transition-all ${
+                        dirInviteSchoolMode === "select"
+                          ? "bg-white text-red-700 shadow-xs font-bold"
+                          : "text-slate-500 hover:text-slate-700"
+                      }`}
+                    >
+                      Choose from list
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setDirInviteSchoolMode("custom")}
+                      className={`px-2 py-0.5 rounded-md font-medium transition-all ${
+                        dirInviteSchoolMode === "custom"
+                          ? "bg-white text-red-700 shadow-xs font-bold"
+                          : "text-slate-500 hover:text-slate-700"
+                      }`}
+                    >
+                      ✍️ Type new school
+                    </button>
+                  </div>
+                </div>
+
+                {dirInviteSchoolMode === "select" ? (
+                  <>
+                    <select
+                      required={dirInviteSchoolMode === "select"}
+                      value={dirInviteForm.directorateId}
+                      onChange={(e) => {
+                        if (e.target.value === "__NEW__") {
+                          setDirInviteSchoolMode("custom");
+                          setDirInviteForm({ ...dirInviteForm, directorateId: "" });
+                        } else {
+                          setDirInviteForm({ ...dirInviteForm, directorateId: e.target.value });
+                        }
+                      }}
+                      className="w-full text-xs px-3 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-1 focus:ring-red-500"
+                    >
+                      <option value="">-- Choose School (e.g. SOCSE, SOIT) --</option>
+                      {directorates.map((d) => (
+                        <option key={d._id} value={d._id}>
+                          {d.code} · {d.name} {d.directorId ? `(Current Director: ${d.directorId.name})` : "(Vacant)"}
+                        </option>
+                      ))}
+                      <option value="__NEW__">✍️ + Type / write a new school name...</option>
+                    </select>
+                  </>
+                ) : (
+                  <>
+                    <input
+                      type="text"
+                      required={dirInviteSchoolMode === "custom"}
+                      placeholder="e.g. SOB - School of Business, SOET, SOM..."
+                      value={dirInviteCustomSchool}
+                      onChange={(e) => setDirInviteCustomSchool(e.target.value)}
+                      className="w-full text-xs px-3 py-2 rounded-lg border border-red-300 focus:outline-none focus:ring-1 focus:ring-red-500 bg-red-50/20"
+                    />
+                    <div className="flex items-center justify-between text-[10px] text-slate-500 mt-1">
+                      <span>Type code or name. Auto-creates School if new.</span>
+                      <button
+                        type="button"
+                        onClick={() => setDirInviteSchoolMode("select")}
+                        className="text-red-600 font-semibold hover:underline cursor-pointer"
+                      >
+                        ← Choose existing
+                      </button>
+                    </div>
+                  </>
+                )}
               </div>
 
               {modalError && (

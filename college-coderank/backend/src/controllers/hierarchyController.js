@@ -199,17 +199,73 @@ export async function getDirectors(req, res, next) {
  */
 export async function createDirector(req, res, next) {
   try {
-    const { name, email, employeeId, phone, designation, qualification, directorateId, temporaryPassword, password, mustChangePassword } = req.body;
+    const {
+      name,
+      email,
+      employeeId,
+      phone,
+      designation,
+      qualification,
+      directorateId,
+      newSchoolName,
+      newSchoolCode,
+      schoolName,
+      temporaryPassword,
+      password,
+      mustChangePassword
+    } = req.body;
 
     if (!name || !email) {
       return res.status(400).json({ message: "Director name and official email address are required." });
     }
 
-    if (!directorateId) {
+    let targetDirectorateId = null;
+    let directorateObj = null;
+
+    if (directorateId && directorateId !== "new" && directorateId !== "custom" && directorateId !== "custom_mode") {
+      try {
+        directorateObj = await Directorate.findById(directorateId);
+      } catch (_) {}
+    }
+
+    const customInput = String(newSchoolName || schoolName || (!directorateObj && directorateId && directorateId !== "custom_mode" ? directorateId : "")).trim();
+
+    if (!directorateObj && customInput && customInput !== "new" && customInput !== "custom" && customInput !== "custom_mode") {
+      let code = (newSchoolCode || "").trim().toUpperCase();
+      let schoolTitle = customInput;
+
+      const parts = customInput.split(/[-–—:]/);
+      if (!code && parts.length > 1 && parts[0].trim().length <= 10) {
+        code = parts[0].trim().toUpperCase();
+        schoolTitle = parts.slice(1).join(" ").trim();
+      } else if (!code) {
+        code = customInput.split(" ")[0].toUpperCase().slice(0, 10);
+      }
+
+      directorateObj = await Directorate.findOne({
+        $or: [
+          { code },
+          { name: { $regex: new RegExp(`^${schoolTitle}$`, "i") } }
+        ]
+      });
+
+      if (!directorateObj) {
+        directorateObj = await Directorate.create({
+          code: code || "SCH",
+          name: schoolTitle || customInput,
+          description: `University School for ${schoolTitle || customInput}`,
+          building: "Main Academic Campus"
+        });
+      }
+    }
+
+    if (!directorateObj) {
       return res.status(400).json({
-        message: "School / Directorate selection is required. Please specify which School (e.g. SOCSE, SOIT) this Director is assigned to."
+        message: "School selection is required. Please choose an existing School (e.g. SOCSE, SOIT) or enter a new School name."
       });
     }
+
+    targetDirectorateId = directorateObj._id;
 
     const cleanEmail = email.trim().toLowerCase();
     const existing = await Admin.findOne({ email: cleanEmail });
@@ -230,16 +286,14 @@ export async function createDirector(req, res, next) {
       phone: phone?.trim(),
       designation: designation?.trim() || "Director of Faculty / Institute",
       qualification: qualification?.trim(),
-      directorateId: directorateId || undefined,
+      directorateId: targetDirectorateId,
       status: "active",
       createdBy: req.user.id,
       mustChangePassword: resolvedMustChange,
       tokenVersion: 0
     });
 
-    if (directorateId) {
-      await Directorate.findByIdAndUpdate(directorateId, { directorId: newDirector._id });
-    }
+    await Directorate.findByIdAndUpdate(targetDirectorateId, { directorId: newDirector._id });
 
     await logAudit(
       req.user,

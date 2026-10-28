@@ -45,6 +45,64 @@ function getClientBaseUrl(req) {
 }
 
 /**
+ * Resolves a School / Directorate by ID or creates it on the fly if a custom name is provided.
+ */
+async function resolveDirectorate({ directorateId, newSchoolName, newSchoolCode, schoolName }) {
+  let directorateObj = null;
+
+  // 1. If valid existing ID provided (not a custom marker)
+  if (
+    directorateId &&
+    directorateId !== "new" &&
+    directorateId !== "custom" &&
+    directorateId !== "custom_mode"
+  ) {
+    try {
+      directorateObj = await Directorate.findById(directorateId);
+    } catch (_) {}
+  }
+
+  // 2. If custom school name/code provided or directorateId is a custom string
+  const customInput = String(
+    newSchoolName ||
+    schoolName ||
+    (!directorateObj && directorateId && directorateId !== "custom_mode" ? directorateId : "")
+  ).trim();
+
+  if (!directorateObj && customInput && customInput !== "new" && customInput !== "custom" && customInput !== "custom_mode") {
+    let code = (newSchoolCode || "").trim().toUpperCase();
+    let name = customInput;
+
+    const parts = customInput.split(/[-–—:]/);
+    if (!code && parts.length > 1 && parts[0].trim().length <= 10) {
+      code = parts[0].trim().toUpperCase();
+      name = parts.slice(1).join(" ").trim();
+    } else if (!code) {
+      code = customInput.split(" ")[0].toUpperCase().slice(0, 10);
+    }
+
+    directorateObj = await Directorate.findOne({
+      $or: [
+        { code },
+        { name: { $regex: new RegExp(`^${name}$`, "i") } }
+      ]
+    });
+
+    if (!directorateObj) {
+      directorateObj = await Directorate.create({
+        code: code || "SCH",
+        name: name || customInput,
+        description: `University School for ${name || customInput}`,
+        building: "Main Academic Campus"
+      });
+      console.log(`[Hierarchy] Auto-created new School for Director appointment: ${directorateObj.name} (${directorateObj.code})`);
+    }
+  }
+
+  return directorateObj;
+}
+
+/**
  * POST /api/invitations
  * Create a new account invitation and send the secure setup link via email.
  */
@@ -58,7 +116,10 @@ export async function createInvitation(req, res, next) {
       departmentId,
       employeeId,
       designation,
-      phone
+      phone,
+      newSchoolName,
+      newSchoolCode,
+      schoolName
     } = req.body;
 
     if (!name || !email) {
@@ -83,14 +144,11 @@ export async function createInvitation(req, res, next) {
       targetRole = role;
 
       if (targetRole === "director") {
-        if (!directorateId) {
-          return res.status(400).json({
-            message: "School / Directorate selection is required. Please specify which School (e.g. SOCSE, SOIT) this Director will lead."
-          });
-        }
-        directorateObj = await Directorate.findById(directorateId);
+        directorateObj = await resolveDirectorate({ directorateId, newSchoolName, newSchoolCode, schoolName });
         if (!directorateObj) {
-          return res.status(404).json({ message: "Selected School / Directorate does not exist." });
+          return res.status(400).json({
+            message: "School selection is required. Please choose an existing School (e.g. SOCSE, SOIT) or type a new School name."
+          });
         }
         targetDirectorateId = directorateObj._id;
       }
@@ -104,15 +162,11 @@ export async function createInvitation(req, res, next) {
       }
       targetRole = "director";
 
-      if (!directorateId) {
-        return res.status(400).json({
-          message: "School / Directorate selection is required. Please specify which School (e.g. SOCSE, SOIT) this Director is being appointed to."
-        });
-      }
-
-      directorateObj = await Directorate.findById(directorateId);
+      directorateObj = await resolveDirectorate({ directorateId, newSchoolName, newSchoolCode, schoolName });
       if (!directorateObj) {
-        return res.status(404).json({ message: "Selected School / Directorate does not exist." });
+        return res.status(400).json({
+          message: "School selection is required. Please choose an existing School (e.g. SOCSE, SOIT) or type a new School name."
+        });
       }
       targetDirectorateId = directorateObj._id;
     } else if (creatorRole === "director") {
