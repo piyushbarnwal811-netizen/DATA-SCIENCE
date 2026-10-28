@@ -1,4 +1,11 @@
+import path from "path";
+import { fileURLToPath } from "url";
+import dotenv from "dotenv";
 import nodemailer from "nodemailer";
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+dotenv.config({ path: path.resolve(__dirname, "../../.env") });
+dotenv.config();
 
 /**
  * Creates and configures the email transporter based on environment variables.

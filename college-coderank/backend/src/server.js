@@ -7,7 +7,14 @@ process.on("uncaughtException", (error) => {
   console.error("[Server] Uncaught Exception:", error);
 });
 
-import "dotenv/config";
+import path from "path";
+import { fileURLToPath } from "url";
+import dotenv from "dotenv";
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+dotenv.config({ path: path.resolve(__dirname, "../.env") });
+dotenv.config();
+
 import cors from "cors";
 import express from "express";
 import rateLimit from "express-rate-limit";
@@ -99,6 +106,11 @@ try {
 
 const server = app.listen(port, () => {
   console.log(`🚀 College CodeRank API running stably on http://localhost:${port}`);
+  if (process.env.SMTP_HOST && process.env.SMTP_USER) {
+    console.log(`📧 Live Email Delivery Active via SMTP (${process.env.SMTP_USER})`);
+  } else {
+    console.warn(`⚠️ SMTP Email Delivery is NOT configured. Set SMTP_HOST, SMTP_USER, SMTP_PASS in backend/.env.`);
+  }
 });
 
 server.on("error", (err) => {

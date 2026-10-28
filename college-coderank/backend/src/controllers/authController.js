@@ -426,7 +426,18 @@ export async function forgotPassword(req, res, next) {
     account.resetPasswordUsed = false;
     await account.save();
 
-    const clientBaseUrl = process.env.CLIENT_URL || "http://localhost:3000";
+    const clientBaseUrl = (() => {
+      const reqOrigin = req?.headers?.origin || req?.headers?.referer;
+      if (reqOrigin) {
+        try {
+          const parsed = new URL(reqOrigin);
+          if (!parsed.hostname.includes("localhost") && !parsed.hostname.includes("127.0.0.1")) {
+            return parsed.origin;
+          }
+        } catch (_) {}
+      }
+      return process.env.CLIENT_URL || "https://data-science-rho-ten.vercel.app";
+    })();
     const resetLink = `${clientBaseUrl}/reset-password?token=${rawToken}&email=${encodeURIComponent(account.email)}`;
     const clientIp = req.ip || req.headers["x-forwarded-for"] || "Unknown";
 

@@ -31,8 +31,17 @@ async function logAudit(user, action, entityType, entityId, details, req) {
 /**
  * Helper to get the client base URL for links
  */
-function getClientBaseUrl() {
-  return process.env.CLIENT_URL || "http://localhost:3000";
+function getClientBaseUrl(req) {
+  const reqOrigin = req?.headers?.origin || req?.headers?.referer;
+  if (reqOrigin) {
+    try {
+      const parsed = new URL(reqOrigin);
+      if (!parsed.hostname.includes("localhost") && !parsed.hostname.includes("127.0.0.1")) {
+        return parsed.origin;
+      }
+    } catch (_) {}
+  }
+  return process.env.CLIENT_URL || "https://data-science-rho-ten.vercel.app";
 }
 
 /**
@@ -185,7 +194,7 @@ export async function createInvitation(req, res, next) {
     });
 
     // 5. Send Real Email
-    const clientBaseUrl = getClientBaseUrl();
+    const clientBaseUrl = getClientBaseUrl(req);
     const setupLink = `${clientBaseUrl}/setup-account?token=${rawToken}`;
 
     try {
@@ -342,7 +351,7 @@ export async function resendInvitation(req, res, next) {
     const expiryHours = Number(process.env.INVITATION_EXPIRY_HOURS) || 24;
 
     // Send email
-    const clientBaseUrl = getClientBaseUrl();
+    const clientBaseUrl = getClientBaseUrl(req);
     const setupLink = `${clientBaseUrl}/setup-account?token=${rawToken}`;
 
     await sendInvitationEmail({
