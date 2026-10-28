@@ -34,10 +34,10 @@ const LEVEL_CONFIG = {
   },
   tpo: {
     title: "Level 2: TPO (Placement Cell)",
-    badgeBg: "bg-blue-100 text-blue-800 border-blue-200",
-    border: "border-blue-300 hover:border-blue-500",
-    iconBg: "bg-blue-600 text-white",
-    cardBg: "bg-blue-50/40",
+    badgeBg: "bg-rose-100 text-rose-800 border-rose-200",
+    border: "border-rose-300 hover:border-rose-500",
+    iconBg: "bg-rose-600 text-white",
+    cardBg: "bg-rose-50/40",
     icon: Briefcase
   },
   director: {

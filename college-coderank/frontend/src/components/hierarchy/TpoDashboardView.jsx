@@ -293,12 +293,12 @@ export default function TpoDashboardView() {
   return (
     <div className="space-y-6">
       {/* Executive Command Banner */}
-      <div className="bg-gradient-to-r from-blue-950 via-indigo-900 to-slate-900 text-white rounded-2xl p-6 sm:p-8 shadow-xl border border-blue-800/40 relative overflow-hidden">
+      <div className="bg-gradient-to-r from-red-950 via-rose-900 to-slate-950 text-white rounded-2xl p-6 sm:p-8 shadow-xl border border-red-800/40 relative overflow-hidden">
         <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
           <div className="space-y-2">
             <div className="flex flex-wrap items-center gap-2">
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black bg-blue-500/20 text-blue-300 border border-blue-400/30 uppercase tracking-wide">
-                <Briefcase size={14} className="text-blue-400" />
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black bg-red-500/20 text-red-300 border border-red-400/30 uppercase tracking-wide">
+                <Briefcase size={14} className="text-red-400" />
                 Training &amp; Placement Office (TPO)
               </span>
               <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-300 bg-emerald-500/10 px-2.5 py-0.5 rounded-full border border-emerald-500/20">
@@ -320,7 +320,7 @@ export default function TpoDashboardView() {
                 setModalError("");
                 setInviteModalOpen(true);
               }}
-              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold bg-indigo-500 hover:bg-indigo-600 text-white shadow-lg shadow-indigo-500/25 transition-all cursor-pointer"
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold bg-red-600 hover:bg-red-700 text-white shadow-lg shadow-red-600/25 transition-all cursor-pointer"
             >
               <UserPlus size={15} />
               <span>+ Appoint / Invite Director</span>
@@ -366,7 +366,7 @@ export default function TpoDashboardView() {
               University Schools
             </span>
             <div className="flex items-baseline gap-1.5 mt-1">
-              <strong className="text-2xl font-black text-indigo-300">{metrics.totalSchools || metrics.totalDirectorates}</strong>
+              <strong className="text-2xl font-black text-rose-300">{metrics.totalSchools || metrics.totalDirectorates}</strong>
               <span className="text-[11px] text-slate-400">faculties</span>
             </div>
           </div>
@@ -437,7 +437,7 @@ export default function TpoDashboardView() {
             onClick={() => setActiveTab("schools")}
             className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap flex items-center gap-2 ${
               activeTab === "schools"
-                ? "bg-indigo-600 text-white shadow-sm"
+                ? "bg-red-600 text-white shadow-sm"
                 : "bg-slate-100 hover:bg-slate-200 text-slate-600"
             }`}
           >
@@ -453,7 +453,7 @@ export default function TpoDashboardView() {
             onClick={() => setActiveTab("directors")}
             className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap flex items-center gap-2 ${
               activeTab === "directors"
-                ? "bg-indigo-600 text-white shadow-sm"
+                ? "bg-red-600 text-white shadow-sm"
                 : "bg-slate-100 hover:bg-slate-200 text-slate-600"
             }`}
           >
@@ -469,7 +469,7 @@ export default function TpoDashboardView() {
             onClick={() => setActiveTab("invitations")}
             className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap flex items-center gap-2 ${
               activeTab === "invitations"
-                ? "bg-indigo-600 text-white shadow-sm"
+                ? "bg-red-600 text-white shadow-sm"
                 : "bg-slate-100 hover:bg-slate-200 text-slate-600"
             }`}
           >
@@ -485,7 +485,7 @@ export default function TpoDashboardView() {
             onClick={() => setActiveTab("departments")}
             className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap flex items-center gap-2 ${
               activeTab === "departments"
-                ? "bg-indigo-600 text-white shadow-sm"
+                ? "bg-red-600 text-white shadow-sm"
                 : "bg-slate-100 hover:bg-slate-200 text-slate-600"
             }`}
           >
@@ -505,7 +505,7 @@ export default function TpoDashboardView() {
             placeholder="Search school or director..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full text-xs pl-8 pr-3 py-1.5 rounded-lg border border-slate-300 focus:outline-none focus:ring-1 focus:ring-indigo-500 bg-white"
+            className="w-full text-xs pl-8 pr-3 py-1.5 rounded-lg border border-slate-300 focus:outline-none focus:ring-1 focus:ring-red-500 bg-white"
           />
         </div>
       </div>
@@ -528,7 +528,7 @@ export default function TpoDashboardView() {
                 setModalError("");
                 setInviteModalOpen(true);
               }}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 transition-all cursor-pointer self-start sm:self-auto"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 transition-all cursor-pointer self-start sm:self-auto"
             >
               <UserPlus size={13} />
               <span>Appoint Director</span>
@@ -558,7 +558,7 @@ export default function TpoDashboardView() {
                     <div className="flex items-start justify-between gap-3">
                       <div>
                         <div className="flex items-center gap-2">
-                          <span className="font-mono text-xs font-black uppercase text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-200">
+                          <span className="font-mono text-xs font-black uppercase text-red-700 bg-red-50 px-2 py-0.5 rounded border border-red-200">
                             {dir.code}
                           </span>
                           <span className="text-[11px] text-slate-400">{dir.building || "Campus Complex"}</span>
@@ -590,7 +590,7 @@ export default function TpoDashboardView() {
                     <div className="p-3.5 rounded-lg bg-white border border-slate-200 flex items-center justify-between gap-3">
                       <div className="flex items-center gap-3">
                         <div className={`w-9 h-9 rounded-full flex items-center justify-center font-bold text-xs ${
-                          dir.directorId ? "bg-indigo-100 text-indigo-700" : "bg-amber-100 text-amber-700"
+                          dir.directorId ? "bg-red-100 text-red-700" : "bg-amber-100 text-amber-700"
                         }`}>
                           {dir.directorId ? dir.directorId.name.charAt(0).toUpperCase() : "?"}
                         </div>
@@ -664,7 +664,7 @@ export default function TpoDashboardView() {
                 setModalError("");
                 setInviteModalOpen(true);
               }}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-all cursor-pointer self-start sm:self-auto"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-red-600 hover:bg-red-700 text-white rounded-lg transition-all cursor-pointer self-start sm:self-auto"
             >
               <UserPlus size={13} />
               <span>+ Invite Director</span>
@@ -696,7 +696,7 @@ export default function TpoDashboardView() {
                     <tr key={dir._id} className="hover:bg-slate-50/80 transition-colors">
                       <td className="py-3.5 px-3">
                         <div className="flex items-center gap-2.5">
-                          <div className="w-8 h-8 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold text-xs shrink-0">
+                          <div className="w-8 h-8 rounded-full bg-red-100 text-red-700 flex items-center justify-center font-bold text-xs shrink-0">
                             {dir.name.charAt(0).toUpperCase()}
                           </div>
                           <div>
@@ -709,7 +709,7 @@ export default function TpoDashboardView() {
                       <td className="py-3.5 px-3">
                         {dir.directorateId ? (
                           <div>
-                            <span className="font-mono text-[10px] font-black uppercase text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-200 inline-block mb-0.5">
+                            <span className="font-mono text-[10px] font-black uppercase text-red-700 bg-red-50 px-2 py-0.5 rounded border border-red-200 inline-block mb-0.5">
                               {dir.directorateId.code}
                             </span>
                             <span className="text-xs text-slate-800 font-medium block">
@@ -749,7 +749,7 @@ export default function TpoDashboardView() {
                                 });
                                 setSelectedDirectorId(dir._id);
                               }}
-                              className="px-2 py-1 text-[11px] font-semibold bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-lg border border-indigo-200 cursor-pointer"
+                              className="px-2 py-1 text-[11px] font-semibold bg-red-50 hover:bg-red-100 text-red-700 rounded-lg border border-red-200 cursor-pointer"
                             >
                               Reassign
                             </button>
@@ -797,7 +797,7 @@ export default function TpoDashboardView() {
                 setModalError("");
                 setInviteModalOpen(true);
               }}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-all cursor-pointer self-start sm:self-auto"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-red-600 hover:bg-red-700 text-white rounded-lg transition-all cursor-pointer self-start sm:self-auto"
             >
               <UserPlus size={13} />
               <span>+ Send New Invite</span>
@@ -835,7 +835,7 @@ export default function TpoDashboardView() {
                       <td className="py-3.5 px-3">
                         {inv.directorateId ? (
                           <div>
-                            <span className="font-mono text-[10px] font-black uppercase text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-200">
+                            <span className="font-mono text-[10px] font-black uppercase text-red-700 bg-red-50 px-2 py-0.5 rounded border border-red-200">
                               {inv.directorateId.code}
                             </span>
                             <span className="text-xs text-slate-700 font-medium block mt-0.5">
@@ -873,7 +873,7 @@ export default function TpoDashboardView() {
                             <button
                               type="button"
                               onClick={() => handleResendInvitation(inv)}
-                              className="px-2 py-1 text-[11px] font-semibold bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-lg border border-indigo-200 cursor-pointer"
+                              className="px-2 py-1 text-[11px] font-semibold bg-red-50 hover:bg-red-100 text-red-700 rounded-lg border border-red-200 cursor-pointer"
                             >
                               Resend
                             </button>
@@ -921,7 +921,7 @@ export default function TpoDashboardView() {
               {departments.map((dept) => (
                 <div key={dept._id} className="p-4 rounded-xl border border-slate-200 bg-slate-50/50 space-y-2.5">
                   <div className="flex items-center justify-between">
-                    <span className="text-[10px] font-black uppercase text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-200">
+                    <span className="text-[10px] font-black uppercase text-red-600 bg-red-50 px-2 py-0.5 rounded border border-red-200">
                       {dept.code || "DEPT"}
                     </span>
                     <span className="text-[11px] text-slate-500 font-medium">{dept.directorateId?.name || "General"}</span>
@@ -948,7 +948,7 @@ export default function TpoDashboardView() {
           <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-slate-200 space-y-4">
             <div className="flex items-center justify-between pb-3 border-b border-slate-100">
               <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-lg bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold">
+                <div className="w-8 h-8 rounded-lg bg-red-100 text-red-700 flex items-center justify-center font-bold">
                   <UserPlus size={16} />
                 </div>
                 <div>
@@ -978,7 +978,7 @@ export default function TpoDashboardView() {
                   required
                   value={inviteForm.directorateId}
                   onChange={(e) => setInviteForm({ ...inviteForm, directorateId: e.target.value })}
-                  className="w-full text-xs px-3 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-1 focus:ring-indigo-500 bg-white"
+                  className="w-full text-xs px-3 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-1 focus:ring-red-500 bg-white"
                 >
                   <option value="">-- Choose School (e.g. SOCSE, SOIT) --</option>
                   {directorates.map((d) => (
@@ -1003,7 +1003,7 @@ export default function TpoDashboardView() {
                     placeholder="e.g. Dr. Rajesh Sharma"
                     value={inviteForm.name}
                     onChange={(e) => setInviteForm({ ...inviteForm, name: e.target.value })}
-                    className="w-full text-xs px-3 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                    className="w-full text-xs px-3 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-1 focus:ring-red-500"
                   />
                 </div>
 
@@ -1017,7 +1017,7 @@ export default function TpoDashboardView() {
                     placeholder="director.socse@rungta.org"
                     value={inviteForm.email}
                     onChange={(e) => setInviteForm({ ...inviteForm, email: e.target.value })}
-                    className="w-full text-xs px-3 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                    className="w-full text-xs px-3 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-1 focus:ring-red-500"
                   />
                 </div>
               </div>
@@ -1029,7 +1029,7 @@ export default function TpoDashboardView() {
                     type="text"
                     value={inviteForm.designation}
                     onChange={(e) => setInviteForm({ ...inviteForm, designation: e.target.value })}
-                    className="w-full text-xs px-3 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                    className="w-full text-xs px-3 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-1 focus:ring-red-500"
                   />
                 </div>
 
@@ -1040,7 +1040,7 @@ export default function TpoDashboardView() {
                     placeholder="+91 98765 43210"
                     value={inviteForm.phone}
                     onChange={(e) => setInviteForm({ ...inviteForm, phone: e.target.value })}
-                    className="w-full text-xs px-3 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                    className="w-full text-xs px-3 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-1 focus:ring-red-500"
                   />
                 </div>
               </div>
@@ -1063,7 +1063,7 @@ export default function TpoDashboardView() {
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="px-4 py-2 text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg shadow-sm cursor-pointer disabled:opacity-50 inline-flex items-center gap-1.5"
+                  className="px-4 py-2 text-xs font-bold bg-red-600 hover:bg-red-700 text-white rounded-lg shadow-sm cursor-pointer disabled:opacity-50 inline-flex items-center gap-1.5"
                 >
                   <Send size={13} />
                   <span>{submitting ? "Dispatching Invitation..." : "Send Official Invitation"}</span>
@@ -1080,7 +1080,7 @@ export default function TpoDashboardView() {
           <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-200 space-y-4">
             <div className="flex items-center justify-between pb-3 border-b border-slate-100">
               <h3 className="font-extrabold text-slate-800 text-sm flex items-center gap-2">
-                <Building size={16} className="text-indigo-600" />
+                <Building size={16} className="text-red-600" />
                 Add New University School
               </h3>
               <button
@@ -1103,7 +1103,7 @@ export default function TpoDashboardView() {
                   placeholder="e.g. SOCSE"
                   value={schoolForm.code}
                   onChange={(e) => setSchoolForm({ ...schoolForm, code: e.target.value.toUpperCase() })}
-                  className="w-full text-xs px-3 py-2 rounded-lg border border-slate-300 font-mono font-bold focus:outline-none focus:ring-1 focus:ring-indigo-500 uppercase"
+                  className="w-full text-xs px-3 py-2 rounded-lg border border-slate-300 font-mono font-bold focus:outline-none focus:ring-1 focus:ring-red-500 uppercase"
                 />
               </div>
 
@@ -1117,7 +1117,7 @@ export default function TpoDashboardView() {
                   placeholder="e.g. School of Computer Science & Engineering"
                   value={schoolForm.name}
                   onChange={(e) => setSchoolForm({ ...schoolForm, name: e.target.value })}
-                  className="w-full text-xs px-3 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                  className="w-full text-xs px-3 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-1 focus:ring-red-500"
                 />
               </div>
 
@@ -1128,7 +1128,7 @@ export default function TpoDashboardView() {
                   placeholder="Academic Block A - Tech Complex"
                   value={schoolForm.building}
                   onChange={(e) => setSchoolForm({ ...schoolForm, building: e.target.value })}
-                  className="w-full text-xs px-3 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                  className="w-full text-xs px-3 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-1 focus:ring-red-500"
                 />
               </div>
 
@@ -1139,7 +1139,7 @@ export default function TpoDashboardView() {
                   placeholder="Disciplines, faculty focus, or technical labs"
                   value={schoolForm.description}
                   onChange={(e) => setSchoolForm({ ...schoolForm, description: e.target.value })}
-                  className="w-full text-xs px-3 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                  className="w-full text-xs px-3 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-1 focus:ring-red-500"
                 />
               </div>
 
@@ -1161,7 +1161,7 @@ export default function TpoDashboardView() {
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="px-4 py-2 text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg shadow-sm cursor-pointer disabled:opacity-50"
+                  className="px-4 py-2 text-xs font-bold bg-red-600 hover:bg-red-700 text-white rounded-lg shadow-sm cursor-pointer disabled:opacity-50"
                 >
                   {submitting ? "Creating School..." : "Create School"}
                 </button>
@@ -1177,7 +1177,7 @@ export default function TpoDashboardView() {
           <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-200 space-y-4">
             <div className="flex items-center justify-between pb-3 border-b border-slate-100">
               <h3 className="font-extrabold text-slate-800 text-sm flex items-center gap-2">
-                <Building size={16} className="text-indigo-600" />
+                <Building size={16} className="text-red-600" />
                 Assign Director for {assignModal.name}
               </h3>
               <button
@@ -1195,7 +1195,7 @@ export default function TpoDashboardView() {
                 <select
                   value={selectedDirectorId}
                   onChange={(e) => setSelectedDirectorId(e.target.value)}
-                  className="w-full text-xs px-3 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-1 focus:ring-indigo-500 bg-white"
+                  className="w-full text-xs px-3 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-1 focus:ring-red-500 bg-white"
                 >
                   <option value="">-- Vacant / Unassigned --</option>
                   {directorsList.map((d) => (
@@ -1220,7 +1220,7 @@ export default function TpoDashboardView() {
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="px-4 py-2 text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg shadow-sm cursor-pointer disabled:opacity-50"
+                  className="px-4 py-2 text-xs font-bold bg-red-600 hover:bg-red-700 text-white rounded-lg shadow-sm cursor-pointer disabled:opacity-50"
                 >
                   {submitting ? "Saving..." : "Save Assignment"}
                 </button>
@@ -1315,7 +1315,7 @@ export default function TpoDashboardView() {
                   <button
                     type="button"
                     onClick={() => copyToClipboard(inviteSuccessModal.setupLink)}
-                    className="inline-flex items-center gap-1 px-3 py-2 text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg shadow-sm cursor-pointer whitespace-nowrap"
+                    className="inline-flex items-center gap-1 px-3 py-2 text-xs font-bold bg-red-600 hover:bg-red-700 text-white rounded-lg shadow-sm cursor-pointer whitespace-nowrap"
                   >
                     {copiedLink ? <Check size={13} /> : <Copy size={13} />}
                     <span>{copiedLink ? "Copied!" : "Copy"}</span>
