@@ -24,9 +24,11 @@ import {
   Send,
   Check,
   AlertTriangle,
-  UserCheck
+  UserCheck,
+  Eye
 } from "lucide-react";
 import api, { errorMessage } from "../../services/api.js";
+import HierarchyProfileInspectorModal from "./HierarchyProfileInspectorModal.jsx";
 
 export default function TpoDashboardView() {
   const [data, setData] = useState(null);
@@ -38,6 +40,7 @@ export default function TpoDashboardView() {
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState("");
   const [successMsg, setSuccessMsg] = useState("");
+  const [inspectTargetId, setInspectTargetId] = useState(null);
 
   // Modals
   const [inviteModalOpen, setInviteModalOpen] = useState(false);
@@ -593,21 +596,34 @@ export default function TpoDashboardView() {
                         )}
                       </div>
 
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setAssignModal({
-                            directorateId: dir._id,
-                            name: `${dir.name} (${dir.code})`,
-                            currentDirectorId: dir.directorId?._id || ""
-                          });
-                          setSelectedDirectorId(dir.directorId?._id || "");
-                        }}
-                        className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold bg-white hover:bg-slate-100 text-slate-700 rounded-lg border border-slate-200 cursor-pointer shadow-2xs transition-all shrink-0"
-                      >
-                        <Edit2 size={12} />
-                        <span>Reassign</span>
-                      </button>
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        {dir.directorId && (
+                          <button
+                            type="button"
+                            onClick={() => setInspectTargetId(dir.directorId._id || dir.directorId)}
+                            className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold bg-red-50 hover:bg-red-100 text-red-700 rounded-lg border border-red-200 cursor-pointer shadow-2xs transition-all"
+                            title="Inspect Director, departments, HODs, and teachers"
+                          >
+                            <Eye size={12} />
+                            <span>Inspect</span>
+                          </button>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setAssignModal({
+                              directorateId: dir._id,
+                              name: `${dir.name} (${dir.code})`,
+                              currentDirectorId: dir.directorId?._id || ""
+                            });
+                            setSelectedDirectorId(dir.directorId?._id || "");
+                          }}
+                          className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold bg-white hover:bg-slate-100 text-slate-700 rounded-lg border border-slate-200 cursor-pointer shadow-2xs transition-all shrink-0"
+                        >
+                          <Edit2 size={12} />
+                          <span>Reassign</span>
+                        </button>
+                      </div>
                     </div>
 
                     {/* Appointed Director Card */}
@@ -619,19 +635,36 @@ export default function TpoDashboardView() {
                           {dir.directorId ? dir.directorId.name.charAt(0).toUpperCase() : "?"}
                         </div>
                         <div>
-                          <div className="flex items-center gap-1.5">
-                            <strong className="text-xs font-bold text-slate-800">
-                              {dir.directorId?.name || "No Appointed Director"}
-                            </strong>
-                            {dir.directorId && (
-                              <span className="inline-flex items-center px-1.5 py-0.2 rounded text-[10px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                                Active
+                          {dir.directorId ? (
+                            <button
+                              type="button"
+                              onClick={() => setInspectTargetId(dir.directorId._id || dir.directorId)}
+                              className="text-left group cursor-pointer block"
+                              title="Click to inspect Director and their entire school tree"
+                            >
+                              <div className="flex items-center gap-1.5">
+                                <strong className="text-xs font-bold text-slate-800 group-hover:text-red-700 transition-colors flex items-center gap-1">
+                                  {dir.directorId.name}
+                                  <Eye size={11} className="opacity-0 group-hover:opacity-100 text-red-600 transition-opacity" />
+                                </strong>
+                                <span className="inline-flex items-center px-1.5 py-0.2 rounded text-[10px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                  Active
+                                </span>
+                              </div>
+                              <span className="text-[11px] text-slate-500 block">
+                                {dir.directorId.email}
                               </span>
-                            )}
-                          </div>
-                          <span className="text-[11px] text-slate-500 block">
-                            {dir.directorId?.email || "Position is currently vacant"}
-                          </span>
+                            </button>
+                          ) : (
+                            <div>
+                              <strong className="text-xs font-bold text-slate-800 block">
+                                No Appointed Director
+                              </strong>
+                              <span className="text-[11px] text-slate-500 block">
+                                Position is currently vacant
+                              </span>
+                            </div>
+                          )}
                         </div>
                       </div>
 
@@ -719,27 +752,40 @@ export default function TpoDashboardView() {
                   {filteredDirectors.map((dir) => (
                     <tr key={dir._id} className="hover:bg-slate-50/80 transition-colors">
                       <td className="py-3.5 px-3">
-                        <div className="flex items-center gap-2.5">
-                          <div className="w-8 h-8 rounded-full bg-red-100 text-red-700 flex items-center justify-center font-bold text-xs shrink-0">
+                        <button
+                          type="button"
+                          onClick={() => setInspectTargetId(dir._id)}
+                          className="flex items-center gap-2.5 text-left group cursor-pointer"
+                          title="Click to inspect Director, schools, departments, and teachers"
+                        >
+                          <div className="w-8 h-8 rounded-full bg-red-100 text-red-700 flex items-center justify-center font-bold text-xs shrink-0 group-hover:bg-red-200 transition-colors">
                             {dir.name.charAt(0).toUpperCase()}
                           </div>
                           <div>
-                            <strong className="text-slate-900 font-bold block">{dir.name}</strong>
-                            <span className="text-[11px] text-slate-400">{dir.designation || "Director of Faculty"}</span>
+                            <strong className="text-slate-900 font-bold block group-hover:text-red-700 transition-colors flex items-center gap-1.5">
+                              {dir.name}
+                              <Eye size={12} className="opacity-0 group-hover:opacity-100 text-red-600 transition-opacity" />
+                            </strong>
+                            <span className="text-[11px] text-slate-400 block">{dir.designation || "Director of Faculty"}</span>
                           </div>
-                        </div>
+                        </button>
                       </td>
 
                       <td className="py-3.5 px-3">
                         {dir.directorateId ? (
-                          <div>
-                            <span className="font-mono text-[10px] font-black uppercase text-red-700 bg-red-50 px-2 py-0.5 rounded border border-red-200 inline-block mb-0.5">
+                          <button
+                            type="button"
+                            onClick={() => setInspectTargetId(dir._id)}
+                            className="text-left group cursor-pointer"
+                            title="Inspect School"
+                          >
+                            <span className="font-mono text-[10px] font-black uppercase text-red-700 bg-red-50 px-2 py-0.5 rounded border border-red-200 inline-block mb-0.5 group-hover:bg-red-100 transition-colors">
                               {dir.directorateId.code}
                             </span>
-                            <span className="text-xs text-slate-800 font-medium block">
+                            <span className="text-xs text-slate-800 font-medium block group-hover:text-red-700 transition-colors">
                               {dir.directorateId.name}
                             </span>
-                          </div>
+                          </button>
                         ) : (
                           <span className="text-amber-600 font-semibold bg-amber-50 px-2 py-0.5 rounded text-[10px] border border-amber-200">
                             Unassigned School
@@ -762,6 +808,14 @@ export default function TpoDashboardView() {
 
                       <td className="py-3.5 px-3 text-right">
                         <div className="flex items-center justify-end gap-1.5">
+                          <button
+                            type="button"
+                            onClick={() => setInspectTargetId(dir._id)}
+                            title="Inspect Director Subordinates Tree"
+                            className="p-1.5 text-slate-500 hover:text-red-700 hover:bg-red-50 rounded-lg cursor-pointer transition-all"
+                          >
+                            <Eye size={13} />
+                          </button>
                           {dir.directorateId && (
                             <button
                               type="button"
@@ -953,7 +1007,19 @@ export default function TpoDashboardView() {
                   <strong className="block text-slate-800 text-xs font-bold">{dept.name}</strong>
                   <div className="pt-2 border-t border-slate-200 text-[11px] flex items-center justify-between">
                     <span className="text-slate-500">Appointed HOD:</span>
-                    <strong className="text-slate-700">{dept.hodId?.name || "Unassigned"}</strong>
+                    {dept.hodId ? (
+                      <button
+                        type="button"
+                        onClick={() => setInspectTargetId(dept.hodId._id || dept.hodId)}
+                        className="font-bold text-slate-700 hover:text-red-600 inline-flex items-center gap-1 cursor-pointer transition-colors"
+                        title="Click to inspect HOD and department teachers"
+                      >
+                        <span>{dept.hodId.name || "Appointed HOD"}</span>
+                        <Eye size={11} className="text-red-500" />
+                      </button>
+                    ) : (
+                      <strong className="text-slate-400 italic">Unassigned</strong>
+                    )}
                   </div>
                 </div>
               ))}
@@ -1428,6 +1494,14 @@ export default function TpoDashboardView() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* ================= MODAL: DEEP HIERARCHICAL PROFILE INSPECTOR ================= */}
+      {inspectTargetId && (
+        <HierarchyProfileInspectorModal
+          targetId={inspectTargetId}
+          onClose={() => setInspectTargetId(null)}
+        />
       )}
     </div>
   );

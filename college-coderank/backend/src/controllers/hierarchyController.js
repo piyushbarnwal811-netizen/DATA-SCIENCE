@@ -1885,3 +1885,446 @@ export async function deleteUser(req, res, next) {
   return deleteAccount(req, res, next);
 }
 
+/**
+ * GET /api/hierarchy/inspect/:id
+ * Deep hierarchical drill-down inspection for any account in the institution.
+ * Returns comprehensive subordinate tree, aggregated statistics, and direct reports
+ * according to the viewer's authoritative hierarchy scope.
+ */
+export async function inspectHierarchyNode(req, res, next) {
+  try {
+    const { id } = req.params;
+    const viewerRole = req.user.role;
+    const viewerId = req.user.id;
+
+    let targetAdmin = null;
+    let targetStudent = null;
+
+    if (id === "super_admin") {
+      targetAdmin = await Admin.findOne({ role: "super_admin", status: "active" });
+    } else if (id === "tpo") {
+      targetAdmin = await Admin.findOne({ role: "tpo", status: "active" });
+    } else {
+      targetAdmin = await Admin.findById(id).populate("directorateId", "name code building").populate("departmentId", "name code");
+      if (!targetAdmin) {
+        targetStudent = await Student.findById(id);
+      }
+    }
+
+    if (!targetAdmin && !targetStudent) {
+      return res.status(404).json({ message: "Account profile not found." });
+    }
+
+    // Role-based Access Control Check
+    if (viewerRole !== "super_admin" && viewerRole !== "admin") {
+      if (viewerRole === "tpo") {
+        if (targetAdmin && (targetAdmin.role === "super_admin" || targetAdmin.role === "admin") && String(targetAdmin._id) !== String(viewerId)) {
+          return res.status(403).json({ message: "Forbidden: TPO cannot inspect Super Admin." });
+        }
+      } else if (viewerRole === "director") {
+        const myDirectorate = await Directorate.findOne({ directorId: viewerId });
+        const myDirId = myDirectorate?._id || req.user.directorateId;
+        if (targetAdmin && String(targetAdmin._id) !== String(viewerId)) {
+          if (!myDirId || String(targetAdmin.directorateId?._id || targetAdmin.directorateId) !== String(myDirId)) {
+            return res.status(403).json({ message: "Forbidden: You can only inspect profiles within your assigned School." });
+          }
+        }
+      } else if (viewerRole === "hod") {
+        const myDept = await Department.findOne({ hodId: viewerId });
+        const myDeptId = myDept?._id || req.user.departmentId;
+        if (targetAdmin && String(targetAdmin._id) !== String(viewerId)) {
+          if (!myDeptId || String(targetAdmin.departmentId?._id || targetAdmin.departmentId) !== String(myDeptId)) {
+            return res.status(403).json({ message: "Forbidden: You can only inspect profiles within your assigned Department." });
+          }
+        }
+      } else if (viewerRole === "teacher") {
+        if (targetAdmin && String(targetAdmin._id) !== String(viewerId)) {
+          return res.status(403).json({ message: "Forbidden: Teachers can only inspect students in their sections." });
+        }
+      }
+    }
+
+    // If target is Student
+    if (targetStudent) {
+      return res.json({
+        type: "student",
+        role: "student",
+        profile: {
+          id: targetStudent._id || targetStudent.id,
+          name: targetStudent.name,
+          email: targetStudent.email,
+          studentId: targetStudent.studentId,
+          branch: targetStudent.branch,
+          section: targetStudent.section,
+          year: targetStudent.year,
+          status: targetStudent.isActive !== false ? "active" : "inactive"
+        },
+        codingStats: {
+          leetcodeUsername: targetStudent.leetcodeUsername,
+          githubUsername: targetStudent.githubUsername,
+          codechefUsername: targetStudent.codechefUsername,
+          hackerrankUsername: targetStudent.hackerrankUsername,
+          geeksforgeeksUsername: targetStudent.geeksforgeeksUsername,
+          totalSolved: targetStudent.totalSolved || 0,
+          rankingScore: targetStudent.rankingScore || 0,
+          verifiedBadgesCount: targetStudent.verifiedBadgesCount || 0
+        },
+        subordinates: []
+      });
+    }
+
+    const role = targetAdmin.role;
+    const baseProfile = {
+      id: targetAdmin._id || targetAdmin.id,
+      name: targetAdmin.name,
+      email: targetAdmin.email,
+      phone: targetAdmin.phone || null,
+      employeeId: targetAdmin.employeeId || null,
+      designation: targetAdmin.designation,
+      qualification: targetAdmin.qualification || null,
+      role: targetAdmin.role,
+      status: targetAdmin.status,
+      createdAt: targetAdmin.createdAt,
+      directorate: targetAdmin.directorateId ? {
+        id: targetAdmin.directorateId._id || targetAdmin.directorateId.id,
+        name: targetAdmin.directorateId.name,
+        code: targetAdmin.directorateId.code,
+        building: targetAdmin.directorateId.building
+      } : null,
+      department: targetAdmin.departmentId ? {
+        id: targetAdmin.departmentId._id || targetAdmin.departmentId.id,
+        name: targetAdmin.departmentId.name,
+        code: targetAdmin.departmentId.code
+      } : null
+    };
+
+    // 1. TPO Profile Drill-down
+    if (role === "tpo") {
+      const [directors, directorates, departments, teachers, studentsCount] = await Promise.all([
+        Admin.find({ role: "director", status: "active" }).populate("directorateId", "name code building").select("-password").sort({ name: 1 }),
+        Directorate.find().populate("directorId", "name email phone designation").sort({ name: 1 }),
+        Department.find().populate("hodId", "name email phone").sort({ name: 1 }),
+        Admin.find({ role: "teacher", status: "active" }).select("name email departmentId assignedSections"),
+        Student.countDocuments({ isActive: { $ne: false } })
+      ]);
+
+      const hodsCount = departments.filter((d) => d.hodId).length;
+
+      return res.json({
+        type: "tpo",
+        role: "tpo",
+        profile: baseProfile,
+        summary: {
+          totalDirectors: directors.length,
+          totalSchools: directorates.length,
+          totalDepartments: departments.length,
+          totalHods: hodsCount,
+          totalTeachers: teachers.length,
+          totalStudents: studentsCount
+        },
+        directors: directors.map((dir) => {
+          const dirId = dir.directorateId?._id || dir.directorateId;
+          const depts = departments.filter((d) => String(d.directorateId) === String(dirId));
+          const deptIds = new Set(depts.map((d) => String(d._id)));
+          const dirTeachers = teachers.filter((t) => deptIds.has(String(t.departmentId)));
+
+          return {
+            id: dir._id || dir.id,
+            name: dir.name,
+            email: dir.email,
+            phone: dir.phone,
+            employeeId: dir.employeeId,
+            designation: dir.designation,
+            status: dir.status,
+            school: dir.directorateId ? {
+              id: dir.directorateId._id || dir.directorateId.id,
+              name: dir.directorateId.name,
+              code: dir.directorateId.code,
+              building: dir.directorateId.building
+            } : null,
+            departmentsCount: depts.length,
+            teachersCount: dirTeachers.length
+          };
+        }),
+        schools: directorates.map((d) => ({
+          id: d._id || d.id,
+          name: d.name,
+          code: d.code,
+          building: d.building,
+          director: d.directorId ? {
+            id: d.directorId._id || d.directorId.id,
+            name: d.directorId.name,
+            email: d.directorId.email,
+            phone: d.directorId.phone
+          } : null,
+          isVacant: !d.directorId
+        }))
+      });
+    }
+
+    // 2. Director Profile Drill-down
+    if (role === "director") {
+      let dirId = targetAdmin.directorateId?._id || targetAdmin.directorateId;
+      let directorate = null;
+      if (dirId) {
+        directorate = await Directorate.findById(dirId);
+      }
+      if (!directorate) {
+        directorate = await Directorate.findOne({ directorId: targetAdmin._id || targetAdmin.id });
+        if (directorate) dirId = directorate._id;
+      }
+
+      let departments = [];
+      let teachers = [];
+      let sections = [];
+      let totalStudentsInSchool = 0;
+
+      if (dirId) {
+        departments = await Department.find({ directorateId: dirId }).populate("hodId", "name email phone employeeId designation status").sort({ name: 1 });
+        const deptIds = departments.map((d) => d._id);
+
+        [teachers, sections] = await Promise.all([
+          Admin.find({ departmentId: { $in: deptIds }, role: "teacher", status: "active" }).select("name email phone employeeId designation assignedSections assignedSubjects departmentId").sort({ name: 1 }),
+          Section.find({ departmentId: { $in: deptIds } })
+        ]);
+
+        totalStudentsInSchool = sections.reduce((sum, s) => sum + (s.totalStudents || 0), 0);
+      }
+
+      return res.json({
+        type: "director",
+        role: "director",
+        profile: {
+          ...baseProfile,
+          directorate: directorate ? {
+            id: directorate._id || directorate.id,
+            name: directorate.name,
+            code: directorate.code,
+            building: directorate.building,
+            description: directorate.description
+          } : null
+        },
+        summary: {
+          schoolName: directorate?.name || "Unassigned School",
+          schoolCode: directorate?.code || "N/A",
+          departmentsCount: departments.length,
+          hodsCount: departments.filter((d) => d.hodId).length,
+          teachersCount: teachers.length,
+          sectionsCount: sections.length,
+          studentsCount: totalStudentsInSchool
+        },
+        departments: departments.map((dept) => {
+          const deptTeachers = teachers.filter((t) => String(t.departmentId) === String(dept._id));
+          const deptSections = sections.filter((s) => String(s.departmentId) === String(dept._id));
+          const deptStudents = deptSections.reduce((acc, sec) => acc + (sec.totalStudents || 0), 0);
+
+          return {
+            id: dept._id || dept.id,
+            name: dept.name,
+            code: dept.code,
+            buildingBlock: dept.buildingBlock,
+            floor: dept.floor,
+            hod: dept.hodId ? {
+              id: dept.hodId._id || dept.hodId.id,
+              name: dept.hodId.name,
+              email: dept.hodId.email,
+              phone: dept.hodId.phone,
+              employeeId: dept.hodId.employeeId,
+              designation: dept.hodId.designation
+            } : null,
+            teachersCount: deptTeachers.length,
+            teachers: deptTeachers.map((t) => ({
+              id: t._id || t.id,
+              name: t.name,
+              email: t.email,
+              phone: t.phone,
+              employeeId: t.employeeId,
+              designation: t.designation,
+              assignedSections: t.assignedSections || [],
+              assignedSubjects: t.assignedSubjects || []
+            })),
+            sectionsCount: deptSections.length,
+            studentsCount: deptStudents
+          };
+        })
+      });
+    }
+
+    // 3. HOD Profile Drill-down
+    if (role === "hod") {
+      let deptId = targetAdmin.departmentId?._id || targetAdmin.departmentId;
+      let department = null;
+      if (deptId) {
+        department = await Department.findById(deptId).populate("directorateId", "name code building");
+      }
+      if (!department) {
+        department = await Department.findOne({ hodId: targetAdmin._id || targetAdmin.id }).populate("directorateId", "name code building");
+        if (department) deptId = department._id;
+      }
+
+      let teachers = [];
+      let sections = [];
+      let totalStudentsInDept = 0;
+
+      if (deptId) {
+        [teachers, sections] = await Promise.all([
+          Admin.find({ departmentId: deptId, role: "teacher", status: "active" }).select("name email phone employeeId designation assignedSections assignedSubjects").sort({ name: 1 }),
+          Section.find({ departmentId: deptId }).populate("classTeacherId", "name email").sort({ year: 1, name: 1 })
+        ]);
+        totalStudentsInDept = sections.reduce((sum, s) => sum + (s.totalStudents || 0), 0);
+      }
+
+      return res.json({
+        type: "hod",
+        role: "hod",
+        profile: {
+          ...baseProfile,
+          department: department ? {
+            id: department._id || department.id,
+            name: department.name,
+            code: department.code,
+            buildingBlock: department.buildingBlock,
+            floor: department.floor
+          } : null,
+          directorate: department?.directorateId ? {
+            id: department.directorateId._id || department.directorateId.id,
+            name: department.directorateId.name,
+            code: department.directorateId.code
+          } : null
+        },
+        summary: {
+          departmentName: department?.name || "Unassigned Department",
+          departmentCode: department?.code || "N/A",
+          schoolName: department?.directorateId?.name || "N/A",
+          teachersCount: teachers.length,
+          sectionsCount: sections.length,
+          studentsCount: totalStudentsInDept
+        },
+        teachers: teachers.map((t) => ({
+          id: t._id || t.id,
+          name: t.name,
+          email: t.email,
+          phone: t.phone,
+          employeeId: t.employeeId,
+          designation: t.designation,
+          assignedSections: t.assignedSections || [],
+          assignedSubjects: t.assignedSubjects || []
+        })),
+        sections: sections.map((s) => ({
+          id: s._id || s.id,
+          name: s.name,
+          year: s.year,
+          semester: s.semester,
+          capacity: s.capacity,
+          totalStudents: s.totalStudents || 0,
+          classTeacher: s.classTeacherId ? {
+            id: s.classTeacherId._id || s.classTeacherId.id,
+            name: s.classTeacherId.name,
+            email: s.classTeacherId.email
+          } : null
+        }))
+      });
+    }
+
+    // 4. Teacher Profile Drill-down
+    if (role === "teacher") {
+      const deptId = targetAdmin.departmentId?._id || targetAdmin.departmentId;
+      let department = null;
+      if (deptId) {
+        department = await Department.findById(deptId).populate("directorateId", "name code");
+      }
+
+      const assignedSectionIds = targetAdmin.assignedSections || [];
+      const sections = await Section.find({ _id: { $in: assignedSectionIds } });
+      const totalStudentsTaught = sections.reduce((sum, s) => sum + (s.totalStudents || 0), 0);
+
+      const students = await Student.find({
+        $or: [
+          { sectionId: { $in: assignedSectionIds } },
+          { section: { $in: sections.map((s) => s.name) } }
+        ]
+      }).select("name email studentId branch section year totalSolved rankingScore").limit(50);
+
+      return res.json({
+        type: "teacher",
+        role: "teacher",
+        profile: {
+          ...baseProfile,
+          department: department ? {
+            id: department._id || department.id,
+            name: department.name,
+            code: department.code
+          } : null,
+          directorate: department?.directorateId ? {
+            id: department.directorateId._id || department.directorateId.id,
+            name: department.directorateId.name,
+            code: department.directorateId.code
+          } : null
+        },
+        summary: {
+          departmentName: department?.name || "N/A",
+          schoolName: department?.directorateId?.name || "N/A",
+          sectionsCount: sections.length,
+          subjectsCount: (targetAdmin.assignedSubjects || []).length,
+          studentsCount: totalStudentsTaught
+        },
+        sections: sections.map((s) => ({
+          id: s._id || s.id,
+          name: s.name,
+          year: s.year,
+          totalStudents: s.totalStudents || 0
+        })),
+        subjects: targetAdmin.assignedSubjects || [],
+        studentsSample: students.map((s) => ({
+          id: s._id || s.id,
+          name: s.name,
+          email: s.email,
+          studentId: s.studentId,
+          section: s.section,
+          year: s.year,
+          totalSolved: s.totalSolved || 0
+        }))
+      });
+    }
+
+    // 5. Super Admin / General fallback
+    const [tpos, directorates, departmentsCount, studentsCount] = await Promise.all([
+      Admin.find({ role: "tpo", status: "active" }).select("name email phone designation"),
+      Directorate.find().populate("directorId", "name email").sort({ name: 1 }),
+      Department.countDocuments(),
+      Student.countDocuments({ isActive: { $ne: false } })
+    ]);
+
+    return res.json({
+      type: "super_admin",
+      role: "super_admin",
+      profile: baseProfile,
+      summary: {
+        tposCount: tpos.length,
+        schoolsCount: directorates.length,
+        departmentsCount,
+        studentsCount
+      },
+      tpos: tpos.map((t) => ({
+        id: t._id || t.id,
+        name: t.name,
+        email: t.email,
+        phone: t.phone,
+        designation: t.designation
+      })),
+      schools: directorates.map((d) => ({
+        id: d._id || d.id,
+        name: d.name,
+        code: d.code,
+        director: d.directorId ? {
+          id: d.directorId._id || d.directorId.id,
+          name: d.directorId.name,
+          email: d.directorId.email
+        } : null
+      }))
+    });
+  } catch (error) {
+    return next(error);
+  }
+}
+

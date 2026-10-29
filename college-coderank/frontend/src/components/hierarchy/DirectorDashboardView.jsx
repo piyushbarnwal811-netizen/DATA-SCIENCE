@@ -29,6 +29,7 @@ import {
   AlertTriangle
 } from "lucide-react";
 import api, { errorMessage } from "../../services/api.js";
+import HierarchyProfileInspectorModal from "./HierarchyProfileInspectorModal.jsx";
 
 const STANDARD_DEPT_OPTIONS = [
   { code: "CSE", name: "Computer Science & Engineering" },
@@ -68,6 +69,7 @@ export default function DirectorDashboardView() {
   const [tempCredsModal, setTempCredsModal] = useState(null);
   const [inviteSuccessModal, setInviteSuccessModal] = useState(null);
   const [copied, setCopied] = useState(false);
+  const [inspectTargetId, setInspectTargetId] = useState(null);
 
   // Forms
   const [hodInviteForm, setHodInviteForm] = useState({
@@ -659,8 +661,18 @@ export default function DirectorDashboardView() {
                             return (
                               <tr key={hod._id} className="hover:bg-slate-50/80 transition-colors">
                                 <td className="py-3.5 px-3">
-                                  <strong className="text-slate-800 font-bold block">{hod.name}</strong>
-                                  <span className="text-[11px] text-slate-400">{hod.designation}</span>
+                                  <button
+                                    type="button"
+                                    onClick={() => setInspectTargetId(hod._id)}
+                                    className="text-left group cursor-pointer block"
+                                    title="Click to inspect HOD, teachers, sections, and students"
+                                  >
+                                    <strong className="text-slate-800 font-bold group-hover:text-amber-700 transition-colors flex items-center gap-1.5">
+                                      {hod.name}
+                                      <Eye size={12} className="opacity-0 group-hover:opacity-100 text-amber-600 transition-opacity" />
+                                    </strong>
+                                    <span className="text-[11px] text-slate-400 block">{hod.designation}</span>
+                                  </button>
                                 </td>
                                 <td className="py-3.5 px-3 font-mono text-slate-600">{hod.email}</td>
                                 <td className="py-3.5 px-3">
@@ -679,18 +691,28 @@ export default function DirectorDashboardView() {
                                   </span>
                                 </td>
                                 <td className="py-3.5 px-3 text-right">
-                                  <button
-                                    type="button"
-                                    onClick={() => handleHodStatusToggle(hod)}
-                                    title={hod.status === "active" ? "Deactivate HOD" : "Activate HOD"}
-                                    className={`p-1.5 rounded-lg cursor-pointer ${
-                                      hod.status === "active"
-                                        ? "text-slate-500 hover:text-rose-600 hover:bg-rose-50"
-                                        : "text-slate-500 hover:text-emerald-600 hover:bg-emerald-50"
-                                    }`}
-                                  >
-                                    <Power size={14} />
-                                  </button>
+                                  <div className="inline-flex items-center gap-1">
+                                    <button
+                                      type="button"
+                                      onClick={() => setInspectTargetId(hod._id)}
+                                      title="Inspect HOD & Teachers Tree"
+                                      className="p-1.5 rounded-lg text-slate-500 hover:text-amber-600 hover:bg-amber-50 cursor-pointer"
+                                    >
+                                      <Eye size={14} />
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() => handleHodStatusToggle(hod)}
+                                      title={hod.status === "active" ? "Deactivate HOD" : "Activate HOD"}
+                                      className={`p-1.5 rounded-lg cursor-pointer ${
+                                        hod.status === "active"
+                                          ? "text-slate-500 hover:text-rose-600 hover:bg-rose-50"
+                                          : "text-slate-500 hover:text-emerald-600 hover:bg-emerald-50"
+                                      }`}
+                                    >
+                                      <Power size={14} />
+                                    </button>
+                                  </div>
                                 </td>
                               </tr>
                             );
@@ -765,9 +787,19 @@ export default function DirectorDashboardView() {
                         <div className="pt-2 border-t border-slate-100 text-xs flex items-center justify-between">
                           <div className="text-slate-600">
                             <span className="text-slate-400 mr-1.5">Appointed HOD:</span>
-                            <strong className={dept.hodId?.name ? "text-slate-800" : "text-amber-600 italic"}>
-                              {dept.hodId?.name || "Vacant"}
-                            </strong>
+                            {dept.hodId?.name ? (
+                              <button
+                                type="button"
+                                onClick={() => setInspectTargetId(dept.hodId._id || dept.hodId)}
+                                className="font-bold text-slate-800 hover:text-amber-700 inline-flex items-center gap-1 cursor-pointer transition-colors"
+                                title="Click to inspect HOD, teachers, and student rosters"
+                              >
+                                <span>{dept.hodId.name}</span>
+                                <Eye size={12} className="text-amber-600" />
+                              </button>
+                            ) : (
+                              <strong className="text-amber-600 italic">Vacant</strong>
+                            )}
                           </div>
                           <button
                             type="button"
@@ -1539,6 +1571,14 @@ export default function DirectorDashboardView() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* ================= MODAL: DEEP HIERARCHICAL PROFILE INSPECTOR ================= */}
+      {inspectTargetId && (
+        <HierarchyProfileInspectorModal
+          targetId={inspectTargetId}
+          onClose={() => setInspectTargetId(null)}
+        />
       )}
     </div>
   );

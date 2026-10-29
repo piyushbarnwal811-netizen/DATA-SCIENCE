@@ -28,6 +28,7 @@ import {
   Loader2
 } from "lucide-react";
 import api, { errorMessage } from "../../services/api.js";
+import HierarchyProfileInspectorModal from "./HierarchyProfileInspectorModal.jsx";
 
 export default function HodDashboardView() {
   const [data, setData] = useState(null);
@@ -38,6 +39,7 @@ export default function HodDashboardView() {
   const [modalError, setModalError] = useState("");
   const [successMsg, setSuccessMsg] = useState("");
   const lastSubmitRef = useRef(0);
+  const [inspectTargetId, setInspectTargetId] = useState(null);
 
   const [activeTab, setActiveTab] = useState("teachers"); // "teachers" | "sections" | "subjects"
   const [showTeacherModal, setShowTeacherModal] = useState(false);
@@ -641,8 +643,18 @@ export default function HodDashboardView() {
                         {teachers.map((tch) => (
                           <tr key={tch._id} className="hover:bg-slate-50/80 transition-colors">
                             <td className="py-3.5 px-3">
-                              <strong className="text-slate-800 font-bold block">{tch.name}</strong>
-                              <span className="text-[11px] text-slate-400">{tch.designation}</span>
+                              <button
+                                type="button"
+                                onClick={() => setInspectTargetId(tch._id)}
+                                className="text-left group cursor-pointer block"
+                                title="Click to inspect teacher, assigned sections, and student roster"
+                              >
+                                <strong className="text-slate-800 font-bold group-hover:text-emerald-700 transition-colors flex items-center gap-1.5">
+                                  {tch.name}
+                                  <Eye size={12} className="opacity-0 group-hover:opacity-100 text-emerald-600 transition-opacity" />
+                                </strong>
+                                <span className="text-[11px] text-slate-400 block">{tch.designation}</span>
+                              </button>
                             </td>
                             <td className="py-3.5 px-3 font-mono text-slate-600">{tch.email}</td>
                             <td className="py-3.5 px-3">
@@ -678,6 +690,14 @@ export default function HodDashboardView() {
                             </td>
                             <td className="py-3.5 px-3 text-right">
                               <div className="inline-flex items-center gap-1">
+                                <button
+                                  type="button"
+                                  onClick={() => setInspectTargetId(tch._id)}
+                                  title="Inspect Teacher & Students Tree"
+                                  className="p-1.5 rounded-lg text-slate-500 hover:text-emerald-600 hover:bg-emerald-50 cursor-pointer"
+                                >
+                                  <Eye size={14} />
+                                </button>
                                 <button
                                   type="button"
                                   onClick={() => {
@@ -1592,6 +1612,14 @@ export default function HodDashboardView() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* ================= MODAL: DEEP HIERARCHICAL PROFILE INSPECTOR ================= */}
+      {inspectTargetId && (
+        <HierarchyProfileInspectorModal
+          targetId={inspectTargetId}
+          onClose={() => setInspectTargetId(null)}
+        />
       )}
     </div>
   );

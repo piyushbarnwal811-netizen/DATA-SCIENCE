@@ -32,9 +32,11 @@ import {
   EyeOff
 } from "lucide-react";
 import api, { errorMessage } from "../../services/api.js";
+import HierarchyProfileInspectorModal from "./HierarchyProfileInspectorModal.jsx";
 
 export default function SuperAdminDashboardView({ onInspectTree }) {
   const [activeTab, setActiveTab] = useState("tpos"); // "tpos" | "directors" | "accounts" | "audit" | "settings"
+  const [inspectTargetId, setInspectTargetId] = useState(null);
   const [overview, setOverview] = useState(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -841,8 +843,18 @@ export default function SuperAdminDashboardView({ onInspectTree }) {
                       {tpos.map((tpo) => (
                         <tr key={tpo._id} className="hover:bg-slate-50/80 transition-colors">
                           <td className="py-3.5 px-3">
-                            <strong className="text-slate-800 font-bold block">{tpo.name}</strong>
-                            <span className="text-[11px] text-slate-400">{tpo.designation}</span>
+                            <button
+                              type="button"
+                              onClick={() => setInspectTargetId(tpo._id)}
+                              className="text-left group cursor-pointer block"
+                              title="Click to inspect TPO and entire subordinate hierarchy"
+                            >
+                              <strong className="text-slate-800 font-bold group-hover:text-red-700 transition-colors flex items-center gap-1.5">
+                                {tpo.name}
+                                <Eye size={12} className="opacity-0 group-hover:opacity-100 text-red-600 transition-opacity" />
+                              </strong>
+                              <span className="text-[11px] text-slate-400 block">{tpo.designation}</span>
+                            </button>
                           </td>
                           <td className="py-3.5 px-3 font-mono text-slate-600">{tpo.email}</td>
                           <td className="py-3.5 px-3 font-mono text-slate-500">{tpo.employeeId || "—"}</td>
@@ -860,6 +872,14 @@ export default function SuperAdminDashboardView({ onInspectTree }) {
                           </td>
                           <td className="py-3.5 px-3 text-right">
                             <div className="inline-flex items-center gap-1">
+                              <button
+                                type="button"
+                                onClick={() => setInspectTargetId(tpo._id)}
+                                title="Inspect TPO & Subordinates Tree"
+                                className="p-1.5 rounded-lg text-slate-500 hover:text-red-600 hover:bg-red-50 cursor-pointer"
+                              >
+                                <Eye size={14} />
+                              </button>
                               <button
                                 type="button"
                                 onClick={() => handleResetPassword(tpo)}
@@ -1062,15 +1082,30 @@ export default function SuperAdminDashboardView({ onInspectTree }) {
                       {directors.map((dir) => (
                         <tr key={dir._id} className="hover:bg-slate-50/80 transition-colors">
                           <td className="py-3.5 px-3">
-                            <strong className="text-slate-800 font-bold block">{dir.name}</strong>
-                            <span className="text-[11px] text-slate-400">{dir.designation}</span>
+                            <button
+                              type="button"
+                              onClick={() => setInspectTargetId(dir._id)}
+                              className="text-left group cursor-pointer block"
+                              title="Click to inspect Director and entire school/department tree"
+                            >
+                              <strong className="text-slate-800 font-bold group-hover:text-red-700 transition-colors flex items-center gap-1.5">
+                                {dir.name}
+                                <Eye size={12} className="opacity-0 group-hover:opacity-100 text-red-600 transition-opacity" />
+                              </strong>
+                              <span className="text-[11px] text-slate-400 block">{dir.designation}</span>
+                            </button>
                           </td>
                           <td className="py-3.5 px-3 font-mono text-slate-600">{dir.email}</td>
                           <td className="py-3.5 px-3">
                             {dir.directorateId ? (
-                              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-red-50 text-red-700 border border-red-200">
+                              <button
+                                type="button"
+                                onClick={() => setInspectTargetId(dir._id)}
+                                className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-red-50 text-red-700 border border-red-200 hover:bg-red-100 cursor-pointer"
+                                title="Inspect this School / Directorate"
+                              >
                                 {dir.directorateId.name} ({dir.directorateId.code})
-                              </span>
+                              </button>
                             ) : (
                               <span className="text-slate-400 italic">Unassigned</span>
                             )}
@@ -1089,6 +1124,14 @@ export default function SuperAdminDashboardView({ onInspectTree }) {
                           </td>
                           <td className="py-3.5 px-3 text-right">
                             <div className="inline-flex items-center gap-1">
+                              <button
+                                type="button"
+                                onClick={() => setInspectTargetId(dir._id)}
+                                title="Inspect Director & Subordinates Tree"
+                                className="p-1.5 rounded-lg text-slate-500 hover:text-red-600 hover:bg-red-50 cursor-pointer"
+                              >
+                                <Eye size={14} />
+                              </button>
                               <button
                                 type="button"
                                 onClick={() => handleResetPassword(dir)}
@@ -1206,8 +1249,18 @@ export default function SuperAdminDashboardView({ onInspectTree }) {
                     {accounts.map((acc) => (
                       <tr key={acc._id} className="hover:bg-slate-50/80 transition-colors">
                         <td className="py-3 px-3">
-                          <strong className="text-slate-800 font-bold block">{acc.name}</strong>
-                          <span className="font-mono text-[11px] text-slate-500">{acc.email}</span>
+                          <button
+                            type="button"
+                            onClick={() => setInspectTargetId(acc._id)}
+                            className="text-left group cursor-pointer block"
+                            title="Click to inspect profile and subordinates"
+                          >
+                            <strong className="text-slate-800 font-bold group-hover:text-red-700 transition-colors flex items-center gap-1.5">
+                              {acc.name}
+                              <Eye size={12} className="opacity-0 group-hover:opacity-100 text-red-600 transition-opacity" />
+                            </strong>
+                            <span className="font-mono text-[11px] text-slate-500 block">{acc.email}</span>
+                          </button>
                         </td>
                         <td className="py-3 px-3">
                           <span className="inline-block px-2 py-0.5 rounded text-[10px] font-extrabold uppercase tracking-wide bg-slate-100 text-slate-700 border border-slate-200">
@@ -1239,6 +1292,14 @@ export default function SuperAdminDashboardView({ onInspectTree }) {
                         </td>
                         <td className="py-3 px-3 text-right">
                           <div className="inline-flex items-center gap-1">
+                            <button
+                              type="button"
+                              onClick={() => setInspectTargetId(acc._id)}
+                              title="Inspect Profile & Hierarchy Tree"
+                              className="p-1.5 rounded-lg text-slate-500 hover:text-red-600 hover:bg-red-50 cursor-pointer"
+                            >
+                              <Eye size={14} />
+                            </button>
                             <button
                               type="button"
                               onClick={() => handleResetPassword(acc)}
@@ -2260,6 +2321,14 @@ export default function SuperAdminDashboardView({ onInspectTree }) {
             </div>
           </div>
         </div>
+      )}
+
+      {/* ================= MODAL: DEEP HIERARCHICAL PROFILE INSPECTOR ================= */}
+      {inspectTargetId && (
+        <HierarchyProfileInspectorModal
+          targetId={inspectTargetId}
+          onClose={() => setInspectTargetId(null)}
+        />
       )}
     </div>
   );

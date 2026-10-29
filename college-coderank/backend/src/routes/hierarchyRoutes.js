@@ -35,7 +35,8 @@ import {
   getUsers,
   createUser,
   updateUser,
-  deleteUser
+  deleteUser,
+  inspectHierarchyNode
 } from "../controllers/hierarchyController.js";
 import { requireAuth, requireRole } from "../middleware/authMiddleware.js";
 
@@ -60,7 +61,8 @@ router.put("/accounts/:id", requireRole("super_admin"), updateAccount);
 router.delete("/accounts/:id", requireRole("super_admin"), deleteAccount);
 router.get("/audit-logs", requireRole("super_admin"), getAuditLogs);
 
-// Universal User Management
+// Universal User Management & Deep Hierarchy Profile Drill-Down
+router.get("/inspect/:id", inspectHierarchyNode);
 router.get("/users", requireRole("super_admin", "tpo", "director", "hod"), getUsers);
 router.post("/users", requireRole("super_admin"), createUser);
 router.put("/users/:id", requireRole("super_admin"), updateUser);
