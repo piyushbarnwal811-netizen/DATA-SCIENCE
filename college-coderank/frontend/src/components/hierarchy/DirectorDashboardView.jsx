@@ -30,6 +30,23 @@ import {
 } from "lucide-react";
 import api, { errorMessage } from "../../services/api.js";
 
+const STANDARD_DEPT_OPTIONS = [
+  { code: "CSE", name: "Computer Science & Engineering" },
+  { code: "AI & DS", name: "Artificial Intelligence & Data Science" },
+  { code: "AIML", name: "Artificial Intelligence & Machine Learning" },
+  { code: "IT", name: "Information Technology" },
+  { code: "CYBER", name: "Cyber Security & Digital Forensics" },
+  { code: "DS", name: "Data Science & Big Data" },
+  { code: "CLOUD", name: "Cloud Computing & DevOps" },
+  { code: "SE", name: "Software Engineering" },
+  { code: "ECE", name: "Electronics & Communication Engineering" },
+  { code: "EEE", name: "Electrical & Electronics Engineering" },
+  { code: "ME", name: "Mechanical Engineering" },
+  { code: "CE", name: "Civil Engineering" },
+  { code: "MBA", name: "Master of Business Administration (MBA)" },
+  { code: "PHARM", name: "Pharmaceutical Sciences" }
+];
+
 export default function DirectorDashboardView() {
   const [data, setData] = useState(null);
   const [hodInvitations, setHodInvitations] = useState([]);
@@ -58,6 +75,10 @@ export default function DirectorDashboardView() {
     email: "",
     departmentId: ""
   });
+  const [hodInviteDeptMode, setHodInviteDeptMode] = useState("select"); // "select" | "custom"
+  const [hodInviteCustomDept, setHodInviteCustomDept] = useState("");
+  const [hodCreateDeptMode, setHodCreateDeptMode] = useState("select"); // "select" | "custom"
+  const [hodCreateCustomDept, setHodCreateCustomDept] = useState("");
 
   const [hodForm, setHodForm] = useState({
     name: "",
@@ -95,8 +116,12 @@ export default function DirectorDashboardView() {
 
   const handleSendHodInvitation = async (e) => {
     e.preventDefault();
-    if (!hodInviteForm.departmentId) {
+    if (hodInviteDeptMode === "select" && !hodInviteForm.departmentId) {
       setModalError("Please select an academic department for the HOD.");
+      return;
+    }
+    if (hodInviteDeptMode === "custom" && !hodInviteCustomDept.trim()) {
+      setModalError("Please enter the Department name or code (e.g. AIML, IT, Cyber Security).");
       return;
     }
     const now = Date.now();
@@ -107,15 +132,24 @@ export default function DirectorDashboardView() {
     setModalError("");
     setError("");
     try {
-      const { data: res } = await api.post("/invitations", {
+      const payload = {
         name: hodInviteForm.name?.trim(),
         email: hodInviteForm.email?.trim().toLowerCase(),
-        role: "hod",
-        departmentId: hodInviteForm.departmentId
-      });
+        role: "hod"
+      };
+
+      if (hodInviteDeptMode === "custom") {
+        payload.newDepartmentName = hodInviteCustomDept.trim();
+      } else {
+        payload.departmentId = hodInviteForm.departmentId;
+      }
+
+      const { data: res } = await api.post("/invitations", payload);
       setShowHodInviteModal(false);
       setShowHodModal(false);
       setHodInviteForm({ name: "", email: "", departmentId: "" });
+      setHodInviteCustomDept("");
+      setHodInviteDeptMode("select");
       setInviteSuccessModal({
         name: res.invitation?.name || hodInviteForm.name,
         email: res.invitation?.email || hodInviteForm.email,
@@ -250,19 +284,30 @@ export default function DirectorDashboardView() {
 
   const handleCreateHod = async (e) => {
     e.preventDefault();
-    if (!hodForm.departmentId) {
+    if (hodCreateDeptMode === "select" && !hodForm.departmentId) {
       setError("Please select a department for the HOD.");
+      return;
+    }
+    if (hodCreateDeptMode === "custom" && !hodCreateCustomDept.trim()) {
+      setError("Please enter the Department name or code (e.g. AIML, IT, Cyber Security).");
       return;
     }
     setSubmitting(true);
     setError("");
     try {
-      const { data: res } = await api.post("/hierarchy/director/hods", {
+      const payload = {
         ...hodForm,
         password: hodForm.password?.trim() || undefined,
         temporaryPassword: hodForm.password?.trim() || undefined,
         mustChangePassword: Boolean(hodForm.mustChangePassword)
-      });
+      };
+
+      if (hodCreateDeptMode === "custom") {
+        payload.newDepartmentName = hodCreateCustomDept.trim();
+        delete payload.departmentId;
+      }
+
+      const { data: res } = await api.post("/hierarchy/director/hods", payload);
       setShowHodModal(false);
       setShowHodInviteModal(false);
       const chosenPass = res.credentials?.password || res.temporaryCredentials?.temporaryPassword;
@@ -282,6 +327,8 @@ export default function DirectorDashboardView() {
         password: "",
         mustChangePassword: true
       });
+      setHodCreateCustomDept("");
+      setHodCreateDeptMode("select");
       showSuccess(`HOD account created successfully.`);
       refreshAll();
     } catch (err) {
@@ -930,6 +977,10 @@ export default function DirectorDashboardView() {
                   setShowHodModal(false);
                   setShowHodInviteModal(false);
                   setModalError("");
+                  setHodInviteDeptMode("select");
+                  setHodInviteCustomDept("");
+                  setHodCreateDeptMode("select");
+                  setHodCreateCustomDept("");
                 }}
                 className="text-slate-400 hover:text-slate-600 cursor-pointer disabled:opacity-50"
               >
@@ -987,20 +1038,99 @@ export default function DirectorDashboardView() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">Academic Department *</label>
-                  <select
-                    required
-                    value={hodInviteForm.departmentId}
-                    onChange={(e) => setHodInviteForm({ ...hodInviteForm, departmentId: e.target.value })}
-                    className="w-full text-xs px-3 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-1 focus:ring-amber-500"
-                  >
-                    <option value="">-- Select Department in Your Directorate --</option>
-                    {departments.map((dept) => (
-                      <option key={dept._id} value={dept._id}>
-                        {dept.name} ({dept.code || "DEPT"})
-                      </option>
-                    ))}
-                  </select>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className="block text-xs font-bold text-slate-700">
+                      Academic Department <span className="text-amber-500">*</span>
+                    </label>
+                    <div className="inline-flex rounded-lg border border-slate-200 bg-slate-50 p-0.5 text-[11px]">
+                      <button
+                        type="button"
+                        onClick={() => setHodInviteDeptMode("select")}
+                        className={`px-2 py-0.5 rounded-md font-medium transition-all ${
+                          hodInviteDeptMode === "select"
+                            ? "bg-white text-amber-800 shadow-xs font-bold"
+                            : "text-slate-500 hover:text-slate-700"
+                        }`}
+                      >
+                        Choose from list
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setHodInviteDeptMode("custom")}
+                        className={`px-2 py-0.5 rounded-md font-medium transition-all ${
+                          hodInviteDeptMode === "custom"
+                            ? "bg-white text-amber-800 shadow-xs font-bold"
+                            : "text-slate-500 hover:text-slate-700"
+                        }`}
+                      >
+                        ✍️ Type new department
+                      </button>
+                    </div>
+                  </div>
+
+                  {hodInviteDeptMode === "select" ? (
+                    <>
+                      <select
+                        required={hodInviteDeptMode === "select"}
+                        value={hodInviteForm.departmentId}
+                        onChange={(e) => {
+                          if (e.target.value === "__NEW__") {
+                            setHodInviteDeptMode("custom");
+                            setHodInviteForm({ ...hodInviteForm, departmentId: "" });
+                          } else {
+                            setHodInviteForm({ ...hodInviteForm, departmentId: e.target.value });
+                          }
+                        }}
+                        className="w-full text-xs px-3 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-1 focus:ring-amber-500 bg-white"
+                      >
+                        <option value="">-- Select Department in Your Directorate --</option>
+                        {departments.length > 0 && (
+                          <optgroup label="Directorate Departments">
+                            {departments.map((dept) => (
+                              <option key={dept._id} value={dept._id}>
+                                {dept.name} ({dept.code || "DEPT"}) {dept.hodId ? `· Current: ${dept.hodId.name}` : "· Vacant"}
+                              </option>
+                            ))}
+                          </optgroup>
+                        )}
+                        <optgroup label="Standard University Departments">
+                          {STANDARD_DEPT_OPTIONS.filter(
+                            (std) => !departments.some((d) => (d.code || "").toUpperCase() === std.code.toUpperCase())
+                          ).map((std) => (
+                            <option key={std.code} value={std.name}>
+                              {std.name} ({std.code})
+                            </option>
+                          ))}
+                        </optgroup>
+                        <option value="__NEW__">✍️ + Type / write another department name...</option>
+                      </select>
+                      <span className="text-[10px] text-slate-400 mt-1 block">
+                        Select which academic department this HOD will head, or switch to typing a new one.
+                      </span>
+                    </>
+                  ) : (
+                    <>
+                      <input
+                        type="text"
+                        required={hodInviteDeptMode === "custom"}
+                        placeholder="e.g. AIML, IT, Cyber Security, ECE, Mechanical, MBA..."
+                        value={hodInviteCustomDept}
+                        onChange={(e) => setHodInviteCustomDept(e.target.value)}
+                        className="w-full text-xs px-3 py-2 rounded-lg border border-amber-300 focus:outline-none focus:ring-1 focus:ring-amber-500 bg-amber-50/20"
+                        autoFocus
+                      />
+                      <div className="flex items-center justify-between text-[10px] text-slate-500 mt-1">
+                        <span>Type department name or code. System auto-creates it if new.</span>
+                        <button
+                          type="button"
+                          onClick={() => setHodInviteDeptMode("select")}
+                          className="text-amber-600 font-semibold hover:underline cursor-pointer"
+                        >
+                          ← Choose existing
+                        </button>
+                      </div>
+                    </>
+                  )}
                 </div>
 
                 <div>
@@ -1039,6 +1169,8 @@ export default function DirectorDashboardView() {
                       setShowHodModal(false);
                       setShowHodInviteModal(false);
                       setModalError("");
+                      setHodInviteDeptMode("select");
+                      setHodInviteCustomDept("");
                     }}
                     className="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-lg cursor-pointer disabled:opacity-50"
                   >
@@ -1079,20 +1211,99 @@ export default function DirectorDashboardView() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">Academic Department *</label>
-                  <select
-                    required
-                    value={hodForm.departmentId}
-                    onChange={(e) => setHodForm({ ...hodForm, departmentId: e.target.value })}
-                    className="w-full text-xs px-3 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-1 focus:ring-amber-500"
-                  >
-                    <option value="">-- Select Department in Your Directorate --</option>
-                    {departments.map((d) => (
-                      <option key={d._id} value={d._id}>
-                        {d.name} ({d.code || "DEPT"})
-                      </option>
-                    ))}
-                  </select>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className="block text-xs font-bold text-slate-700">
+                      Academic Department <span className="text-amber-500">*</span>
+                    </label>
+                    <div className="inline-flex rounded-lg border border-slate-200 bg-slate-50 p-0.5 text-[11px]">
+                      <button
+                        type="button"
+                        onClick={() => setHodCreateDeptMode("select")}
+                        className={`px-2 py-0.5 rounded-md font-medium transition-all ${
+                          hodCreateDeptMode === "select"
+                            ? "bg-white text-amber-800 shadow-xs font-bold"
+                            : "text-slate-500 hover:text-slate-700"
+                        }`}
+                      >
+                        Choose from list
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setHodCreateDeptMode("custom")}
+                        className={`px-2 py-0.5 rounded-md font-medium transition-all ${
+                          hodCreateDeptMode === "custom"
+                            ? "bg-white text-amber-800 shadow-xs font-bold"
+                            : "text-slate-500 hover:text-slate-700"
+                        }`}
+                      >
+                        ✍️ Type new department
+                      </button>
+                    </div>
+                  </div>
+
+                  {hodCreateDeptMode === "select" ? (
+                    <>
+                      <select
+                        required={hodCreateDeptMode === "select"}
+                        value={hodForm.departmentId}
+                        onChange={(e) => {
+                          if (e.target.value === "__NEW__") {
+                            setHodCreateDeptMode("custom");
+                            setHodForm({ ...hodForm, departmentId: "" });
+                          } else {
+                            setHodForm({ ...hodForm, departmentId: e.target.value });
+                          }
+                        }}
+                        className="w-full text-xs px-3 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-1 focus:ring-amber-500 bg-white"
+                      >
+                        <option value="">-- Select Department in Your Directorate --</option>
+                        {departments.length > 0 && (
+                          <optgroup label="Directorate Departments">
+                            {departments.map((d) => (
+                              <option key={d._id} value={d._id}>
+                                {d.name} ({d.code || "DEPT"}) {d.hodId ? `· Current: ${d.hodId.name}` : "· Vacant"}
+                              </option>
+                            ))}
+                          </optgroup>
+                        )}
+                        <optgroup label="Standard University Departments">
+                          {STANDARD_DEPT_OPTIONS.filter(
+                            (std) => !departments.some((d) => (d.code || "").toUpperCase() === std.code.toUpperCase())
+                          ).map((std) => (
+                            <option key={std.code} value={std.name}>
+                              {std.name} ({std.code})
+                            </option>
+                          ))}
+                        </optgroup>
+                        <option value="__NEW__">✍️ + Type / write another department name...</option>
+                      </select>
+                      <span className="text-[10px] text-slate-400 mt-1 block">
+                        Select which academic department this HOD will head, or switch to typing a new one.
+                      </span>
+                    </>
+                  ) : (
+                    <>
+                      <input
+                        type="text"
+                        required={hodCreateDeptMode === "custom"}
+                        placeholder="e.g. AIML, IT, Cyber Security, ECE, Mechanical, MBA..."
+                        value={hodCreateCustomDept}
+                        onChange={(e) => setHodCreateCustomDept(e.target.value)}
+                        className="w-full text-xs px-3 py-2 rounded-lg border border-amber-300 focus:outline-none focus:ring-1 focus:ring-amber-500 bg-amber-50/20"
+                        autoFocus
+                      />
+                      <div className="flex items-center justify-between text-[10px] text-slate-500 mt-1">
+                        <span>Type department name or code. System auto-creates it if new.</span>
+                        <button
+                          type="button"
+                          onClick={() => setHodCreateDeptMode("select")}
+                          className="text-amber-600 font-semibold hover:underline cursor-pointer"
+                        >
+                          ← Choose existing
+                        </button>
+                      </div>
+                    </>
+                  )}
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
@@ -1196,6 +1407,8 @@ export default function DirectorDashboardView() {
                     onClick={() => {
                       setShowHodModal(false);
                       setShowHodInviteModal(false);
+                      setHodCreateDeptMode("select");
+                      setHodCreateCustomDept("");
                     }}
                     className="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-lg cursor-pointer"
                   >

@@ -103,6 +103,75 @@ async function resolveDirectorate({ directorateId, newSchoolName, newSchoolCode,
 }
 
 /**
+ * Resolves an Academic Department by ID or creates it on the fly within a Directorate
+ * if a custom department name or standard department name/code is provided.
+ */
+async function resolveDepartment({ directorateId, departmentId, newDepartmentName, newDepartmentCode, departmentName }) {
+  let departmentObj = null;
+
+  // 1. If valid existing ID provided (and not a placeholder)
+  if (
+    departmentId &&
+    departmentId !== "new" &&
+    departmentId !== "custom" &&
+    departmentId !== "custom_mode"
+  ) {
+    try {
+      departmentObj = await Department.findById(departmentId);
+    } catch (_) {}
+  }
+
+  // 2. If custom department name/code provided or departmentId is a custom string
+  const customInput = String(
+    newDepartmentName ||
+    departmentName ||
+    (!departmentObj && departmentId && departmentId !== "custom_mode" ? departmentId : "")
+  ).trim();
+
+  if (!departmentObj && customInput && customInput !== "new" && customInput !== "custom" && customInput !== "custom_mode") {
+    let code = (newDepartmentCode || "").trim().toUpperCase();
+    let name = customInput;
+
+    const parts = customInput.split(/[-–—:]/);
+    if (!code && parts.length > 1 && parts[0].trim().length <= 10) {
+      code = parts[0].trim().toUpperCase();
+      name = parts.slice(1).join(" ").trim();
+    } else if (!code) {
+      code = customInput.split(" ")[0].toUpperCase().slice(0, 10);
+    }
+
+    // Try finding within directorate
+    if (directorateId) {
+      departmentObj = await Department.findOne({
+        directorateId,
+        $or: [
+          { code },
+          { name: { $regex: new RegExp(`^${name}$`, "i") } }
+        ]
+      });
+    }
+
+    // If not found in directorate, create it
+    if (!departmentObj) {
+      const existingCodeAnywhere = await Department.findOne({ code });
+      const uniqueCode = existingCodeAnywhere ? `${code}-${Date.now().toString().slice(-4)}` : (code || `DEPT-${Date.now().toString().slice(-4)}`);
+
+      departmentObj = await Department.create({
+        name: name || customInput,
+        code: uniqueCode,
+        directorateId: directorateId || null,
+        buildingBlock: "Academic Complex",
+        floor: "Floor 1-3",
+        status: "active"
+      });
+      console.log(`[Hierarchy] Auto-created new Department for HOD: ${departmentObj.name} (${departmentObj.code}) under Directorate: ${directorateId}`);
+    }
+  }
+
+  return departmentObj;
+}
+
+/**
  * POST /api/invitations
  * Create a new account invitation and send the secure setup link via email.
  */
@@ -119,7 +188,10 @@ export async function createInvitation(req, res, next) {
       phone,
       newSchoolName,
       newSchoolCode,
-      schoolName
+      schoolName,
+      newDepartmentName,
+      newDepartmentCode,
+      departmentName
     } = req.body;
 
     if (!name || !email) {
@@ -177,29 +249,39 @@ export async function createInvitation(req, res, next) {
       }
       targetRole = "hod";
 
-      if (!departmentId) {
+      const directorAdmin = await Admin.findById(req.user.id);
+      let myDirectorateId = directorAdmin?.directorateId || req.user.directorateId;
+      if (!myDirectorateId) {
+        const myDir = await Directorate.findOne({ directorId: req.user.id });
+        myDirectorateId = myDir?._id;
+      }
+
+      departmentObj = await resolveDepartment({
+        directorateId: myDirectorateId,
+        departmentId,
+        newDepartmentName,
+        newDepartmentCode,
+        departmentName
+      });
+
+      if (!departmentObj) {
         return res.status(400).json({
-          message: "Department selection is required when inviting an HOD."
+          message: "Department selection is required. Please choose an existing Department (e.g. AI & DS, CSE, IT) or type a new Department name."
         });
       }
 
-      departmentObj = await Department.findById(departmentId);
-      if (!departmentObj) {
-        return res.status(404).json({ message: "Selected Department does not exist." });
-      }
-
       // Ensure department belongs to the director's assigned directorate
-      const directorAdmin = await Admin.findById(req.user.id);
       if (
-        !directorAdmin.directorateId ||
-        departmentObj.directorateId.toString() !== directorAdmin.directorateId.toString()
+        myDirectorateId &&
+        departmentObj.directorateId &&
+        departmentObj.directorateId.toString() !== myDirectorateId.toString()
       ) {
         return res.status(403).json({
           message: "Unauthorized: You can only invite HODs for departments within your assigned Directorate."
         });
       }
 
-      targetDirectorateId = departmentObj.directorateId;
+      targetDirectorateId = departmentObj.directorateId || myDirectorateId;
       targetDepartmentId = departmentObj._id;
     } else if (creatorRole === "hod") {
       if (role && role !== "teacher") {

@@ -804,6 +804,71 @@ export async function getTpoOverview(req, res, next) {
 // =========================================================================
 
 /**
+ * Resolves an Academic Department by ID or creates it on the fly within a Directorate
+ * if a custom department name or standard department name/code is provided.
+ */
+async function resolveDepartment({ directorateId, departmentId, newDepartmentName, newDepartmentCode, departmentName }) {
+  let departmentObj = null;
+
+  if (
+    departmentId &&
+    departmentId !== "new" &&
+    departmentId !== "custom" &&
+    departmentId !== "custom_mode"
+  ) {
+    try {
+      departmentObj = await Department.findById(departmentId);
+    } catch (_) {}
+  }
+
+  const customInput = String(
+    newDepartmentName ||
+    departmentName ||
+    (!departmentObj && departmentId && departmentId !== "custom_mode" ? departmentId : "")
+  ).trim();
+
+  if (!departmentObj && customInput && customInput !== "new" && customInput !== "custom" && customInput !== "custom_mode") {
+    let code = (newDepartmentCode || "").trim().toUpperCase();
+    let name = customInput;
+
+    const parts = customInput.split(/[-–—:]/);
+    if (!code && parts.length > 1 && parts[0].trim().length <= 10) {
+      code = parts[0].trim().toUpperCase();
+      name = parts.slice(1).join(" ").trim();
+    } else if (!code) {
+      code = customInput.split(" ")[0].toUpperCase().slice(0, 10);
+    }
+
+    if (directorateId) {
+      departmentObj = await Department.findOne({
+        directorateId,
+        $or: [
+          { code },
+          { name: { $regex: new RegExp(`^${name}$`, "i") } }
+        ]
+      });
+    }
+
+    if (!departmentObj) {
+      const existingCodeAnywhere = await Department.findOne({ code });
+      const uniqueCode = existingCodeAnywhere ? `${code}-${Date.now().toString().slice(-4)}` : (code || `DEPT-${Date.now().toString().slice(-4)}`);
+
+      departmentObj = await Department.create({
+        name: name || customInput,
+        code: uniqueCode,
+        directorateId: directorateId || null,
+        buildingBlock: "Academic Complex",
+        floor: "Floor 1-3",
+        status: "active"
+      });
+      console.log(`[Hierarchy] Auto-created new Department for HOD: ${departmentObj.name} (${departmentObj.code}) under Directorate: ${directorateId}`);
+    }
+  }
+
+  return departmentObj;
+}
+
+/**
  * GET /api/hierarchy/director/overview
  * Director views stats strictly for their assigned Directorate
  */
@@ -824,6 +889,47 @@ export async function getDirectorOverview(req, res, next) {
         hods: [],
         metrics: { departmentsCount: 0, hodsCount: 0, teachersCount: 0, studentsCount: 0 }
       });
+    }
+
+    // Auto-seed standard university departments for this Directorate so Director has rich options
+    try {
+      const existingDepts = await Department.find({ directorateId: directorate._id });
+      const existingCodes = new Set(existingDepts.map((d) => (d.code || "").toUpperCase()));
+      const existingNames = new Set(existingDepts.map((d) => (d.name || "").toLowerCase()));
+
+      const standardList = [
+        { code: "CSE", name: "Computer Science & Engineering" },
+        { code: "AI & DS", name: "Artificial Intelligence & Data Science" },
+        { code: "AIML", name: "Artificial Intelligence & Machine Learning" },
+        { code: "IT", name: "Information Technology" },
+        { code: "CYBER", name: "Cyber Security & Digital Forensics" },
+        { code: "DS", name: "Data Science & Big Data" },
+        { code: "CLOUD", name: "Cloud Computing & DevOps" },
+        { code: "SE", name: "Software Engineering" },
+        { code: "ECE", name: "Electronics & Communication Engineering" },
+        { code: "EEE", name: "Electrical & Electronics Engineering" },
+        { code: "ME", name: "Mechanical Engineering" },
+        { code: "CE", name: "Civil Engineering" }
+      ];
+
+      for (const std of standardList) {
+        if (!existingCodes.has(std.code.toUpperCase()) && !existingNames.has(std.name.toLowerCase())) {
+          const codeTaken = await Department.findOne({ code: std.code });
+          const useCode = codeTaken ? `${std.code}-${String(directorate.code || "DIR").slice(0, 4)}` : std.code;
+          await Department.create({
+            name: std.name,
+            code: useCode,
+            directorateId: directorate._id,
+            buildingBlock: directorate.building || "Academic Complex",
+            floor: "Floor 1-3",
+            status: "active"
+          });
+          existingCodes.add(useCode.toUpperCase());
+          existingNames.add(std.name.toLowerCase());
+        }
+      }
+    } catch (seedErr) {
+      console.warn("[Director Overview] Seed departments warning:", seedErr.message);
     }
 
     const departments = await Department.find({ directorateId: directorate._id })
@@ -862,30 +968,53 @@ export async function getDirectorOverview(req, res, next) {
  */
 export async function createDirectorHod(req, res, next) {
   try {
-    const { name, email, departmentId, employeeId, phone, designation, qualification, temporaryPassword, password, mustChangePassword } = req.body;
+    const {
+      name,
+      email,
+      departmentId,
+      newDepartmentName,
+      newDepartmentCode,
+      departmentName,
+      employeeId,
+      phone,
+      designation,
+      qualification,
+      temporaryPassword,
+      password,
+      mustChangePassword
+    } = req.body;
 
-    if (!name || !email || !departmentId) {
-      return res.status(400).json({ message: "Name, email, and department are required." });
-    }
-
-    // Verify department belongs to this director's directorate
-    const dept = await Department.findById(departmentId);
-    if (!dept) {
-      return res.status(404).json({ message: "Department not found." });
+    if (!name || !email) {
+      return res.status(400).json({ message: "Name and email are required." });
     }
 
     const directorId = req.user.id;
     const isSuperAdmin = req.user.role === "super_admin" || req.user.role === "admin";
+    let myDirectorateId = req.user.directorateId;
 
     if (!isSuperAdmin) {
       const myDirectorate = await Directorate.findOne({ directorId });
-      const myDirectorateId = myDirectorate?._id || req.user.directorateId;
+      myDirectorateId = myDirectorate?._id || req.user.directorateId;
+    }
 
-      if (!myDirectorateId || String(dept.directorateId) !== String(myDirectorateId)) {
-        return res.status(403).json({
-          message: "Forbidden: You can only appoint HODs for departments within your assigned Directorate."
-        });
-      }
+    const dept = await resolveDepartment({
+      directorateId: myDirectorateId,
+      departmentId,
+      newDepartmentName,
+      newDepartmentCode,
+      departmentName
+    });
+
+    if (!dept) {
+      return res.status(400).json({
+        message: "Department selection is required. Please choose an existing Department or enter a new Department name."
+      });
+    }
+
+    if (!isSuperAdmin && myDirectorateId && dept.directorateId && String(dept.directorateId) !== String(myDirectorateId)) {
+      return res.status(403).json({
+        message: "Forbidden: You can only appoint HODs for departments within your assigned Directorate."
+      });
     }
 
     const cleanEmail = email.trim().toLowerCase();
