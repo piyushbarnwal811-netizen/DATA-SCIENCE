@@ -59,6 +59,14 @@ export function convertFilter(filter = {}) {
       const condition = {};
       let isOperator = false;
 
+      if ("$exists" in val) {
+        isOperator = true;
+        if (val.$exists === false) {
+          condition.equals = null;
+        } else {
+          condition.not = null;
+        }
+      }
       if ("$ne" in val) {
         isOperator = true;
         condition.not = val.$ne;

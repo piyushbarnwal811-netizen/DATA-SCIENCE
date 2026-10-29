@@ -771,14 +771,15 @@ export async function getTpoOverview(req, res, next) {
       console.warn("[TPO] Note on verifying default schools:", seedErr.message);
     }
 
-    const [directorates, departments, totalStudents, unassignedDirectorates, directors, directorInvitations] = await Promise.all([
+    const [directorates, departments, totalStudents, directors, directorInvitations] = await Promise.all([
       Directorate.find().populate("directorId", "name email phone designation employeeId status").sort({ name: 1 }),
       Department.find().populate("directorateId", "name code").populate("hodId", "name email").sort({ name: 1 }),
       Student.countDocuments({ isActive: { $ne: false } }),
-      Directorate.find({ directorId: { $exists: false } }),
       Admin.find({ role: "director" }).populate("directorateId", "name code building").select("-password").sort({ name: 1 }),
       Invitation.find({ role: "director" }).populate("directorateId", "name code").sort({ createdAt: -1 })
     ]);
+
+    const vacantDirectorates = directorates.filter((d) => !d.directorId);
 
     return res.json({
       metrics: {
@@ -787,7 +788,7 @@ export async function getTpoOverview(req, res, next) {
         totalDirectors: directors.length,
         totalDepartments: departments.length,
         totalStudents,
-        vacantDirectorates: unassignedDirectorates.length
+        vacantDirectorates: vacantDirectorates.length
       },
       directorates,
       directors,

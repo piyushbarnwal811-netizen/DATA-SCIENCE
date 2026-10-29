@@ -71,13 +71,16 @@ export default function TpoDashboardView() {
     try {
       const [tpoRes, dirRes, invRes] = await Promise.all([
         api.get("/hierarchy/tpo/overview"),
-        api.get("/hierarchy/directors"),
+        api.get("/hierarchy/directors").catch(() => ({ data: { directors: [] } })),
         api.get("/invitations?role=director").catch(() => ({ data: { invitations: [] } }))
       ]);
 
       setData(tpoRes.data);
-      setDirectorsList(dirRes.data.directors || tpoRes.data.directors || []);
-      setDirectorInvitations(invRes.data.invitations || tpoRes.data.directorInvitations || []);
+      const dirs = (dirRes.data?.directors && dirRes.data.directors.length > 0)
+        ? dirRes.data.directors
+        : (tpoRes.data?.directors || []);
+      setDirectorsList(dirs);
+      setDirectorInvitations(invRes.data?.invitations || tpoRes.data?.directorInvitations || []);
     } catch (err) {
       setError(errorMessage(err));
     }
